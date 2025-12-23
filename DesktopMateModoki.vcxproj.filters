@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{b44510a2-5854-4da5-9c8c-613e5f1dd0dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{9af6a9bb-fd59-4be6-b9c1-154e3d7535ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\constant_buffer">
+      <UniqueIdentifier>{332aeb39-94fe-4e81-bb65-0ceded8a1f02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\model">
+      <UniqueIdentifier>{78e1dcf8-bb38-4135-a9f5-fd0d3d980b2e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Application.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBuffers.cpp">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="Collider.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Models.cpp">
+      <Filter>src\core\model</Filter>
+    </ClCompile>
+    <ClCompile Include="PMDModel.cpp">
+      <Filter>src\core\model</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelConfig.cpp">
+      <Filter>src\core\model</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Application.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBuffers.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h" />
+    <ClInclude Include="Bones.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="PMDModel.h">
+      <Filter>src\core\model</Filter>
+    </ClInclude>
+    <ClInclude Include="Models.h">
+      <Filter>src\core\model</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelConfig.h">
+      <Filter>src\core\model</Filter>
+    </ClInclude>
+    <ClInclude Include="IModelRenderer.h">
+      <Filter>src\core\model</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

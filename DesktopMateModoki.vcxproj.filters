@@ -13,71 +13,108 @@
     <Filter Include="src\core\model">
       <UniqueIdentifier>{78e1dcf8-bb38-4135-a9f5-fd0d3d980b2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\api">
+      <UniqueIdentifier>{8ad16457-9577-4276-9f4d-62711ac1d92f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\wall">
+      <UniqueIdentifier>{3f42fafb-b04a-4dac-8dfb-eb2338722191}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\shader">
+      <UniqueIdentifier>{c75d0cbc-89a2-47cb-97af-f23cb73e8d8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core\render_pass">
+      <UniqueIdentifier>{6cce8bbc-a5a9-42f9-8e98-f340fe6786d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp">
+    <ClCompile Include="src\Application.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Core.cpp">
+    <ClCompile Include="src\core\Core.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
+    <ClCompile Include="src\core\texrure\Texture.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="ConstantBuffers.cpp">
-      <Filter>src\core\constant_buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="Collider.cpp">
+    <ClCompile Include="src\core\collider\Collider.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="Models.cpp">
+    <ClCompile Include="src\core\model\Models.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
-    <ClCompile Include="PMDModel.cpp">
+    <ClCompile Include="src\core\model\PMDModel.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
-    <ClCompile Include="ModelConfig.cpp">
+    <ClCompile Include="src\core\model\ModelConfig.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\Wall.cpp">
+      <Filter>src\core\wall</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\D3D11.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\render_pass\model\ModelRenderPass.cpp" />
+    <ClCompile Include="src\core\render_pass\shadow\ShadowRenderPass.cpp" />
+    <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
+    <ClCompile Include="src\core\scene\light\Light.cpp" />
+    <ClCompile Include="src\core\scene\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.h">
+    <ClInclude Include="src\Application.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="src\core\constant_buffer\Camera.h">
       <Filter>src\core\constant_buffer</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
+    <ClInclude Include="src\core\constant_buffer\Material.h">
       <Filter>src\core\constant_buffer</Filter>
     </ClInclude>
-    <ClInclude Include="Core.h">
+    <ClInclude Include="src\core\Core.h">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
+    <ClInclude Include="src\core\texrure\Texture.h">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="ConstantBuffers.h">
+    <ClInclude Include="src\core\constant_buffer\Bones.h">
       <Filter>src\core\constant_buffer</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="Bones.h">
-      <Filter>src\core\constant_buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="Collider.h">
+    <ClInclude Include="src\core\collider\Collider.h">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="PMDModel.h">
+    <ClInclude Include="src\core\model\PMDModel.h">
       <Filter>src\core\model</Filter>
     </ClInclude>
-    <ClInclude Include="Models.h">
+    <ClInclude Include="src\core\model\Models.h">
       <Filter>src\core\model</Filter>
     </ClInclude>
-    <ClInclude Include="ModelConfig.h">
+    <ClInclude Include="src\core\model\ModelConfig.h">
       <Filter>src\core\model</Filter>
     </ClInclude>
-    <ClInclude Include="IModelRenderer.h">
+    <ClInclude Include="src\core\model\IModelRenderer.h">
       <Filter>src\core\model</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\constant_buffer\Shadow.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\Wall.h">
+      <Filter>src\core\wall</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\constant_buffer\ShadowReceiver.h">
+      <Filter>src\core\constant_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\render_pass\IRenderPass.h">
+      <Filter>src\core\render_pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\D3D11.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\render_pass\model\ModelRenderPass.h" />
+    <ClInclude Include="src\core\render_pass\shadow\ShadowRenderPass.h" />
+    <ClInclude Include="src\core\render_pass\CommonResource.h" />
+    <ClInclude Include="src\core\model\pmd\PMDFileStruct.h" />
+    <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
+    <ClInclude Include="src\core\scene\light\Light.h" />
+    <ClInclude Include="src\core\scene\Scene.h" />
   </ItemGroup>
 </Project>

@@ -1,18 +1,6 @@
 #include "PMDModel.h"
-#include <d3d11.h>
 #include <fstream>
-#include <optional>
-#include <vector>
-#include "Material.h"
-
-#pragma pack(push, 1)
-struct PMDHeader {
-	char magic[3];      // "Pmd"
-	float version;      // 1.0
-	char modelName[20];
-	char comment[256];
-};
-#pragma pack(pop)
+#include "../constant_buffer/Material.h"
 
 struct Vertex {
 	float pos[3];
@@ -304,4 +292,19 @@ void PMDModel::render(ID3D11DeviceContext* const context) const {
 }
 
 void PMDModel::update(ID3D11DeviceContext* const context) {
+	for(const auto& material : this->materials) {
+		const auto& material_data = this->material_map.at(material.texture_file);
+
+		Material mat{};
+		memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
+		memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
+		context->UpdateSubresource(
+			material_data.buffer.Get(),
+			0,
+			nullptr,
+			&mat,
+			0,
+			0
+		);
+	}
 }

@@ -131,30 +131,45 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Bones.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Collider.h" />
-    <ClInclude Include="ConstantBuffers.h" />
-    <ClInclude Include="Core.h" />
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="IModelRenderer.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="ModelConfig.h" />
-    <ClInclude Include="Models.h" />
-    <ClInclude Include="PMDModel.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Utility.h" />
+    <ClInclude Include="src\core\scene\Scene.h" />
+    <ClInclude Include="src\core\scene\light\Light.h" />
+    <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
+    <ClInclude Include="src\core\model\pmd\PMDFileStruct.h" />
+    <ClInclude Include="src\core\render_pass\CommonResource.h" />
+    <ClInclude Include="src\core\render_pass\shadow\ShadowRenderPass.h" />
+    <ClInclude Include="src\core\render_pass\model\ModelRenderPass.h" />
+    <ClInclude Include="src\core\constant_buffer\Bones.h" />
+    <ClInclude Include="src\core\constant_buffer\Camera.h" />
+    <ClInclude Include="src\core\collider\Collider.h" />
+    <ClInclude Include="src\core\Core.h" />
+    <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\core\D3D11.h" />
+    <ClInclude Include="src\core\model\IModelRenderer.h" />
+    <ClInclude Include="src\core\constant_buffer\Material.h" />
+    <ClInclude Include="src\core\model\ModelConfig.h" />
+    <ClInclude Include="src\core\model\Models.h" />
+    <ClInclude Include="src\core\model\PMDModel.h" />
+    <ClInclude Include="src\core\render_pass\IRenderPass.h" />
+    <ClInclude Include="src\core\constant_buffer\Shadow.h" />
+    <ClInclude Include="src\core\constant_buffer\ShadowReceiver.h" />
+    <ClInclude Include="src\core\texrure\Texture.h" />
+    <ClInclude Include="src\core\Wall.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="ConstantBuffers.cpp" />
-    <ClCompile Include="Core.cpp" />
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="ModelConfig.cpp" />
-    <ClCompile Include="Models.cpp" />
-    <ClCompile Include="PMDModel.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="src\core\scene\Scene.cpp" />
+    <ClCompile Include="src\core\scene\light\Light.cpp" />
+    <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
+    <ClCompile Include="src\core\render_pass\shadow\ShadowRenderPass.cpp" />
+    <ClCompile Include="src\core\render_pass\model\ModelRenderPass.cpp" />
+    <ClCompile Include="src\core\collider\Collider.cpp" />
+    <ClCompile Include="src\core\Core.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\core\D3D11.cpp" />
+    <ClCompile Include="src\core\model\ModelConfig.cpp" />
+    <ClCompile Include="src\core\model\Models.cpp" />
+    <ClCompile Include="src\core\model\PMDModel.cpp" />
+    <ClCompile Include="src\core\texrure\Texture.cpp" />
+    <ClCompile Include="src\core\Wall.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

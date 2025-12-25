@@ -1,9 +1,10 @@
 #pragma once
-#include <d3d11.h>
+
+struct ID3D11DeviceContext;
 
 class IModelRenderer {
 public:
-	~IModelRenderer() = default;
+	virtual ~IModelRenderer() = default;
 
 	virtual void update(ID3D11DeviceContext* const context) = 0;
 

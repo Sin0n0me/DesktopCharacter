@@ -7,22 +7,22 @@
 
 constexpr char RESOURCE_FILE_NAME[] = "assets/model_list.txt";
 
+using model_list = std::vector<std::filesystem::path>;
 std::optional<model_list> get_model_files(const char* resouce_file_path);
 
-std::optional<Models> Models::load_models() {
+bool Models::load_models() {
 	// まずはモデルの有無判定
 	const auto model_files = get_model_files(RESOURCE_FILE_NAME);
 	if(!model_files.has_value()) {
-		return std::optional<Models>();
+		return false;
 	}
 
 	// モデルが1つもない
 	if(model_files.value().empty()) {
-		return std::optional<Models>();
+		return false;
 	}
 
 	// モデルの仮読み込み & 登録
-	Models models{};
 	for(const auto& model_file : model_files.value()) {
 		const auto& model = PMDModel::load_pmd(model_file);
 		if(!model.has_value()) {
@@ -30,21 +30,21 @@ std::optional<Models> Models::load_models() {
 			continue;
 		}
 
-		models.models.emplace(model_file.u8string(), model.value());
+		this->models.emplace(model_file.u8string(), model.value());
 	}
 
 	// 最初に見つかったモデルを使用
 	// TODO: 任意のモデルへ変更可能にする
-	for(const auto& i : models.models) {
-		models.current_model = i.first;
+	for(const auto& i : this->models) {
+		this->current_model = i.first;
 		break;
 	}
 
-	if(models.models.empty()) {
-		return std::optional<Models>();
+	if(this->models.empty()) {
+		return false;
 	}
 
-	return std::optional<Models>(models);
+	return true;
 }
 
 void Models::set_current_model(ID3D11Device* const device) {

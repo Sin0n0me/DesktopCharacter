@@ -5,9 +5,10 @@
 #include <DirectXMath.h>
 #include <unordered_map>
 #include <wrl/client.h>
-#include "IModelRenderer.h"
-#include "../texrure/Texture.h"
-#include "pmd/PMDFileStruct.h"
+#include "../../texrure/Texture.h"
+#include "../IModelRenderer.h"
+#include "PMDFileStruct.h"
+#include "../../collider/OBB.h"
 
 struct Bone {
 	std::string name;
@@ -37,28 +38,32 @@ private:
 	};
 
 private:
-	std::vector<PMDVertex> vertices;
 	std::vector<uint16_t> indices;
 	std::vector<PMDMaterial> materials;
 	std::vector<Bone> bones;
-	std::vector<SkinnedVertex> skinned_vertices;
+	std::vector<SkinnedVertex> vertices;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 	std::unordered_map<std::string, MaterialData> material_map;
+	std::unordered_map<int, OBB> obb_map;
 
-	PMDModel(void) = delete;
-	PMDModel(const std::filesystem::path& path) : model_file_path(path) {}
-
-	void make_skinned_vertices();
+private:
+	bool load_pmd(const std::filesystem::path& path);
+	bool make_skinned_vertices();
+	bool make_buffers(ID3D11Device* const device);
+	bool compute_obb();
+	OBB make_obb(const std::vector<DirectX::XMFLOAT3>& positions, const DirectX::XMVECTOR& mean, const DirectX::XMVECTOR& axis0);
 
 public:
 	const std::filesystem::path model_file_path;
 
-	static std::optional<PMDModel> load_pmd(const std::filesystem::path& path);
+public:
+	PMDModel(const std::filesystem::path& path) : model_file_path(path) {}
 
-	void make_buffers(ID3D11Device* const device);
-
+	bool init(void) override;
+	bool load_model(const std::filesystem::path& path, ID3D11Device* const device) override;
+	void unload_model(void) override;
+	bool is_loaded_model(void) override;
 	void update(ID3D11DeviceContext* const context) override;
-
 	void render(ID3D11DeviceContext* const context) const override;
 };

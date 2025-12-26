@@ -11,20 +11,20 @@ cbuffer Material : register(b1)
     float3 ambient;
 };
 
+cbuffer Shadow : register(b2) {
+    matrix light_view_proj;
+};
+
 /*
 cbuffer Bones : register(b3) {
     matrix gBones[128];
 };
 */
 
-cbuffer Shadow : register(b2) {
-    matrix light_view_proj;
-};
-
 Texture2D model_texture : register(t0);
 Texture2D shadow_texture : register(t1);
 SamplerState model_sampler : register(s0);
-SamplerComparisonState shadow_map : register(s1);
+SamplerComparisonState shadow_sampler : register(s1);
 
 struct VSInput
 {
@@ -44,27 +44,25 @@ PSInput VSMain(VSInput input)
 {
     PSInput output;
 
-    float4 wpos = mul(float4(input.position, 1.0f), world);
-    float4 vpos = mul(wpos, view);
+    const float4 wpos = mul(float4(input.position, 1.0f), world);
+    const float4 vpos = mul(wpos, view);
     output.position = mul(vpos, proj);
     output.uv = input.uv;
-    output.shadow = mul(float4(input.position,1.0f), light_view_proj);
+    output.shadow = mul(wpos, light_view_proj);
     return output;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float4 tex = model_texture.Sample(model_sampler, input.uv);
-    float4 base = tex * diffuse + float4(ambient, 1);
-    float3 projection = input.shadow.xyz / input.shadow.w;
-    float2 uv = projection.xy * 0.5f + 0.5f;
-    float depth = projection.z;
-    float shadow = shadow_texture.SampleCmpLevelZero(shadow_map, uv, depth);
+    const float4 tex = model_texture.Sample(model_sampler, input.uv);
+    const float4 base = tex * diffuse;// + float4(ambient, 1);
+    const float3 shadow_ndc = input.shadow.xyz / input.shadow.w;
+    float2 uv = shadow_ndc.xy * 0.5f + 0.5f;
+    uv.y *= -1.0f;
+    const float depth = shadow_ndc.z * 0.5f + 0.5f;
+    const float shadow = shadow_texture.SampleCmpLevelZero(shadow_sampler, uv, depth);
     
-    return tex;
-    
-    float depth2 = shadow_texture.Load(int3(input.position.xy, 0)).r;
-    return float4(depth2, depth2, depth2, 1);
-    
-    return base * shadow;
+    //return float4(depth, depth, depth, 1);    
+    const float4 result = float4(base.xyz * shadow, base.w);
+    return result;
 }

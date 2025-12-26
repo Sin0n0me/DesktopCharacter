@@ -8,7 +8,7 @@ constexpr wchar_t VERTEX_SHADER_PATH[] = L"assets/shader/pmd_model.hlsl";
 constexpr wchar_t PIXEL_SHADER_PATH[] = L"assets/shader/pmd_model.hlsl";
 
 ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) : IRenderPass(common_resouce) {
-	this->common_resouce = common_resouce;
+	this->resource = common_resouce;
 }
 
 bool ModelRenderPass::init(ID3D11Device* const device) {
@@ -20,10 +20,6 @@ bool ModelRenderPass::init(ID3D11Device* const device) {
 		return false;
 	}
 
-	if(!this->make_shadow_sampler(device)) {
-		return false;
-	}
-
 	return true;
 }
 
@@ -31,43 +27,62 @@ void ModelRenderPass::update(ID3D11DeviceContext* const context) {
 }
 
 void ModelRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
-	context->OMSetRenderTargets(
-		1,
-		&render_target_view,
-		this->depth_stencil_view.Get()
-	);
-
-	context->OMSetDepthStencilState(this->depth_stencil_state.Get(), 0);
-}
-
-void ModelRenderPass::render(ID3D11DeviceContext* const context) const {
 	context->ClearDepthStencilView(
-		this->depth_stencil_view.Get(),
+		this->resource->depth_stencil_view.at(Pattern::ModelPattern).Get(),
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0
 	);
 
+	context->OMSetRenderTargets(
+		1,
+		&render_target_view,
+		this->resource->depth_stencil_view.at(Pattern::ModelPattern).Get()
+	);
+
+	context->OMSetDepthStencilState(
+		this->resource->depth_stencil_state.at(Pattern::ModelPattern).Get(),
+		0
+	);
+}
+
+void ModelRenderPass::render(ID3D11DeviceContext* const context) const {
 	// シェーダーのバインド
-	context->IASetInputLayout(this->model_input_layout.Get());
-	context->VSSetShader(this->model_vertex_shader.Get(), nullptr, 0);
-	context->PSSetShader(this->model_pixel_shader.Get(), nullptr, 0);
+	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::ModelPattern).Get());
+	context->VSSetShader(
+		this->resource->vertex_shaders.at(Pattern::ModelPattern).Get(),
+		nullptr,
+		0
+	);
+	context->PSSetShader(
+		this->resource->pixel_shaders.at(Pattern::ModelPattern).Get(),
+		nullptr,
+		0
+	);
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
 		0,
 		1,
-		this->common_resouce->camera_constant_buffer.GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBufferPattern::CameraBuffer).GetAddressOf()
 	);
 	context->VSSetConstantBuffers(
 		2,
 		1,
-		this->common_resouce->shadow_constant_buffer.GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBufferPattern::ShadowBuffer).GetAddressOf()
 	);
 
 	// シャドウマップ
-	context->PSSetShaderResources(1, 1, this->common_resouce->shadow_resouce_view.GetAddressOf());
-	context->PSSetSamplers(1, 1, this->shadow_sampler.GetAddressOf());
+	context->PSSetShaderResources(
+		1,
+		1,
+		this->resource->shader_resouce_view.at(Pattern::ShadowPattern).GetAddressOf()
+	);
+	context->PSSetSamplers(
+		1,
+		1,
+		this->resource->sampler_state.at(Pattern::ShadowPattern).GetAddressOf()
+	);
 }
 
 bool ModelRenderPass::make_shaders(ID3D11Device* const device) {
@@ -119,7 +134,7 @@ bool ModelRenderPass::make_shaders(ID3D11Device* const device) {
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
 			nullptr,
-			this->model_vertex_shader.GetAddressOf()
+			this->resource->vertex_shaders[Pattern::ModelPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -131,51 +146,55 @@ bool ModelRenderPass::make_shaders(ID3D11Device* const device) {
 			ps_blob->GetBufferPointer(),
 			ps_blob->GetBufferSize(),
 			nullptr,
-			this->model_pixel_shader.GetAddressOf()
+			this->resource->pixel_shaders[Pattern::ModelPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
 		}
 	}
 
-	const D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		{
-			"POSITION",
-			0,
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			0,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"NORMAL",
-			0,
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			12,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"TEXCOORD",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			24,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		}
-	};
+		const D3D11_INPUT_ELEMENT_DESC layout[] = {
+			{
+				"POSITION",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				0,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+			{
+				"NORMAL",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				12,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+			{
+				"TEXCOORD",
+				0,
+				DXGI_FORMAT_R32G32_FLOAT,
+				0,
+				24,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			}
+		};
 
-	device->CreateInputLayout(
-		layout,
-		_countof(layout),
-		vs_blob->GetBufferPointer(),
-		vs_blob->GetBufferSize(),
-		this->model_input_layout.GetAddressOf()
-	);
+		const HRESULT hr = device->CreateInputLayout(
+			layout,
+			_countof(layout),
+			vs_blob->GetBufferPointer(),
+			vs_blob->GetBufferSize(),
+			this->resource->input_layouts[Pattern::ModelPattern].GetAddressOf()
+		);
+		if(FAILED(hr)) {
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -206,7 +225,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateDepthStencilView(
 			this->depth_texture.Get(),
 			nullptr,
-			this->depth_stencil_view.GetAddressOf()
+			this->resource->depth_stencil_view[Pattern::ModelPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -221,7 +240,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 
 		const HRESULT hr = device->CreateDepthStencilState(
 			&desc,
-			this->depth_stencil_state.GetAddressOf()
+			this->resource->depth_stencil_state[Pattern::ModelPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -231,30 +250,6 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 	return true;
 }
 
-// シャドウマップを使用するためのバッファ作成
-bool ModelRenderPass::make_shadow_sampler(ID3D11Device* const device) {
-	{
-		D3D11_SAMPLER_DESC desc{};
-		desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-		desc.BorderColor[0] = 1.0f;
-		desc.BorderColor[1] = 1.0f;
-		desc.BorderColor[2] = 1.0f;
-		desc.BorderColor[3] = 1.0f;
-		desc.MinLOD = 0.0f;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-		const HRESULT hr = device->CreateSamplerState(
-			&desc,
-			this->shadow_sampler.GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
+bool ModelRenderPass::is_render_model(void) const {
 	return true;
 }

@@ -1,27 +1,42 @@
 #include "Light.h"
 #include <d3d11.h>
 #include "../../render_pass/CommonResource.h"
+#include "../../utility/Utility.h"
+#include "../../../Application.h"
 
-Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource) {
+Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resource) {
 	Light light{};
 
 	// ŒõŒ¹
-	const DirectX::XMVECTOR light_direction = DirectX::XMVector3Normalize(
-		DirectX::XMVectorSet(5.0f, -20.0f, -10.0f, 0.0f)
+	const DirectX::XMVECTOR light_position = DirectX::XMVectorSet(
+		-20.0f,
+		15.0f,
+		30.0f,
+		1.0f
 	);
-	const DirectX::XMVECTOR light_position = DirectX::XMVectorScale(
-		light_direction,
-		-100.0f
+	const DirectX::XMVECTOR light_target = DirectX::XMVectorSet(
+		0.0f,
+		10.0f,
+		0.0f,
+		0.0f
 	);
 	const DirectX::XMMATRIX light_view = DirectX::XMMatrixLookAtLH(
 		light_position,
-		DirectX::XMVectorZero(),
+		light_target,
 		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
 	);
+	/*
+	const DirectX::XMMATRIX light_projection = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XMConvertToRadians(60.0f),
+		float(WIDTH) / float(HEIGHT),
+		0.1f,
+		200.0f
+	);
+	*/
 	const DirectX::XMMATRIX light_projection = DirectX::XMMatrixOrthographicLH(
-		50.0f,
-		50.0f,
-		1.0f,
+		100.0f,
+		100.0f,
+		0.1f,
 		100.0f
 	);
 
@@ -40,7 +55,7 @@ Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<Common
 	const HRESULT hr = device->CreateBuffer(
 		&desc,
 		&init_data,
-		common_resource->shadow_constant_buffer.GetAddressOf()
+		resource->constant_buffers[ConstantBufferPattern::ShadowBuffer].GetAddressOf()
 	);
 	if FAILED(hr) {
 		throw;

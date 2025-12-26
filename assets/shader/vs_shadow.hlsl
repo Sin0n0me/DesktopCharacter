@@ -1,21 +1,25 @@
-cbuffer Shadow : register(b0)
-{
+cbuffer Camera : register(b0) {
     matrix world;
+    matrix view;
+    matrix proj;
+}
+
+cbuffer Shadow : register(b1)
+{
     matrix light_view_proj;
 };
 
 struct VSInput {
-    float3 pos : POSITION;
+    float3 position : POSITION;
 };
 
 struct VSOutput {
-    float4 pos : SV_POSITION;
+    float4 position : SV_POSITION;
 };
 
 VSOutput main(VSInput input) {
-    float4 p = float4(input.pos, 1);
-
     VSOutput output;
-    output.pos = mul(input.pos, light_view_proj);
+    output.position = mul(float4(input.position, 1.0f), world);
+    output.position = mul(output.position, light_view_proj);
     return output;
 }

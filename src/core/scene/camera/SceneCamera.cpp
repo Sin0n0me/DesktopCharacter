@@ -4,14 +4,13 @@
 #include "../../../Application.h"
 #include "../../render_pass/CommonResource.h"
 
-SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource) {
+SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resource) {
 	SceneCamera scene_camera{};
-	scene_camera.common_resource = common_resource;
 
 	scene_camera.camera.world = DirectX::XMMatrixIdentity();
 
 	const float eye_position = 10.0f;
-	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, eye_position + 5.0f, 20.0f, 1.0f);
+	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, eye_position + 7.5f, 20.0f, 1.0f);
 	const DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, eye_position, 0.0f, 1.0f);
 	const DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -22,7 +21,7 @@ SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shar
 		DirectX::XMConvertToRadians(60.0f),
 		float(WIDTH) / float(HEIGHT),
 		0.1f,
-		1000.0f
+		100.0f
 	);
 
 	// DirectX‚È‚Ì‚Å—ñ—Dæ
@@ -43,7 +42,7 @@ SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shar
 	const HRESULT hr = device->CreateBuffer(
 		&bd,
 		&init_data,
-		scene_camera.common_resource->camera_constant_buffer.GetAddressOf()
+		resource->constant_buffers[ConstantBufferPattern::CameraBuffer].GetAddressOf()
 	);
 	if FAILED(hr) {
 		throw;

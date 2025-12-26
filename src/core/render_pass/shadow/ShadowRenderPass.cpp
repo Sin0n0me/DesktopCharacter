@@ -1,11 +1,13 @@
 #include "ShadowRenderPass.h"
-#include <d3dcompiler.h>
 #include "../CommonResource.h"
+#include <d3dcompiler.h>
+#include <d3d11.h>
 
 constexpr wchar_t PATH_VERTEX_SHADER_SHADOW[] = L"assets/shader/vs_shadow.hlsl";
+constexpr UINT SHADOW_MAP_SIZE = 2048;
 
 ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) : IRenderPass(common_resouce) {
-	this->common_resouce = common_resouce;
+	this->resource = common_resouce;
 }
 
 bool ShadowRenderPass::init(ID3D11Device* const device) {
@@ -24,31 +26,46 @@ void ShadowRenderPass::update(ID3D11DeviceContext* const context) {
 }
 
 void ShadowRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
-	context->OMSetRenderTargets(
-		0,
-		nullptr,
-		this->shadow_stencil_view.Get()
-	);
-}
-
-void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
 	context->ClearDepthStencilView(
-		this->shadow_stencil_view.Get(),
+		this->resource->depth_stencil_view.at(Pattern::ShadowPattern).Get(),
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0
 	);
+	context->OMSetRenderTargets(
+		0,
+		nullptr,
+		this->resource->depth_stencil_view.at(Pattern::ShadowPattern).Get()
+	);
+
+	D3D11_VIEWPORT vp{};
+	vp.TopLeftX = 0.0f;
+	vp.TopLeftY = 0.0f;
+	vp.Width = static_cast<FLOAT>(SHADOW_MAP_SIZE);
+	vp.Height = static_cast<FLOAT>(SHADOW_MAP_SIZE);
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+
+	context->RSSetViewports(1, &vp);
+}
+
+void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
+	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::ShadowPattern).Get());
 
 	// シェーダーのバインド
-	context->IASetInputLayout(this->shadow_input_layout.Get());
-	context->VSSetShader(this->shadow_vertex_shader.Get(), nullptr, 0);
+	context->VSSetShader(this->resource->vertex_shaders.at(Pattern::ShadowPattern).Get(), nullptr, 0);
 	context->PSSetShader(nullptr, nullptr, 0);
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
 		0,
 		1,
-		this->common_resouce->shadow_constant_buffer.GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBufferPattern::CameraBuffer).GetAddressOf()
+	);
+	context->VSSetConstantBuffers(
+		1,
+		1,
+		this->resource->constant_buffers.at(ConstantBufferPattern::ShadowBuffer).GetAddressOf()
 	);
 }
 
@@ -83,7 +100,7 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
 			nullptr,
-			this->shadow_vertex_shader.GetAddressOf()
+			this->resource->vertex_shaders[Pattern::ShadowPattern].GetAddressOf()
 		);
 
 		if(FAILED(hr)) {
@@ -95,7 +112,7 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 	}
 
 	{
-		const D3D11_INPUT_ELEMENT_DESC shadowLayout[] =
+		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
 			{
 				"POSITION",
@@ -109,13 +126,12 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 		};
 
 		const HRESULT hr = device->CreateInputLayout(
-			shadowLayout,
-			_countof(shadowLayout),
+			layout,
+			_countof(layout),
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
-			this->shadow_input_layout.GetAddressOf()
+			this->resource->input_layouts[Pattern::ShadowPattern].GetAddressOf()
 		);
-
 		if(FAILED(hr)) {
 			if(error_blob.Get()) {
 				OutputDebugStringA((char*)error_blob->GetBufferPointer());
@@ -130,8 +146,8 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 	{
 		D3D11_TEXTURE2D_DESC desc{};
-		desc.Width = 1024;
-		desc.Height = 1024;
+		desc.Width = SHADOW_MAP_SIZE;
+		desc.Height = SHADOW_MAP_SIZE;
 		desc.MipLevels = 1;
 		desc.ArraySize = 1;
 		desc.Format = DXGI_FORMAT_R32_TYPELESS;
@@ -156,7 +172,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateDepthStencilView(
 			this->shadow_texture.Get(),
 			&desc,
-			this->shadow_stencil_view.GetAddressOf()
+			this->resource->depth_stencil_view[Pattern::ShadowPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -172,12 +188,41 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateShaderResourceView(
 			this->shadow_texture.Get(),
 			&desc,
-			this->common_resouce->shadow_resouce_view.GetAddressOf()
+			this->resource->shader_resouce_view[Pattern::ShadowPattern].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
 		}
 	}
 
+	{
+		D3D11_SAMPLER_DESC desc{};
+		desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+		desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+		desc.BorderColor[0] = 1.0f;
+		desc.BorderColor[1] = 1.0f;
+		desc.BorderColor[2] = 1.0f;
+		desc.BorderColor[3] = 1.0f;
+		desc.MinLOD = 0.0f;
+		desc.MaxLOD = D3D11_FLOAT32_MAX;
+		desc.MipLODBias = 0;
+		desc.MaxAnisotropy = 1;
+
+		const HRESULT hr = device->CreateSamplerState(
+			&desc,
+			this->resource->sampler_state[Pattern::ShadowPattern].GetAddressOf()
+		);
+		if(FAILED(hr)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool ShadowRenderPass::is_render_model(void) const {
 	return true;
 }

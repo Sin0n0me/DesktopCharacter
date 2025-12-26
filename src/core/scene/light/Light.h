@@ -5,12 +5,8 @@
 struct ID3D11Device;
 struct CommonResource;
 
-class Light {
-private:
+struct Light {
 	Shadow shadow;
-	std::shared_ptr<CommonResource> common_resource;
-
-public:
 
 	static Light make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource);
 };

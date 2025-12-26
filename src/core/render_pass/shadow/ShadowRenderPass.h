@@ -1,16 +1,14 @@
 #pragma once
 #include "../IRenderPass.h"
-#include <d3d11.h>
 #include <wrl/client.h>
+
+struct ID3D11Texture2D;
 
 class ShadowRenderPass : public IRenderPass {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadow_texture;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadow_stencil_view;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_vertex_shader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> shadow_input_layout;
 
-	std::shared_ptr<CommonResource> common_resouce;
+	std::shared_ptr<CommonResource> resource;
 public:
 	ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce);
 
@@ -20,6 +18,7 @@ public:
 	void update(ID3D11DeviceContext* const context) override;
 	void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
 	void render(ID3D11DeviceContext* const context) const override;
+	bool is_render_model(void) const override;
 
 private:
 

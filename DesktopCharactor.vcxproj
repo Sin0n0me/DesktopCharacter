@@ -22,8 +22,9 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{f3c0b764-8435-4fe5-aa5e-1804613a2d12}</ProjectGuid>
-    <RootNamespace>DesktopMateModoki</RootNamespace>
+    <RootNamespace>DesktopCharactor</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>DesktopCharactor</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -131,6 +132,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\object\IObjectRenderer.h" />
+    <ClInclude Include="src\core\collider\OBB.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\scene\light\Light.h" />
     <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
@@ -148,14 +151,17 @@
     <ClInclude Include="src\core\constant_buffer\Material.h" />
     <ClInclude Include="src\core\model\ModelConfig.h" />
     <ClInclude Include="src\core\model\Models.h" />
-    <ClInclude Include="src\core\model\PMDModel.h" />
+    <ClInclude Include="src\core\model\pmd\PMDModel.h" />
     <ClInclude Include="src\core\render_pass\IRenderPass.h" />
     <ClInclude Include="src\core\constant_buffer\Shadow.h" />
     <ClInclude Include="src\core\constant_buffer\ShadowReceiver.h" />
     <ClInclude Include="src\core\texrure\Texture.h" />
-    <ClInclude Include="src\core\Wall.h" />
+    <ClInclude Include="src\core\render_pass\wall\WallRenderPass.h" />
+    <ClInclude Include="src\core\utility\Utility.h" />
+    <ClInclude Include="src\core\object\wall\WallObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\collider\OBB.cpp" />
     <ClCompile Include="src\core\scene\Scene.cpp" />
     <ClCompile Include="src\core\scene\light\Light.cpp" />
     <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
@@ -167,9 +173,11 @@
     <ClCompile Include="src\core\D3D11.cpp" />
     <ClCompile Include="src\core\model\ModelConfig.cpp" />
     <ClCompile Include="src\core\model\Models.cpp" />
-    <ClCompile Include="src\core\model\PMDModel.cpp" />
+    <ClCompile Include="src\core\model\pmd\PMDModel.cpp" />
     <ClCompile Include="src\core\texrure\Texture.cpp" />
-    <ClCompile Include="src\core\Wall.cpp" />
+    <ClCompile Include="src\core\render_pass\wall\WallRenderPass.cpp" />
+    <ClCompile Include="src\core\utility\Utility.cpp" />
+    <ClCompile Include="src\core\object\wall\WallObject.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -10,7 +10,7 @@ class IRenderPass {
 protected:
 
 public:
-	IRenderPass(const std::shared_ptr<CommonResource> common_resource) {}
+	IRenderPass(const std::shared_ptr<CommonResource>& common_resource) {}
 
 	virtual ~IRenderPass() = default;
 
@@ -21,4 +21,6 @@ public:
 	virtual void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const = 0;
 
 	virtual void render(ID3D11DeviceContext* const context) const = 0;
+
+	virtual bool is_render_model(void) const = 0;
 };

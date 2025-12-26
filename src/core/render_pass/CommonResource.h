@@ -1,10 +1,39 @@
 #pragma once
 #include <wrl/client.h>
+#include <unordered_map>
 
+struct ID3D11VertexShader;
+struct ID3D11PixelShader;
+struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;
+struct ID3D11InputLayout;
+struct ID3D11DepthStencilView;
+struct ID3D11DepthStencilState;
+struct ID3D11SamplerState;
+
+enum ConstantBufferPattern {
+	CameraBuffer,
+	ShadowBuffer,
+	MaterialBuffer,
+	BonesBuffer,
+};
+
+enum Pattern {
+	ModelPattern,
+	WallPattern,
+	ShadowPattern,
+};
+
+template <typename T, typename U>
+using ResourceMap = std::unordered_map<T, Microsoft::WRL::ComPtr<U>>;
 
 struct CommonResource {
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadow_resouce_view;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> camera_constant_buffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> shadow_constant_buffer;
+	ResourceMap<Pattern, ID3D11VertexShader> vertex_shaders;
+	ResourceMap<Pattern, ID3D11PixelShader> pixel_shaders;
+	ResourceMap<ConstantBufferPattern, ID3D11Buffer> constant_buffers;
+	ResourceMap<Pattern, ID3D11InputLayout> input_layouts;
+	ResourceMap<Pattern, ID3D11ShaderResourceView> shader_resouce_view;
+	ResourceMap<Pattern, ID3D11DepthStencilState> depth_stencil_state;
+	ResourceMap<Pattern, ID3D11DepthStencilView> depth_stencil_view;
+	ResourceMap<Pattern, ID3D11SamplerState> sampler_state;
 };

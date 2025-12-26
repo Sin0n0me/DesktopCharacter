@@ -1,22 +1,9 @@
 #pragma once
 
+#include <d3d11.h>
 #include <Windows.h>
 #include <wrl/client.h>
 #include <dcomp.h>
-
-struct IDXGIDevice;
-struct IDXGIAdapter;
-struct IDXGIFactory2;
-struct IDXGISwapChain1;
-/*
-struct IDCompositionDevice;
-struct IDCompositionTarget;
-struct IDCompositionVisual;
- */
-struct ID3D11Device;
-struct ID3D11DeviceContext;
-struct ID3D11RenderTargetView;
-struct ID3D11RasterizerState;
 
 // DirectX11を使用するための構造体
 // 扱いやすさ重視で基本public(アプリケーションのコアとなる部分でしか作成しないため)

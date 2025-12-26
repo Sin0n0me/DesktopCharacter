@@ -42,13 +42,13 @@
     <ClCompile Include="src\core\model\Models.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\model\PMDModel.cpp">
+    <ClCompile Include="src\core\model\pmd\PMDModel.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
     <ClCompile Include="src\core\model\ModelConfig.cpp">
       <Filter>src\core\model</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\Wall.cpp">
+    <ClCompile Include="src\core\render_pass\wall\WallRenderPass.cpp">
       <Filter>src\core\wall</Filter>
     </ClCompile>
     <ClCompile Include="src\core\D3D11.cpp">
@@ -59,6 +59,9 @@
     <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
     <ClCompile Include="src\core\scene\light\Light.cpp" />
     <ClCompile Include="src\core\scene\Scene.cpp" />
+    <ClCompile Include="src\core\collider\OBB.cpp" />
+    <ClCompile Include="src\core\utility\Utility.cpp" />
+    <ClCompile Include="src\core\object\wall\WallObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">
@@ -82,7 +85,7 @@
     <ClInclude Include="src\core\collider\Collider.h">
       <Filter>src\core</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\model\PMDModel.h">
+    <ClInclude Include="src\core\model\pmd\PMDModel.h">
       <Filter>src\core\model</Filter>
     </ClInclude>
     <ClInclude Include="src\core\model\Models.h">
@@ -97,7 +100,7 @@
     <ClInclude Include="src\core\constant_buffer\Shadow.h">
       <Filter>src\core\constant_buffer</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Wall.h">
+    <ClInclude Include="src\core\render_pass\wall\WallRenderPass.h">
       <Filter>src\core\wall</Filter>
     </ClInclude>
     <ClInclude Include="src\core\constant_buffer\ShadowReceiver.h">
@@ -116,5 +119,9 @@
     <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
     <ClInclude Include="src\core\scene\light\Light.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
+    <ClInclude Include="src\core\collider\OBB.h" />
+    <ClInclude Include="src\core\utility\Utility.h" />
+    <ClInclude Include="src\core\object\IObjectRenderer.h" />
+    <ClInclude Include="src\core\object\wall\WallObject.h" />
   </ItemGroup>
 </Project>

@@ -160,6 +160,8 @@ bool D3D11::make_rasterizer() {
 	desc.FillMode = D3D11_FILL_SOLID;
 	desc.DepthClipEnable = TRUE;
 	desc.FrontCounterClockwise = FALSE;
+	desc.DepthBias = 1;
+	desc.SlopeScaledDepthBias = 0.5f;
 
 	// ”w–ÊƒJƒŠƒ“ƒO‚ ‚è
 	desc.CullMode = D3D11_CULL_BACK;

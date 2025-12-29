@@ -57,6 +57,22 @@ static inline DirectX::XMFLOAT3 operator/(const DirectX::XMFLOAT3& v1, const Dir
 	return temp;
 }
 
+static inline DirectX::XMFLOAT3 operator*(const DirectX::XMFLOAT3& v1, const float& v2) {
+	DirectX::XMFLOAT3 temp{v1};
+	temp.x *= v2;
+	temp.y *= v2;
+	temp.z *= v2;
+	return temp;
+}
+
+static inline DirectX::XMFLOAT3 operator/(const DirectX::XMFLOAT3& v1, const float& v2) {
+	DirectX::XMFLOAT3 temp{v1};
+	temp.x /= v2;
+	temp.y /= v2;
+	temp.z /= v2;
+	return temp;
+}
+
 //
 // DirectX::XMVECTOR <- DirectX::XMFLOAT3
 //
@@ -220,5 +236,23 @@ static inline DirectX::XMFLOAT3 operator/(const DirectX::XMFLOAT3& v1, const Dir
 	temp.x /= v2.m128_f32[0];
 	temp.y /= v2.m128_f32[1];
 	temp.z /= v2.m128_f32[2];
+	return temp;
+}
+
+static inline DirectX::XMVECTOR add_float(const DirectX::XMVECTOR& v1, const DirectX::XMVECTOR& v2) {
+	DirectX::XMVECTOR temp{v1};
+	temp.m128_f32[0] += v2.m128_f32[0];
+	temp.m128_f32[1] += v2.m128_f32[1];
+	temp.m128_f32[2] += v2.m128_f32[2];
+	temp.m128_f32[3] += v2.m128_f32[3];
+	return temp;
+}
+
+static inline DirectX::XMVECTOR sub_float(const DirectX::XMVECTOR& v1, const DirectX::XMVECTOR& v2) {
+	DirectX::XMVECTOR temp{v1};
+	temp.m128_f32[0] -= v2.m128_f32[0];
+	temp.m128_f32[1] -= v2.m128_f32[1];
+	temp.m128_f32[2] -= v2.m128_f32[2];
+	temp.m128_f32[3] -= v2.m128_f32[3];
 	return temp;
 }

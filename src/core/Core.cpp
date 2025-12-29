@@ -6,6 +6,8 @@
 #include <dxgi1_2.h>
 #include "../Application.h"
 
+decltype(Engine::instance) Engine::instance;
+
 void Engine::render_update(void) {
 	for(auto& render_pass : this->render_pass) {
 		render_pass->update(this->d3d11->context.Get());
@@ -53,49 +55,65 @@ void Engine::render(void) const {
 	this->d3d11->dxgi_swap_chain->Present(1, 0);
 }
 
-std::optional<Engine> Engine::make_engine(const HWND hwnd, const UINT width, const UINT height) {
-	Engine engine{};
+const IMouseStateGetter* Engine::get_mouse_getter(void) const {
+	return this->mouse_state.get();
+}
+
+bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
+	const HRESULT hr = CoInitializeEx(nullptr, tagCOINIT::COINIT_APARTMENTTHREADED);
+	if(FAILED(hr)) {
+		return false;
+	}
 
 	// DirectX11の初期化
-	engine.d3d11 = std::make_unique<D3D11>();
-	if(!engine.d3d11->init_d3d11(hwnd, width, height)) {
-		return std::optional<Engine>();
+	this->d3d11 = std::make_unique<D3D11>();
+	if(!this->d3d11->init_d3d11(hwnd, width, height)) {
+		return false;
 	}
 
 	// 共通リソースの作成
-	engine.common_resouce = std::make_shared<CommonResource>();
+	this->common_resouce = std::make_shared<CommonResource>();
+
+	// マウスの状態を保存する構造体の作成
+	this->mouse_state = std::make_unique<MouseState>();
+
+	// 当たり判定用
+	this->collider = std::make_unique<Collider>();
 
 	// モデル読み込み
-	engine.models = std::make_unique<Models>();
-	if(!engine.models->init()) {
-		return std::optional<Engine>();
+	this->models = std::make_unique<Models>();
+	if(!this->models->init()) {
+		return false;
 	}
-	engine.models->load_current_model(engine.d3d11->device.Get());
+	this->models->load_current_model(this->d3d11->device.Get());
 
-	//
-	engine.scene = std::make_unique<Scene>(engine.d3d11->device.Get(), engine.common_resouce);
+	// シーンの作成
+	this->scene = std::make_unique<Scene>(this->d3d11->device.Get(), this->common_resouce);
 
-	//
-	engine.render_pass.emplace_back(
-		std::make_unique<ShadowRenderPass>(engine.common_resouce)
+	// レンダーパスの追加
+	this->render_pass.emplace_back(
+		std::make_unique<ShadowRenderPass>(this->common_resouce)
 	);
-	engine.render_pass.emplace_back(
-		std::make_unique<WallRenderPass>(engine.common_resouce)
+	this->render_pass.emplace_back(
+		std::make_unique<WallRenderPass>(this->common_resouce)
 	);
-	engine.render_pass.emplace_back(
-		std::make_unique<ModelRenderPass>(engine.common_resouce)
+	this->render_pass.emplace_back(
+		std::make_unique<ModelRenderPass>(this->common_resouce)
 	);
 
-	for(auto& render_pass : engine.render_pass) {
-		if(!render_pass->init(engine.d3d11->device.Get())) {
-			return std::optional<Engine>();
+	// レンダーパスの初期化
+	for(auto& render_pass : this->render_pass) {
+		if(!render_pass->init(this->d3d11->device.Get())) {
+			return false;
 		}
 	}
 
-	return engine;
+	this->instance.emplace(this);
+
+	return true;
 }
 
-int Engine::run_app() {
+void Engine::run(void) {
 	// main loop
 	MSG msg{};
 	while(msg.message != WM_QUIT) {
@@ -107,6 +125,10 @@ int Engine::run_app() {
 		this->render_update();
 		this->render();
 	}
+}
 
-	return 0;
+void Engine::uninit(void) {
+	this->instance.reset();
+
+	CoUninitialize();
 }

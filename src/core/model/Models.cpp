@@ -11,7 +11,7 @@ constexpr char RESOURCE_FILE_NAME[] = "assets/model_list.txt";
 using model_list = std::vector<std::filesystem::path>;
 std::optional<model_list> get_model_files(const char* resouce_file_path);
 
-std::unique_ptr<IModelRenderer> load_pmd(const std::filesystem::path& path) {
+std::unique_ptr<IModel> load_pmd(const std::filesystem::path& path) {
 	return std::make_unique<PMDModel>(path);
 }
 
@@ -64,7 +64,7 @@ bool Models::init() {
 	return true;
 }
 
-bool Models::add_model(const std::unique_ptr<IModelRenderer>& model) {
+bool Models::add_model(const std::unique_ptr<IModel>& model) {
 	if(!model->init()) {
 		return false;
 	}
@@ -74,6 +74,10 @@ bool Models::add_model(const std::unique_ptr<IModelRenderer>& model) {
 
 void Models::set_model(const std::u8string& model_name) {
 	this->current_model = model_name;
+}
+
+const IModel* Models::get_current_model(void) const {
+	return this->models.at(this->current_model).get();
 }
 
 void Models::load_current_model(ID3D11Device* const device) {

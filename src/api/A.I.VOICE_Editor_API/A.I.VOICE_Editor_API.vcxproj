@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f3c0b764-8435-4fe5-aa5e-1804613a2d12}</ProjectGuid>
-    <RootNamespace>DesktopCharactor</RootNamespace>
+    <ProjectGuid>{7307c26a-493e-4431-9686-d6d34217bf99}</ProjectGuid>
+    <RootNamespace>AIVOICEEditorAPI</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>DesktopCharactor</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -75,12 +74,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -90,12 +89,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -105,12 +103,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -120,77 +118,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\core\model\IModel.h" />
-    <ClInclude Include="src\core\collider\IModelOBB.h" />
-    <ClInclude Include="src\core\IEngineStarter.h" />
-    <ClInclude Include="src\core\event\mouse\IMouseStateGetter.h" />
-    <ClInclude Include="src\core\event\mouse\MouseState.h" />
-    <ClInclude Include="src\core\collider\Ray.h" />
-    <ClInclude Include="src\core\event\EventQueue.h" />
-    <ClInclude Include="src\core\event\IEventHandler.h" />
-    <ClInclude Include="src\core\object\IObjectRenderer.h" />
-    <ClInclude Include="src\core\collider\OBB.h" />
-    <ClInclude Include="src\core\scene\Scene.h" />
-    <ClInclude Include="src\core\scene\light\Light.h" />
-    <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
-    <ClInclude Include="src\core\model\pmd\PMDFileStruct.h" />
-    <ClInclude Include="src\core\render_pass\CommonResource.h" />
-    <ClInclude Include="src\core\render_pass\shadow\ShadowRenderPass.h" />
-    <ClInclude Include="src\core\render_pass\model\ModelRenderPass.h" />
-    <ClInclude Include="src\core\constant_buffer\Bones.h" />
-    <ClInclude Include="src\core\constant_buffer\Camera.h" />
-    <ClInclude Include="src\core\collider\Collider.h" />
-    <ClInclude Include="src\core\Core.h" />
-    <ClInclude Include="src\Application.h" />
-    <ClInclude Include="src\core\D3D11.h" />
-    <ClInclude Include="src\core\render\IModelRenderer.h" />
-    <ClInclude Include="src\core\constant_buffer\Material.h" />
-    <ClInclude Include="src\core\model\ModelConfig.h" />
-    <ClInclude Include="src\core\model\Models.h" />
-    <ClInclude Include="src\core\model\pmd\PMDModel.h" />
-    <ClInclude Include="src\core\render_pass\IRenderPass.h" />
-    <ClInclude Include="src\core\constant_buffer\Shadow.h" />
-    <ClInclude Include="src\core\constant_buffer\ShadowReceiver.h" />
-    <ClInclude Include="src\core\texrure\Texture.h" />
-    <ClInclude Include="src\core\render_pass\wall\WallRenderPass.h" />
-    <ClInclude Include="src\core\utility\Utility.h" />
-    <ClInclude Include="src\core\object\wall\WallObject.h" />
-    <ClInclude Include="src\core\event\WindowEvent.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\core\event\mouse\MouseState.cpp" />
-    <ClCompile Include="src\core\collider\Ray.cpp" />
-    <ClCompile Include="src\core\event\EventQueue.cpp" />
-    <ClCompile Include="src\core\collider\OBB.cpp" />
-    <ClCompile Include="src\core\event\WindowEvent.cpp" />
-    <ClCompile Include="src\core\scene\Scene.cpp" />
-    <ClCompile Include="src\core\scene\light\Light.cpp" />
-    <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
-    <ClCompile Include="src\core\render_pass\shadow\ShadowRenderPass.cpp" />
-    <ClCompile Include="src\core\render_pass\model\ModelRenderPass.cpp" />
-    <ClCompile Include="src\core\collider\Collider.cpp" />
-    <ClCompile Include="src\core\Core.cpp" />
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\core\D3D11.cpp" />
-    <ClCompile Include="src\core\model\ModelConfig.cpp" />
-    <ClCompile Include="src\core\model\Models.cpp" />
-    <ClCompile Include="src\core\model\pmd\PMDModel.cpp" />
-    <ClCompile Include="src\core\texrure\Texture.cpp" />
-    <ClCompile Include="src\core\render_pass\wall\WallRenderPass.cpp" />
-    <ClCompile Include="src\core\utility\Utility.cpp" />
-    <ClCompile Include="src\core\object\wall\WallObject.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

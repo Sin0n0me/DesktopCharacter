@@ -1,12 +1,15 @@
 #pragma once
+#include "collider/Collider.h"
+#include "D3D11.h"
+#include "event/mouse/MouseState.h"
+#include "IEngineStarter.h"
+#include "model/Models.h"
+#include "render_pass/CommonResource.h"
+#include "render_pass/IRenderPass.h"
+#include "scene/Scene.h"
 #include <memory>
 #include <optional>
 #include <vector>
-#include "D3D11.h"
-#include "model/Models.h"
-#include "scene/Scene.h"
-#include "render_pass/CommonResource.h"
-#include "render_pass/IRenderPass.h"
 
 #ifdef _DEBUG
 constexpr bool IS_DEBUG_MODE = true;
@@ -16,22 +19,33 @@ constexpr bool IS_DEBUG_MODE = false;
 
 constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-class Engine {
+class Engine : public IEngineStarter {
+private:
+	friend class WindowEvent; // •ª—£—p
+
+private:
+	static std::optional<Engine* const> instance;
+
 private:
 	std::unique_ptr<D3D11> d3d11;
 	std::unique_ptr<Models> models;
 	std::unique_ptr<Scene> scene;
+	std::unique_ptr<MouseState> mouse_state;
+	std::unique_ptr<Collider> collider;
 	std::shared_ptr<CommonResource> common_resouce;
 	std::vector<std::unique_ptr<IRenderPass>> render_pass;
 
-	Engine(void) = default;
-
+private:
 	void render_update(void);
 	void render(void) const;
 
 public:
 
-	static std::optional<Engine> make_engine(const HWND hwnd, const UINT width, const  UINT height);
+	//static Engine get_engine();
 
-	int run_app(void);
+	const IMouseStateGetter* get_mouse_getter(void) const;
+
+	bool init(const HWND& hwnd, const UINT& width, const UINT& height) override;
+	void run(void) override;
+	void uninit(void) override;
 };

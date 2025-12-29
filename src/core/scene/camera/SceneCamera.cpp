@@ -10,18 +10,26 @@ SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shar
 	scene_camera.camera.world = DirectX::XMMatrixIdentity();
 
 	const float eye_position = 10.0f;
-	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, eye_position + 7.5f, 20.0f, 1.0f);
+	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, eye_position + 7.5f, 25.0f, 1.0f);
 	const DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, eye_position, 0.0f, 1.0f);
 	const DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	scene_camera.camera.view = DirectX::XMMatrixLookAtLH(eye, target, up);
 
+	/*
+	scene_camera.camera.projection = DirectX::XMMatrixOrthographicLH(
+		25.0f,
+		25.0f,
+		0.1f,
+		25.0f
+	);
+	*/
 	// âìãﬂä¥
 	scene_camera.camera.projection = DirectX::XMMatrixPerspectiveFovLH(
-		DirectX::XMConvertToRadians(60.0f),
+		DirectX::XMConvertToRadians(45.0f),
 		float(WIDTH) / float(HEIGHT),
 		0.1f,
-		100.0f
+		200.0f
 	);
 
 	// DirectXÇ»ÇÃÇ≈óÒóDêÊ

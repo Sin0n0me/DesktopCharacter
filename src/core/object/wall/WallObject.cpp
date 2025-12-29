@@ -3,7 +3,9 @@
 #include <DirectXMath.h>
 
 constexpr float WALL_SIZE = 20.0f;
-constexpr float DEPTH = -2.0f;
+constexpr float FRONT_DEPTH = -1.0f;
+constexpr float DEPTH = -2.0f; // ‰œs(°–Ê)
+constexpr float OFFSET_Y = 0.0f;
 
 struct ShadowReceiverVertex {
 	DirectX::XMFLOAT3 position;
@@ -52,7 +54,7 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 		{{WALL_SIZE / 2.0f, WALL_SIZE, DEPTH}},
 		{{WALL_SIZE / 2.0f, 0.0f, DEPTH}},
 	};
-	constexpr uint32_t INDICES[6] = {
+	constexpr uint32_t INDICES[] = {
 		0, 2, 1,
 		0, 3, 2
 	};
@@ -65,12 +67,12 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 		desc.ByteWidth = sizeof(WALL_VERTICES);
 		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-		D3D11_SUBRESOURCE_DATA vb_data{};
-		vb_data.pSysMem = WALL_VERTICES;
+		D3D11_SUBRESOURCE_DATA init_data{};
+		init_data.pSysMem = WALL_VERTICES;
 
 		const HRESULT hr = device->CreateBuffer(
 			&desc,
-			&vb_data,
+			&init_data,
 			this->wall_vertex_buffer.GetAddressOf()
 		);
 		if(FAILED(hr)) {
@@ -84,12 +86,12 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 		desc.ByteWidth = sizeof(INDICES);
 		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
-		D3D11_SUBRESOURCE_DATA ib_data{};
-		ib_data.pSysMem = INDICES;
+		D3D11_SUBRESOURCE_DATA init_data{};
+		init_data.pSysMem = INDICES;
 
 		const HRESULT hr = device->CreateBuffer(
 			&desc,
-			&ib_data,
+			&init_data,
 			this->wall_index_buffer.GetAddressOf()
 		);
 		if(FAILED(hr)) {
@@ -101,25 +103,24 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 }
 
 bool WallObject::make_mesh_chair(ID3D11Device* const device) {
-	constexpr float OFFSET_Y = 0.0f;
 	constexpr ShadowReceiverVertex CHAIR_VERTICES[] = {
-		{{-WALL_SIZE, OFFSET_Y, DEPTH}},
-		{{-WALL_SIZE, WALL_SIZE + OFFSET_Y, DEPTH}},
-		{{WALL_SIZE, WALL_SIZE + OFFSET_Y, DEPTH}},
-		{{WALL_SIZE, OFFSET_Y, DEPTH}},
+		{{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
+		{{-WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + DEPTH}},
+		{{WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + DEPTH}},
+		{{WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
 
-		{{-WALL_SIZE, OFFSET_Y, 0.0f}},
-		{{-WALL_SIZE, OFFSET_Y, DEPTH}},
-		{{WALL_SIZE, OFFSET_Y, DEPTH}},
-		{{WALL_SIZE, OFFSET_Y, 0.0f}},
+		{{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+		{{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
+		{{WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
+		{{WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
 
-		{{-WALL_SIZE, WALL_SIZE - OFFSET_Y, 0.0f}},
-		{{-WALL_SIZE, OFFSET_Y, 0.0f}},
-		{{WALL_SIZE, OFFSET_Y, 0.0f}},
-		{{WALL_SIZE, WALL_SIZE - OFFSET_Y, 0.0f}},
+		{{-WALL_SIZE, -WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
+		{{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+		{{WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+		{{WALL_SIZE, -WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
 	};
 
-	constexpr uint32_t INDICES[18] = {
+	constexpr uint32_t INDICES[] = {
 		0, 2, 1,
 		0, 3, 2,
 		4, 6, 5,

@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <wrl/client.h>
 #include "../../texrure/Texture.h"
-#include "../IModelRenderer.h"
-#include "PMDFileStruct.h"
 #include "../../collider/OBB.h"
+#include "../IModel.h"
+#include "PMDFileStruct.h"
 
 struct Bone {
 	std::string name;
@@ -30,7 +30,7 @@ struct SkinnedVertex {
 struct ID3D11Device;
 struct ID3D11Buffer;
 
-class PMDModel : public IModelRenderer {
+class PMDModel : public IModel {
 private:
 	struct MaterialData {
 		Texture texture;
@@ -45,14 +45,18 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 	std::unordered_map<std::string, MaterialData> material_map;
-	std::unordered_map<int, OBB> obb_map;
+	std::vector<OBB> obb_list;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> debug_vertex_buffer;
 
 private:
 	bool load_pmd(const std::filesystem::path& path);
 	bool make_skinned_vertices();
 	bool make_buffers(ID3D11Device* const device);
-	bool compute_obb();
-	OBB make_obb(const std::vector<DirectX::XMFLOAT3>& positions, const DirectX::XMVECTOR& mean, const DirectX::XMVECTOR& axis0);
+
+	void jacobi_eigen_decomposition(DirectX::XMMATRIX& matrix, DirectX::XMMATRIX& eigenVectors) const;
+
+	OBB make_obb(const std::vector<DirectX::XMFLOAT3>& positions, const DirectX::XMVECTOR& mean, const DirectX::XMMATRIX& eigenvector);
 
 public:
 	const std::filesystem::path model_file_path;
@@ -66,4 +70,8 @@ public:
 	bool is_loaded_model(void) override;
 	void update(ID3D11DeviceContext* const context) override;
 	void render(ID3D11DeviceContext* const context) const override;
+
+	bool compute_obb(void) override;
+	void update_obb(void) override;
+	const std::vector<OBB>& get_obb(void) const override;
 };

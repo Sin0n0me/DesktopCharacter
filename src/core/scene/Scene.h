@@ -13,6 +13,9 @@ private:
 
 public:
 
+	const SceneCamera& get_camera(void) const;
+	const Light& get_lignt(void) const;
+
 	Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resouce);
 
 	void update(void);

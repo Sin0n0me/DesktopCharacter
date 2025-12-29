@@ -10,7 +10,6 @@ cbuffer Shadow : register(b2) {
 
 Texture2D<float> shadow_map : register(t0);
 SamplerComparisonState shadow_sampler : register(s0);
-//SamplerState shadow_sampler : register(s0); 
 
 struct VSInput {
     float3 position : POSITION;
@@ -43,7 +42,9 @@ float4 PSMain(PSInput input) : SV_TARGET {
         input.shadow.xy,
         depth
     );
+    // ”wŒi‚ªŒ©‚¦‚é‚æ‚¤‚É‚ ‚é’ö“x“§‰ß‚³‚¹‚é
+    const float alpha = (1.0f - shadow) * 0.25;
  
-    return float4(0.0f, 0.0f, 0.0f, 1.0f - shadow);
+    return float4(0.0f, 0.0f, 0.0f, alpha);
 
 }

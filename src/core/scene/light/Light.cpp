@@ -10,7 +10,7 @@ Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<Common
 	// ŒõŒ¹
 	const DirectX::XMVECTOR light_position = DirectX::XMVectorSet(
 		-20.0f,
-		15.0f,
+		30.0f,
 		30.0f,
 		1.0f
 	);

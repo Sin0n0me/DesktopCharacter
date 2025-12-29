@@ -1,5 +1,6 @@
 #include "PMDModel.h"
 #include <fstream>
+#include <algorithm>
 #include "../../constant_buffer/Material.h"
 #include "../../utility/Utility.h"
 
@@ -296,6 +297,48 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
 	return true;
 }
 
+void PMDModel::jacobi_eigen_decomposition(DirectX::XMMATRIX& matrix, DirectX::XMMATRIX& eigenvector) const {
+	eigenvector = DirectX::XMMatrixIdentity();
+	for(int i = 0; i < 24; ++i) {
+		int p = 0;
+		int q = 1;
+		const float max_value = [&matrix, &p, &q]() {
+			float max_value = fabsf(matrix.r[0].m128_f32[1]);
+			for(int j = 0; j < 3; ++j) {
+				for(int k = j + 1; k < 3; ++k) {
+					const float v = fabsf(matrix.r[j].m128_f32[k]);
+					if(v > max_value) {
+						max_value = v;
+						p = j;
+						q = k;
+					}
+				}
+			}
+			return max_value;
+			}();
+
+		if(max_value < 1e-6f) {
+			break;
+		}
+
+		const float app = matrix.r[p].m128_f32[p];
+		const float aqq = matrix.r[q].m128_f32[q];
+		const float apq = matrix.r[p].m128_f32[q];
+		const float phi = 0.5f * atanf(2.0f * apq / (aqq - app));
+		const float c = cosf(phi);
+		const float s = sinf(phi);
+
+		DirectX::XMMATRIX R = DirectX::XMMatrixIdentity();
+		R.r[p].m128_f32[p] = c;
+		R.r[q].m128_f32[q] = c;
+		R.r[p].m128_f32[q] = s;
+		R.r[q].m128_f32[p] = -s;
+
+		matrix = DirectX::XMMatrixTranspose(R) * matrix * R;
+		eigenvector = eigenvector * R;
+	}
+}
+
 // 主成分分析による最小体積のOBBを作成
 bool PMDModel::compute_obb() {
 	// ボーンが影響する頂点のみを収集
@@ -310,20 +353,13 @@ bool PMDModel::compute_obb() {
 	for(auto& pair : points_map) {
 		const int index = pair.first;
 		auto& positions = pair.second;
-
-		// 次の共分散行列作成用に先に初期化
-		DirectX::XMVECTOR mean = DirectX::XMVectorZero();
-
-		// ローカル空間への変換
-		for(auto& position : positions) {
-			const DirectX::XMVECTOR v1 = DirectX::XMLoadFloat3(&position);
-			const DirectX::XMVECTOR v2 = DirectX::XMVector3Transform(v1, this->bones[index].inverse_bind);
-			DirectX::XMStoreFloat3(&position, v2);
-			mean += position;
-		}
+		const float positions_size = static_cast<float>(positions.size());
 
 		// 重心を求める
-		const float positions_size = static_cast<float>(positions.size());
+		DirectX::XMVECTOR mean = DirectX::XMVectorZero();
+		for(const auto& position : positions) {
+			mean += position;
+		}
 		mean /= positions_size;
 
 		// 共分散行列の作成
@@ -343,77 +379,56 @@ bool PMDModel::compute_obb() {
 		matrix *= 1.0f / positions_size;
 		matrix.r[3].m128_f32[3] = 1.0f; // 元の行列は単位行列ではないので
 
-		// 固有ベクトル取得
-		DirectX::XMVECTOR eigenvector = DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-		for(int i = 0; i < 16; ++i) {
-			eigenvector = DirectX::XMVector3Transform(eigenvector, matrix);
-			eigenvector = DirectX::XMVector3Normalize(eigenvector);
-		}
+		// ヤコビ法による固有ベクトル取得
+		DirectX::XMMATRIX eigen_vectors{};
+		this->jacobi_eigen_decomposition(matrix, eigen_vectors);
 
-		this->obb_map[index] = make_obb(positions, mean, eigenvector);
+		this->obb_list.emplace_back(make_obb(positions, mean, eigen_vectors));
 	}
 
 	return true;
 }
 
-OBB PMDModel::make_obb(const std::vector<DirectX::XMFLOAT3>& positions, const DirectX::XMVECTOR& mean, const DirectX::XMVECTOR& axis0) {
+OBB PMDModel::make_obb(const std::vector<DirectX::XMFLOAT3>& positions, const DirectX::XMVECTOR& mean, const DirectX::XMMATRIX& eigen_vectors) {
 	// OBBの作成
-	const DirectX::XMVECTOR temp = fabs(DirectX::XMVectorGetX(axis0)) < 0.9f
-		? DirectX::XMVectorSet(1, 0, 0, 0)
-		: DirectX::XMVectorSet(0, 1, 0, 0);
-	const DirectX::XMVECTOR axis1 = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(axis0, temp));
-	const DirectX::XMVECTOR axis2 = DirectX::XMVector3Cross(axis0, axis1);
+	OBB obb{};
+	for(int i = 0; i < 3; ++i) {
+		const DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(eigen_vectors.r[i]);
+		DirectX::XMStoreFloat3(&obb.axis[i], axis);
+	}
 
-	float min[3] = {FLT_MAX, FLT_MAX, FLT_MAX};
-	float max[3] = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
+	// 軸空間でAABB
+	const DirectX::XMVECTOR minV = DirectX::XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0);
+	const DirectX::XMVECTOR maxV = DirectX::XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0);
 
+	constexpr int SIZE = 3;
+	DirectX::XMVECTOR min_vec = DirectX::XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0);
+	DirectX::XMVECTOR max_vec = DirectX::XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0);
 	for(const auto& position : positions) {
 		const auto& temp = (position - mean);
 		const DirectX::XMVECTOR d = DirectX::XMLoadFloat3(&temp);
-		constexpr int PROJECTION_SIZE = 3;
-		const float proj[PROJECTION_SIZE] =
-		{
-			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, axis0)),
-			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, axis1)),
-			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, axis2))
-		};
-
-		for(int i = 0; i < PROJECTION_SIZE; ++i) {
-			min[i] = min(min[i], proj[i]);
-			max[i] = max(max[i], proj[i]);
-		}
+		const DirectX::XMVECTOR local = DirectX::XMVectorSet(
+			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, DirectX::XMLoadFloat3(&obb.axis[0]))),
+			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, DirectX::XMLoadFloat3(&obb.axis[1]))),
+			DirectX::XMVectorGetX(DirectX::XMVector3Dot(d, DirectX::XMLoadFloat3(&obb.axis[2]))),
+			0.0f
+		);
+		min_vec = DirectX::XMVectorMin(min_vec, local);
+		max_vec = DirectX::XMVectorMax(max_vec, local);
 	}
 
-	DirectX::XMVECTOR center{mean};
-	const DirectX::XMVECTOR add_list[] = {
-		axis0 * ((min[0] + max[0]) * 0.5f),
-		axis1 * ((min[0] + max[0]) * 0.5f),
-		axis2 * ((min[0] + max[0]) * 0.5f),
-	};
-	for(const auto& add : add_list) {
-		center.m128_f32[0] += add.m128_f32[0];
-		center.m128_f32[1] += add.m128_f32[1];
-		center.m128_f32[2] += add.m128_f32[2];
-		center.m128_f32[3] += add.m128_f32[3];
-	}
+	const DirectX::XMVECTOR half = sub_float(max_vec, min_vec) * 0.5f;
+	const DirectX::XMVECTOR offset = add_float(max_vec, min_vec) * 0.5f;
 
-	OBB obb{};
-	DirectX::XMStoreFloat3(&obb.center, center);
-	DirectX::XMStoreFloat3(&obb.axis[0], axis0);
-	DirectX::XMStoreFloat3(&obb.axis[1], axis1);
-	DirectX::XMStoreFloat3(&obb.axis[2], axis2);
+	DirectX::XMStoreFloat3(&obb.half_extent, half);
 
-	obb.half_extent =
-	{
-		(max[0] - min[0]) * 0.5f,
-		(max[1] - min[1]) * 0.5f,
-		(max[2] - min[2]) * 0.5f
-	};
-
-	// 安全マージン
-	obb.half_extent.x *= EXTENT_MARGIN;
-	obb.half_extent.y *= EXTENT_MARGIN;
-	obb.half_extent.z *= EXTENT_MARGIN;
+	// 中心補正
+	DirectX::XMStoreFloat3(&obb.center,
+		mean +
+		obb.axis[0] * offset.m128_f32[0] +
+		obb.axis[1] * offset.m128_f32[1] +
+		obb.axis[2] * offset.m128_f32[2]
+	);
 
 	return obb;
 }
@@ -480,4 +495,11 @@ void PMDModel::render(ID3D11DeviceContext* const context) const {
 		context->DrawIndexed(material.index_count, index_offset, 0);
 		index_offset += material.index_count;
 	}
+}
+
+void PMDModel::update_obb(void) {
+}
+
+const std::vector<OBB>& PMDModel::get_obb(void) const {
+	return this->obb_list;
 }

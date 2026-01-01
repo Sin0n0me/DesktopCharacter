@@ -2,7 +2,7 @@
 #include <d3d11.h>
 #include "SceneCamera.h"
 #include "../../../Application.h"
-#include "../../render_pass/CommonResource.h"
+#include "../../render/CommonResource.h"
 
 SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resource) {
 	SceneCamera scene_camera{};

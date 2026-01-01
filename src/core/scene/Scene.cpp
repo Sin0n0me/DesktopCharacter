@@ -1,6 +1,6 @@
 #include "Scene.h"
 #include <d3d11.h>
-#include "../render_pass/CommonResource.h"
+#include "../render/CommonResource.h"
 
 const SceneCamera& Scene::get_camera(void) const {
 	return this->camera;

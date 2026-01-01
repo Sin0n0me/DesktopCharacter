@@ -2,7 +2,7 @@
 #include "../IRenderPass.h"
 #include <memory>
 #include <wrl/client.h>
-#include "../../object/IObjectRenderer.h"
+#include "../../../object/IObjectRenderer.h"
 
 struct ID3D11BlendState;
 

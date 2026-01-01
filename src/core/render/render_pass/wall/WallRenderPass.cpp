@@ -1,8 +1,8 @@
+#include "../../../object/wall/WallObject.h"
+#include "../../CommonResource.h"
 #include "WallRenderPass.h"
 #include <d3d11.h>
-#include "../CommonResource.h"
 #include <d3dcompiler.h>
-#include "../../object/wall/WallObject.h"
 
 constexpr wchar_t VERTEX_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";
 constexpr wchar_t PIXEL_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";

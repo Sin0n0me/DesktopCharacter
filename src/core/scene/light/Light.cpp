@@ -1,8 +1,6 @@
 #include "Light.h"
 #include <d3d11.h>
-#include "../../render_pass/CommonResource.h"
-#include "../../utility/Utility.h"
-#include "../../../Application.h"
+#include "../../render/CommonResource.h"
 
 Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resource) {
 	Light light{};
@@ -25,14 +23,6 @@ Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<Common
 		light_target,
 		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
 	);
-	/*
-	const DirectX::XMMATRIX light_projection = DirectX::XMMatrixPerspectiveFovLH(
-		DirectX::XMConvertToRadians(60.0f),
-		float(WIDTH) / float(HEIGHT),
-		0.1f,
-		200.0f
-	);
-	*/
 	const DirectX::XMMATRIX light_projection = DirectX::XMMatrixOrthographicLH(
 		100.0f,
 		100.0f,

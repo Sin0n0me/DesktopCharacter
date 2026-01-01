@@ -1,5 +1,5 @@
 #pragma once
-#include "../../constant_buffer/Camera.h"
+#include "../../render/constant_buffer/Camera.h"
 #include <memory>
 
 struct ID3D11Device;

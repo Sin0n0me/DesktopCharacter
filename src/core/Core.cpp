@@ -1,12 +1,17 @@
+#include "../Application.h"
 #include "Core.h"
-#include "render_pass/model/ModelRenderPass.h"
-#include "render_pass/shadow/ShadowRenderPass.h"
-#include "render_pass/wall/WallRenderPass.h"
+#include "render/render_pass/model/ModelRenderPass.h"
+#include "render/render_pass/shadow/ShadowRenderPass.h"
+#include "render/render_pass/wall/WallRenderPass.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
-#include "../Application.h"
+#include <chrono>
 
 decltype(Engine::instance) Engine::instance;
+
+void Engine::update(const int64_t delta_time) {
+	this->models->update(delta_time);
+}
 
 void Engine::render_update(void) {
 	for(auto& render_pass : this->render_pass) {
@@ -15,7 +20,7 @@ void Engine::render_update(void) {
 
 	this->scene->render_update(this->d3d11->context.Get());
 
-	this->models->update(this->d3d11->context.Get());
+	this->models->update_render(this->d3d11->context.Get());
 }
 
 void Engine::render(void) const {
@@ -81,11 +86,13 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 	this->collider = std::make_unique<Collider>();
 
 	// モデル読み込み
-	this->models = std::make_unique<Models>();
+	this->models = std::make_unique<ModelManager>(this->common_resouce);
 	if(!this->models->init()) {
 		return false;
 	}
-	this->models->load_current_model(this->d3d11->device.Get());
+	if(!this->models->load_current_model(this->d3d11->device.Get())) {
+		return false;
+	}
 
 	// シーンの作成
 	this->scene = std::make_unique<Scene>(this->d3d11->device.Get(), this->common_resouce);
@@ -108,6 +115,19 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 		}
 	}
 
+	// フックのセット
+	/*
+	this->hook = SetWinEventHook(
+		EVENT_OBJECT_LOCATIONCHANGE,
+		EVENT_OBJECT_LOCATIONCHANGE,
+		nullptr,
+		WindowEvent::hook_win_event,
+		0,
+		0,
+		WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS
+	);
+	*/
+
 	this->instance.emplace(this);
 
 	return true;
@@ -116,19 +136,26 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 void Engine::run(void) {
 	// main loop
 	MSG msg{};
+	auto start = std::chrono::high_resolution_clock::now();
 	while(msg.message != WM_QUIT) {
 		if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 
+		const auto end = start;
+		const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+		this->update(duration.count());
 		this->render_update();
 		this->render();
+
+		start = std::chrono::high_resolution_clock::now();
 	}
 }
 
 void Engine::uninit(void) {
+	UnhookWinEvent(this->hook);
 	this->instance.reset();
-
 	CoUninitialize();
 }

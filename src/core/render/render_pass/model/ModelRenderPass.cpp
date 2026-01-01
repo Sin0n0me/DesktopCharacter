@@ -1,21 +1,13 @@
-#include <d3dcompiler.h>
-#include <d3d11.h>
+#include "../../../../Application.h"
+#include "../../CommonResource.h"
 #include "ModelRenderPass.h"
-#include "../../../Application.h"
-#include "../CommonResource.h"
-
-constexpr wchar_t VERTEX_SHADER_PATH[] = L"assets/shader/pmd_model.hlsl";
-constexpr wchar_t PIXEL_SHADER_PATH[] = L"assets/shader/pmd_model.hlsl";
+#include <d3d11.h>
 
 ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) : IRenderPass(common_resouce) {
 	this->resource = common_resouce;
 }
 
 bool ModelRenderPass::init(ID3D11Device* const device) {
-	if(!this->make_shaders(device)) {
-		return false;
-	}
-
 	if(!this->make_depth_stencil(device)) {
 		return false;
 	}
@@ -83,120 +75,6 @@ void ModelRenderPass::render(ID3D11DeviceContext* const context) const {
 		1,
 		this->resource->sampler_state.at(Pattern::ShadowPattern).GetAddressOf()
 	);
-}
-
-bool ModelRenderPass::make_shaders(ID3D11Device* const device) {
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
-
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			VERTEX_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"VSMain",
-			"vs_5_0",
-			0, 0,
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
-
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PIXEL_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"PSMain",
-			"ps_5_0",
-			0, 0,
-			ps_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
-
-	{
-		const HRESULT hr = device->CreateVertexShader(
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			nullptr,
-			this->resource->vertex_shaders[Pattern::ModelPattern].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	{
-		const HRESULT hr = device->CreatePixelShader(
-			ps_blob->GetBufferPointer(),
-			ps_blob->GetBufferSize(),
-			nullptr,
-			this->resource->pixel_shaders[Pattern::ModelPattern].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"NORMAL",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				12,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"TEXCOORD",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				24,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			}
-		};
-
-		const HRESULT hr = device->CreateInputLayout(
-			layout,
-			_countof(layout),
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::ModelPattern].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	return true;
 }
 
 // 深度ステンシルの作成

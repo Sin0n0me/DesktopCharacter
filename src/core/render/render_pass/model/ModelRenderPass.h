@@ -21,6 +21,5 @@ public:
 
 private:
 
-	bool make_shaders(ID3D11Device* const device);
 	bool make_depth_stencil(ID3D11Device* const device);
 };

@@ -15,11 +15,9 @@ cbuffer Shadow : register(b2) {
     matrix light_view_proj;
 };
 
-/*
 cbuffer Bones : register(b3) {
-    matrix gBones[128];
+    matrix bone_matrices[256];
 };
-*/
 
 Texture2D model_texture : register(t0);
 Texture2D shadow_texture : register(t1);
@@ -31,6 +29,8 @@ struct VSInput
     float3 position : POSITION;
     float3 normal : NORMAL;
     float2 uv : TEXCOORD;
+    uint2 bones : BONEINDICES;
+    float2 weights : BONEWEIGHTS;
 };
 
 struct PSInput
@@ -43,10 +43,28 @@ struct PSInput
 PSInput VSMain(VSInput input)
 {
     PSInput output;
+    
+    // スキニング
+    const float4 local_pos = float4(input.position, 1.0f);
+    const float3 local_nor = input.normal;
 
-    const float4 wpos = mul(float4(input.position, 1.0f), world);
-    const float4 vpos = mul(wpos, view);
-    output.position = mul(vpos, proj);
+    const float4 skinned_pos = 
+        mul(local_pos, bone_matrices[input.bones.x]) * input.weights.x +
+        mul(local_pos, bone_matrices[input.bones.y]) * input.weights.y;
+
+    const float3 skinned_nor =
+        mul(local_nor, (float3x3)bone_matrices[input.bones.x]) * input.weights.x +
+        mul(local_nor, (float3x3)bone_matrices[input.bones.y]) * input.weights.y;
+
+    //skinned_nor = normalize(skinned_nor);
+
+    
+    // カメラ
+    const float4 world_pos = mul(skinned_pos, world);
+    const float4 view_pos = mul(world_pos, view);
+    const float4 clip_pos = mul(view_pos, proj);
+
+    output.position = clip_pos;    
     output.uv = input.uv;
 
     /*
@@ -62,7 +80,7 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
     const float4 tex = model_texture.Sample(model_sampler, input.uv);
-    const float4 base = tex * diffuse;// + float4(ambient, 1);
+    const float4 base = tex * diffuse;//+ float4(ambient, 1);
 
     /*
     const float depth = input.shadow.z;

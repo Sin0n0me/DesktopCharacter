@@ -1,6 +1,12 @@
 .vs/
 x64/
+Debug/
 
 assets/models/
 
 *.user
+*.obj
+*.pdb
+*.idb
+*.log
+

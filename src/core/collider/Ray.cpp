@@ -1,5 +1,5 @@
 #include "Ray.h"
-#include "../constant_buffer/Camera.h"
+#include "../render/constant_buffer/Camera.h"
 #include "../../Application.h"
 
 Ray Ray::make_ray_from_screen(const float x, const float y, const Camera& camera) {

@@ -3,9 +3,9 @@
 #include "D3D11.h"
 #include "event/mouse/MouseState.h"
 #include "IEngineStarter.h"
-#include "model/Models.h"
-#include "render_pass/CommonResource.h"
-#include "render_pass/IRenderPass.h"
+#include "render/CommonResource.h"
+#include "render/model/ModelManager.h"
+#include "render/render_pass/IRenderPass.h"
 #include "scene/Scene.h"
 #include <memory>
 #include <optional>
@@ -27,8 +27,9 @@ private:
 	static std::optional<Engine* const> instance;
 
 private:
+	HWINEVENTHOOK hook;
 	std::unique_ptr<D3D11> d3d11;
-	std::unique_ptr<Models> models;
+	std::unique_ptr<ModelManager> models;
 	std::unique_ptr<Scene> scene;
 	std::unique_ptr<MouseState> mouse_state;
 	std::unique_ptr<Collider> collider;
@@ -36,6 +37,7 @@ private:
 	std::vector<std::unique_ptr<IRenderPass>> render_pass;
 
 private:
+	void update(const int64_t delta_time);
 	void render_update(void);
 	void render(void) const;
 

@@ -118,7 +118,7 @@ bool IKSolver::solve_ik_bone(const PMDIK& ik, const uint16_t& bone_index, std::u
 	auto& matrix = bone_matrix_map.at(bone_index);
 	if(bone_index == 5 || bone_index == 8) {
 		const DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationAxis(
-			cross * -1.0,
+			cross,
 			angle
 		);
 		const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(quat);

@@ -8,6 +8,8 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <optional>
+#include <algorithm>
+#include <ranges>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
 constexpr wchar_t MOTION_WAVE[] = L"assets/motion/è‚ğU‚é.vmd";
@@ -27,16 +29,13 @@ PMDModel::PMDModel(const std::filesystem::path& path) : Model(path) {
 	this->bones = std::make_unique<Bones>();
 	this->current_motion = MotionState::WaveHand;
 	this->bone_map = std::make_shared<PMDBoneMap>();
+	this->ik_soulver = std::make_shared<IKSolver>(this->bone_map);
 }
 
 void PMDModel::on_clicked(const short obb_index) {
 }
 
 bool PMDModel::init(void) {
-	if(!this->make_motions()) {
-		return false;
-	}
-
 	return true;
 }
 
@@ -55,6 +54,11 @@ bool PMDModel::load_model(ID3D11Device* const device) {
 		return false;
 	}
 
+	//
+	if(!this->make_motions()) {
+		return false;
+	}
+
 	// ƒ{[ƒ“–¼‚Ì‰ğŒˆ
 	if(!this->motion_map.at(this->current_motion).resolve_bones(this->bone_name_map)) {
 		return false;
@@ -64,7 +68,6 @@ bool PMDModel::load_model(ID3D11Device* const device) {
 }
 
 void PMDModel::unload_model() {
-	this->iks.clear();
 	this->morphs.clear();
 	this->materials.clear();
 }
@@ -236,51 +239,71 @@ bool PMDModel::load_pmd_header(BinaryReader& binary_reader) {
 
 bool PMDModel::load_pmd_vertices(BinaryReader& binary_reader) {
 	uint32_t vertex_count{};
-	binary_reader.read_to(&vertex_count);
+	if(!binary_reader.read_to(&vertex_count)) {
+		return false;
+	}
 
 	this->temp->vertices.resize(vertex_count);
-	binary_reader.read_to_vec(this->temp->vertices, vertex_count);
+	if(!binary_reader.read_to_vec(this->temp->vertices, vertex_count)) {
+		return false;
+	}
 
 	// À•WŒn‚ªˆá‚¤‚Ì‚ÅDirectX‚Ì¶èŒn‚É•ÏX
+	/*
 	for(auto& vertex : this->temp->vertices) {
 		vertex.position[2] *= -1.0f;
 		vertex.normal[2] *= -1.0f;
 	}
+	*/
 
 	return true;
 }
 
 bool PMDModel::load_pmd_indices(BinaryReader& binary_reader) {
 	uint32_t index_count{};
-	binary_reader.read_to(&index_count);
+	if(!binary_reader.read_to(&index_count)) {
+		return false;
+	}
 
 	this->temp->indices.resize(index_count);
-	binary_reader.read_to_vec(this->temp->indices, index_count);
+	if(!binary_reader.read_to_vec(this->temp->indices, index_count)) {
+		return false;
+	}
 
 	// À•WŒn‚ªˆá‚¤‚Ì‚ÅDirectX‚Ì¶èŒn‚É•ÏX
+	/*
 	for(size_t i = 0; i < this->temp->indices.size(); i += 3) {
 		std::swap(this->temp->indices[i + 1], this->temp->indices[i + 2]);
 	}
+	*/
 
 	return true;
 }
 
 bool PMDModel::load_pmd_materials(BinaryReader& binary_reader) {
 	uint32_t material_count{};
-	binary_reader.read_to(&material_count);
+	if(!binary_reader.read_to(&material_count)) {
+		return false;
+	}
 
 	this->materials.resize(material_count);
-	binary_reader.read_to_vec(this->materials, material_count);
+	if(!binary_reader.read_to_vec(this->materials, material_count)) {
+		return false;
+	}
 
 	return true;
 }
 
 bool PMDModel::load_pmd_bones(BinaryReader& binary_reader) {
 	uint16_t bone_count{};
-	binary_reader.read_to(&bone_count);
+	if(!binary_reader.read_to(&bone_count)) {
+		return false;
+	}
 
 	std::vector<PMDBone> raw;
-	binary_reader.read_to_vec(raw, bone_count);
+	if(!binary_reader.read_to_vec(raw, bone_count)) {
+		return false;
+	}
 
 	for(int index = 0; index < bone_count; ++index) {
 		PMDBoneData bone{};
@@ -292,23 +315,37 @@ bool PMDModel::load_pmd_bones(BinaryReader& binary_reader) {
 			raw[index].position[1],
 			raw[index].position[2]
 		};
-		bone.local = DirectX::XMMatrixTranslation(
-			bone.position.x,
-			bone.position.y,
-			bone.position.z
-		);
+
+		if(bone.parent < 0) {
+			bone.local = DirectX::XMMatrixTranslation(
+				bone.position.x,
+				bone.position.y,
+				bone.position.z
+			);
+		} else {
+			const auto& parent = this->bone_map->at(bone.parent);
+			bone.local = DirectX::XMMatrixTranslation(
+				bone.position.x - parent.position.x,
+				bone.position.y - parent.position.y,
+				bone.position.z - parent.position.z
+			);
+		}
 
 		this->bone_name_map.emplace(raw[index].name, index);
 		this->bone_map->emplace(index, bone);
 	}
 
-	// ƒ[ƒJƒ‹‚©‚çƒOƒ[ƒoƒ‹‚Ö‚Ì•ÏŠ·
-	for(auto& pair : *this->bone_map) {
-		auto& bone = pair.second;
-		if(bone.parent >= 0) {
-			bone.global = bone.local * this->bone_map->at(bone.parent).global;
-		} else {
+	// sort
+	const auto& keys_view = std::views::keys(*this->bone_map);
+	auto sorted_vec = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
+	std::sort(sorted_vec.begin(), sorted_vec.end());
+
+	for(auto& key : sorted_vec) {
+		auto& bone = this->bone_map->at(key);
+		if(bone.parent < 0) {
 			bone.global = bone.local;
+		} else {
+			bone.global = bone.local * this->bone_map->at(bone.parent).global;
 		}
 
 		// ‹t•ÏŠ·
@@ -320,22 +357,31 @@ bool PMDModel::load_pmd_bones(BinaryReader& binary_reader) {
 
 bool PMDModel::load_pmd_iks(BinaryReader& binary_reader) {
 	uint16_t ik_count{};
-	binary_reader.read_to(&ik_count);
+	if(!binary_reader.read_to(&ik_count)) {
+		return false;
+	}
 
-	this->iks.resize(ik_count);
+	std::vector<PMDIK> iks(ik_count);
 	for(int i = 0; i < ik_count; i++) {
 		PMDIK raw;
 		// ‰Â•Ï•”•ª‚Å‚ ‚échain‚Ì•”•ª‚¾‚¯‚ÍŒã‚Å“Ç‚İ‚Ş‚æ‚¤‚É
 		// æ“ª11Byte‚¾‚¯“Ç‚İ‚İ
-		binary_reader.read((char*)&raw, sizeof(PMDIK) - sizeof(PMDIK::chain));
-		iks[i].ik_bone = raw.ik_bone;
-		iks[i].target_bone = raw.target_bone;
-		iks[i].iterations = raw.iterations;
-		iks[i].limit = raw.limit;
+		if(!binary_reader.read(&raw, sizeof(PMDIK) - sizeof(PMDIK::chain))) {
+			return false;
+		}
+		auto& ik = iks[i];
+		ik.ik_bone = raw.ik_bone;
+		ik.target_bone = raw.target_bone;
+		ik.iterations = raw.iterations;
+		ik.limit = raw.limit;
 
 		// ‰Â•Ï•”•ª
-		binary_reader.read_to_vec(iks[i].chain, raw.chain_length);
+		if(!binary_reader.read_to_vec(ik.chain, raw.chain_length)) {
+			return false;
+		}
 	}
+
+	this->ik_soulver->set_pmd_ik(std::move(iks));
 
 	return true;
 }
@@ -549,7 +595,7 @@ bool PMDModel::make_constant_buffer_for_bones(ID3D11Device* const device) {
 bool PMDModel::make_motions(void) {
 	const auto& iter = this->motion_map.emplace(
 		MotionState::WaveHand,
-		VMDMotion(this->bones, this->bone_map)
+		VMDMotion(this->bones, this->bone_map, this->ik_soulver)
 	);
 
 	if(!iter.second) {

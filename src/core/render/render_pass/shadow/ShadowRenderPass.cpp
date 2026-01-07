@@ -1,7 +1,7 @@
+#include "../../CommonResource.h"
 #include "ShadowRenderPass.h"
-#include "../CommonResource.h"
-#include <d3dcompiler.h>
 #include <d3d11.h>
+#include <d3dcompiler.h>
 
 constexpr wchar_t PATH_VERTEX_SHADER_SHADOW[] = L"assets/shader/vs_shadow.hlsl";
 constexpr UINT SHADOW_MAP_SIZE = 2048;

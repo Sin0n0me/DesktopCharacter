@@ -1,20 +1,23 @@
 #include "../../../utility/BinaryReader.h"
 #include "../../constant_buffer/Bones.h"
-#include "../../../utility/Utility.h"
+#include "../../model/ik/IKSolver.h"
 #include "VMDFileStruct.h"
 #include "VMDMotion.h"
 #include <algorithm>
-#include <filesystem>
 #include <ranges>
+#include <filesystem>
 
-constexpr uint32_t VMD_FPS = 30;
-constexpr uint32_t FRAME_TIME = 1'000'000 / VMD_FPS; // 1フレームの時間
-
-VMDMotion::VMDMotion(const std::shared_ptr<Bones>& bones, const std::shared_ptr<const PMDBoneMap>& bone_map) {
+VMDMotion::VMDMotion(
+	const std::shared_ptr<Bones>& bones,
+	const std::shared_ptr<const PMDBoneMap>& bone_map,
+	const std::shared_ptr<const IKSolver>& ik_solver
+) {
 	this->bones = bones;
 	this->bone_map = bone_map;
 	this->elapsed_time = 0;
 	this->current_frame = 0;
+	this->last_frame = 0;
+	this->ik = std::make_unique<IKKeyFrameManager>(ik_solver);
 }
 
 bool VMDMotion::load_vmd_header(BinaryReader& binary_reader) {
@@ -33,23 +36,12 @@ bool VMDMotion::load_vmd_header(BinaryReader& binary_reader) {
 
 bool VMDMotion::load_vmd_bone_key_frame(BinaryReader& binary_reader) {
 	uint32_t count = 0;
-	binary_reader.read_to(&count);
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
 
-	binary_reader.read_to_vec(this->bone_key_frame_list, count);
-
-	// 正規化
-	for(auto& bone_key_frame : this->bone_key_frame_list) {
-		const auto normalize_1uaternion = DirectX::XMQuaternionNormalize(DirectX::XMVectorSet(
-			bone_key_frame.rotation[0],
-			bone_key_frame.rotation[1],
-			bone_key_frame.rotation[2],
-			bone_key_frame.rotation[3]
-		));
-
-		bone_key_frame.rotation[0] = normalize_1uaternion.m128_f32[0];
-		bone_key_frame.rotation[1] = normalize_1uaternion.m128_f32[1];
-		bone_key_frame.rotation[2] = normalize_1uaternion.m128_f32[2];
-		bone_key_frame.rotation[3] = normalize_1uaternion.m128_f32[3];
+	if(!binary_reader.read_to_vec(this->bone_key_frame_list, count)) {
+		return false;
 	}
 
 	return true;
@@ -57,31 +49,126 @@ bool VMDMotion::load_vmd_bone_key_frame(BinaryReader& binary_reader) {
 
 bool VMDMotion::load_vmd_morph_key_frame(BinaryReader& binary_reader) {
 	uint32_t count = 0;
-	binary_reader.read_to(&count);
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
 
-	this->morph_key_frame.resize(count);
-	binary_reader.read_to_vec(this->morph_key_frame, count);
+	if(!binary_reader.read_to_vec(this->morph_key_frame, count)) {
+		return false;
+	}
 
 	return true;
 }
 
-bool VMDMotion::resolve_bones(const std::unordered_map<std::string, uint16_t>& bone_name_map) {
-	for(int index = 0; index < this->bone_key_frame_list.size(); ++index) {
-		const auto& bone_key_frame = this->bone_key_frame_list[index];
+bool VMDMotion::load_vmd_camera(BinaryReader& binary_reader) {
+	uint32_t count = 0;
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
+
+	// 今のところ使用しない
+	std::vector<VMDCameraKeyframe> camera;
+	if(!binary_reader.read_to_vec(camera, count)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool VMDMotion::load_vmd_light(BinaryReader& binary_reader) {
+	uint32_t count = 0;
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
+
+	// 今のところ使用しない
+	std::vector<VMDLight> camera;
+	if(!binary_reader.read_to_vec(camera, count)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool VMDMotion::load_vmd_shadow(BinaryReader& binary_reader) {
+	uint32_t count = 0;
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
+
+	// 今のところ使用しない
+	std::vector<VMDShadow> camera;
+	if(!binary_reader.read_to_vec(camera, count)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool VMDMotion::load_vmd_ik(BinaryReader& binary_reader) {
+	uint32_t count = 0;
+	if(!binary_reader.read_to(&count)) {
+		return false;
+	}
+
+	std::vector<VMDIK> iks(count);
+	for(decltype(count) i = 0; i < count; i++) {
+		auto& ik = iks[i];
+		//
+		const bool result = binary_reader.read(
+			&ik,
+			sizeof(VMDIK) - sizeof(VMDIK::ik_infos)
+		);
+		if(!result) {
+			return false;
+		}
+
+		if(!binary_reader.read_to_vec(ik.ik_infos, ik.count)) {
+			return false;
+		}
+	}
+	this->ik->set_vmd_iks(std::move(iks));
+
+	return true;
+}
+
+bool VMDMotion::resolve_bones(const std::unordered_map<std::string, BoneIndex>& bone_name_map) {
+	std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
+
+	for(const auto& bone_key_frame : this->bone_key_frame_list) {
 		const auto& iter = bone_name_map.find(bone_key_frame.bone_name);
 		if(iter == bone_name_map.end()) {
+			// TODO: log
 			continue;
 		}
 		const auto& bone_index = iter->second;
-
-		this->resolved_bone_key_frame.emplace(index, bone_index);
-		this->bone_key_frame_map[index].emplace_back(bone_key_frame.frame_index);
+		temp_map[bone_index].emplace_back(BoneKeyFrame::make(bone_key_frame));
 	}
 
 	// 変換
-	const auto& views_keys = std::views::keys(this->bone_key_frame_map);
-	this->key_frame_list = std::vector<uint32_t>(views_keys.begin(), views_keys.end());
-	std::ranges::sort(this->key_frame_list); // 昇順にソート
+	for(auto& pair : temp_map) {
+		const auto& bone_index = pair.first;
+
+		this->bone_key_frame_map.emplace(
+			bone_index,
+			BoneKeyFrameManager::make(std::move(pair.second))
+		);
+
+		// 最終キーフレームを求める
+		const auto& opt_last = this->bone_key_frame_map
+			.at(bone_index)
+			.get_last_key_frame();
+		if(opt_last.has_value()) {
+			const auto& last = opt_last.value().frame_index;
+			this->last_frame = this->last_frame < last ? last : this->last_frame;
+		}
+	}
+
+	const auto& keys_view = std::views::keys(temp_map);
+	this->sorted_bones = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
+	std::sort(this->sorted_bones.begin(), this->sorted_bones.end());
+
+	this->ik->resolve_bones(bone_name_map);
 
 	return true;
 }
@@ -113,7 +200,23 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
 	}
 
 	// カメラの読み込み
-	{
+	if(!this->load_vmd_camera(binary_reader)) {
+		return false;
+	}
+
+	// ライトの読み込み
+	if(!this->load_vmd_light(binary_reader)) {
+		return false;
+	}
+
+	// 影の読み込み
+	if(!this->load_vmd_shadow(binary_reader)) {
+		return false;
+	}
+
+	// IKの読み込み
+	if(!this->load_vmd_ik(binary_reader)) {
+		return false;
 	}
 
 	return true;
@@ -123,67 +226,61 @@ void VMDMotion::update_motion(const int64_t delta_time) {
 	this->elapsed_time += delta_time;
 
 	// 経過時間のリセット
-	if(this->elapsed_time > FRAME_TIME) {
+	if(FRAME_TIME < this->elapsed_time) {
 		this->current_frame += 1;
 		this->elapsed_time = 0;
 	}
 
-	const auto frame = this->key_frame_list[this->frame_index];
-	if(this->current_frame > frame) {
-		// 連続で現在のフレームが大きい場合は一巡しているのでリセット
-		if(this->current_frame > this->key_frame_list[this->frame_index]) {
-			this->current_frame = 0;
-			this->frame_index = 0;
+	// フレームのリセット
+	if(this->last_frame < this->current_frame) {
+		this->current_frame = 0;
+	}
+
+	// TODO: to GPU (ローカル行列作成以外)
+
+	// ローカル行列作成
+	for(const auto& bone_index : this->sorted_bones) {
+		auto& matrix = this->bone_matrix_map[bone_index];
+		auto& key_frame_list = this->bone_key_frame_map.at(bone_index);
+		key_frame_list.set_frame(this->current_frame);
+
+		const auto& opt_previous_key_frame = key_frame_list.get_previous_key_frame();
+		const auto& opt_bone_key_frame = key_frame_list.get_current_key_frame();
+		const auto& bone_key_frame = opt_bone_key_frame.value();
+		const auto& bind_bone = this->bone_map->at(bone_index);
+
+		// ローカル行列作成
+		const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
+			key_frame_list.get_translate(this->elapsed_time)
+		);
+		const DirectX::XMMATRIX translate = bind_bone.local * anim_translate;
+		const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(
+			key_frame_list.get_rotate(this->elapsed_time)
+		);
+
+		matrix.local = rotate * translate;
+	}
+
+	// グローバル行列作成
+	for(const auto& bone_index : this->sorted_bones) {
+		auto& matrix = this->bone_matrix_map.at(bone_index);
+		const auto& bind_bone = this->bone_map->at(bone_index);
+		const int parent_index = bind_bone.parent;
+		if(parent_index < 0) {
+			matrix.global = matrix.local;
+		} else {
+			const auto& parent_global = this->bone_matrix_map.at(parent_index).global;
+			matrix.global = matrix.local * parent_global;
 		}
 	}
 
-	struct BoneDelta {
-		DirectX::XMVECTOR translation;
-		DirectX::XMVECTOR rotation;
-	};
-	BoneDelta result{};
+	// IK
+	this->ik->apply_ik(this->bone_matrix_map, this->current_frame);
 
-	for(const auto& pair : this->bone_key_frame_map) {
-		const auto& bone_index = pair.first;
-		const auto& key_frame_list = pair.second;
-
-		for(const auto& index : this->bone_key_frame_map.at(frame)) {
-			const auto& bone_index = this->resolved_bone_key_frame.at(index);
-			const auto& bone_key_frame = this->bone_key_frame_list.at(bone_index);
-			const auto& base_bone = this->bone_map->at(bone_index);
-
-			// 線形補完
-			result.translation = DirectX::XMVectorSet(
-				bone_key_frame.translation[0],
-				bone_key_frame.translation[1],
-				bone_key_frame.translation[2],
-				0.0f
-			);
-			result.rotation = DirectX::XMVectorSet(
-				bone_key_frame.rotation[0],
-				bone_key_frame.rotation[1],
-				bone_key_frame.rotation[2],
-				bone_key_frame.rotation[3]
-			);
-
-			// ローカル行列作成
-			const DirectX::XMVECTOR bind_pos = DirectX::XMLoadFloat3(&base_bone.position);
-			const DirectX::XMVECTOR final_pos = add_float(bind_pos, result.translation);
-			const DirectX::XMMATRIX translate = DirectX::XMMatrixTranslationFromVector(final_pos);
-			const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(result.rotation);
-			const DirectX::XMMATRIX local = translate * rotate;
-
-			// グローバル
-			DirectX::XMMATRIX global{};
-			const int parent = base_bone.parent;
-			if(parent < 0) {
-				global = local;
-			} else {
-				global = this->bone_map->at(parent).global * local;
-			}
-
-			//
-			this->bones->bone_matrices[bone_index] = global * base_bone.inverse_bind;
-		}
+	// スキニング用の定数バッファ結果を格納
+	for(const auto& bone_index : this->sorted_bones) {
+		const auto& matrix = this->bone_matrix_map.at(bone_index);
+		const auto& inverse = this->bone_map->at(bone_index).inverse_bind;
+		this->bones->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
 	}
 }

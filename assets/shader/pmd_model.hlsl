@@ -48,13 +48,13 @@ PSInput VSMain(VSInput input)
     const float4 local_pos = float4(input.position, 1.0f);
     const float3 local_nor = input.normal;
 
-    const float4 skinned_pos = 
-        mul(local_pos, bone_matrices[input.bones.x]) * input.weights.x +
-        mul(local_pos, bone_matrices[input.bones.y]) * input.weights.y;
+    const float4 bone_pos_x = mul(local_pos, bone_matrices[input.bones.x]) * input.weights.x;
+    const float4 bone_pos_y = mul(local_pos, bone_matrices[input.bones.y]) * input.weights.y;
+    const float4 skinned_pos = bone_pos_x + bone_pos_y;
 
-    const float3 skinned_nor =
-        mul(local_nor, (float3x3)bone_matrices[input.bones.x]) * input.weights.x +
-        mul(local_nor, (float3x3)bone_matrices[input.bones.y]) * input.weights.y;
+    const float3 nor_x = mul(local_nor, (float3x3)bone_matrices[input.bones.x]) * input.weights.x;
+    const float3 nor_y = mul(local_nor, (float3x3)bone_matrices[input.bones.y]) * input.weights.y;
+    const float3 skinned_nor = nor_x + nor_y;
 
     //skinned_nor = normalize(skinned_nor);
 

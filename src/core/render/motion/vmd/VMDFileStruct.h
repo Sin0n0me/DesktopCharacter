@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 
 #pragma pack(push, 1)
 
@@ -12,16 +13,16 @@ struct VMDHeader {
 };
 
 struct VMDBoneKeyFrame {
-	char bone_name[15];			//
-	uint32_t frame_index;		//
-	float translation[3];		//
-	float rotation[4];			//
-	uint8_t interpolation[64];	//
+	char bone_name[15];				//
+	uint32_t frame;					//
+	float translation[3];			//
+	float rotation[4];				//
+	uint8_t interpolation[64];		//
 };
 
 struct VMDMorphKeyframe {
-	char morph_name[15];			//
-	uint32_t frame_index;
+	char morph_name[15];		//
+	uint32_t frame;
 	float weight;
 };
 
@@ -33,6 +34,31 @@ struct VMDCameraKeyframe {
 	uint8_t interpolation[24];
 	uint32_t view_angle;
 	uint8_t perspective;
+};
+
+struct VMDLight {
+	uint32_t frame;
+	float color[3];
+	float position[3];
+};
+
+struct VMDShadow {
+	uint32_t frame;
+	uint8_t shadow_type;
+	float distance;
+};
+
+struct VMDIKInfo {
+	char name[20];
+	uint8_t flag;  // IK‚Ìon/off, 0:OFF, 1:ON
+};
+
+// ‚±‚ê‚¾‚¯‰Â•Ï—v‘f‚ðŠÜ‚Þ
+struct VMDIK {
+	uint32_t frame;
+	uint8_t show_flag; //
+	uint32_t count;
+	std::vector<VMDIKInfo> ik_infos;
 };
 
 #pragma pack(pop)

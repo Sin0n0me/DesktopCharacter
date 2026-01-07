@@ -9,8 +9,9 @@ SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shar
 
 	scene_camera.camera.world = DirectX::XMMatrixIdentity();
 
-	const float eye_position = 10.0f;
-	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0f, eye_position + 7.5f, 25.0f, 1.0f);
+	const float eye_position = 11.0f;
+	const float distance = 25.0f;
+	const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0, eye_position + 7.5f, -distance, 1.0f);
 	const DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, eye_position, 0.0f, 1.0f);
 	const DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 

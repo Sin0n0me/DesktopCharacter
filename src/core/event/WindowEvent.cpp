@@ -1,8 +1,38 @@
 #include "WindowEvent.h"
 #include "../../Application.h"
 
-decltype(WindowEvent::target_hwnd) WindowEvent::target_hwnd;
-decltype(WindowEvent::self_hwnd) WindowEvent::self_hwnd;
+void forward_message_to_underlying_window(const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
+	// 下のウィンドウのクライアント座標へ変換
+	POINT pt{};
+	pt.x = LOWORD(lparam);
+	pt.y = HIWORD(lparam);
+
+	const HWND below = [&hwnd]() -> HWND {
+		HWND below = GetWindow(hwnd, GW_HWNDNEXT);
+		for(; below != NULL; below = GetWindow(below, GW_HWNDNEXT)) {
+			if(IsWindowVisible(below) == FALSE || GetWindow(below, GW_OWNER) != NULL) {
+				continue;
+			}
+
+			char title[256];
+			GetWindowTextA(below, title, sizeof(title));
+			if(strlen(title) > 0) {
+				break;
+			}
+		}
+
+		return below == NULL ? GetDesktopWindow() : below;
+		}();
+	if(!below || below == hwnd) {
+		return;
+	}
+
+	ClientToScreen(hwnd, &pt);
+	ScreenToClient(below, &pt);
+
+	const LPARAM new_lparam = MAKELPARAM(pt.x, pt.y);
+	SendMessage(below, message, wparam, new_lparam);
+}
 
 bool WindowEvent::hit_model(const Engine* instance, const POINT& point) {
 	const Ray ray = Ray::make_ray_from_screen(
@@ -21,72 +51,50 @@ bool WindowEvent::hit_model(const Engine* instance, const POINT& point) {
 	return false;
 }
 
-LRESULT WindowEvent::forward_message_to_underlying_window(const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
-	// 一時的に透過
-	/*
-	SetWindowLong(
-		hwnd,
-		GWL_EXSTYLE,
-		GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT
+LRESULT WindowEvent::on_input(const Engine* instance, const HWND hwnd, const WPARAM wparam, const LPARAM lparam) {
+	UINT size = 0;
+	GetRawInputData(
+		reinterpret_cast<HRAWINPUT>(lparam),
+		RID_INPUT,
+		nullptr,
+		&size,
+		sizeof(RAWINPUTHEADER)
 	);
-	*/
 
-	// 下のウィンドウを取得
-	/*
-	*/
-	const HWND below = [&hwnd]() -> HWND {
-		HWND below = GetWindow(hwnd, GW_HWNDNEXT);
-		for(; below != NULL; below = GetWindow(below, GW_HWNDNEXT)) {
-			if(IsWindowVisible(below) == FALSE || GetWindow(below, GW_OWNER) != NULL) {
-				continue;
-			}
+	std::vector<BYTE> buffer(size);
 
-			char title[256];
-			GetWindowTextA(below, title, sizeof(title));
-			if(strlen(title) > 0) {
-				break;
-			}
-		}
-
-		return below == NULL ? GetDesktopWindow() : below;
-		}();
-
-	POINT pt{};
-	pt.x = LOWORD(lparam);
-	pt.y = HIWORD(lparam);
-
-	//const HWND below = WindowFromPoint(pt);
-	if(!below || below == hwnd) {
-		return DefWindowProc(hwnd, message, wparam, lparam);
+	if(GetRawInputData(
+		reinterpret_cast<HRAWINPUT>(lparam),
+		RID_INPUT,
+		buffer.data(),
+		&size,
+		sizeof(RAWINPUTHEADER)
+	) != size) {
+		return 0;
 	}
 
-	// 下のウィンドウのクライアント座標へ変換
+	const RAWINPUT* raw = reinterpret_cast<const RAWINPUT*>(buffer.data());
 
-	ClientToScreen(hwnd, &pt);
-	ScreenToClient(below, &pt);
-	const LPARAM new_lparam = MAKELPARAM(pt.x, pt.y);
+	if(raw->header.dwType == RIM_TYPEMOUSE) {
+		const RAWMOUSE& mouse = raw->data.mouse;
 
-	PostMessage(below, message, wparam, new_lparam);
+		// 相対移動量
+		LONG dx = mouse.lLastX;
+		LONG dy = mouse.lLastY;
 
-	// 元に戻す
-	/*
-	SetWindowLong(
-		hwnd,
-		GWL_EXSTYLE,
-		GetWindowLong(hwnd, GWL_EXSTYLE) & ~WS_EX_TRANSPARENT
-	);
-	*/
+		// ボタン状態
+		USHORT flags = mouse.usButtonFlags;
 
-	/*
-	const HWND below2 = WindowFromPoint(pt);
-	LONG oldStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-	SetWindowLong(hwnd, GWL_EXSTYLE, oldStyle | WS_EX_TRANSPARENT | WS_EX_LAYERED);
-	SetWindowLong(hwnd, GWL_EXSTYLE, oldStyle);
-	*/
+		// ホイール
+		if(flags & RI_MOUSE_WHEEL) {
+			SHORT wheel = static_cast<SHORT>(mouse.usButtonData);
+			// wheel は WHEEL_DELTA 単位
+		}
 
-	//return HTTRANSPARENT;
-	//return result;
-	return HTNOWHERE;
+		// ここで入力を処理
+	}
+
+	return 0;
 }
 
 LRESULT WindowEvent::on_mouse_move(const Engine* instance, const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
@@ -95,7 +103,8 @@ LRESULT WindowEvent::on_mouse_move(const Engine* instance, const HWND hwnd, cons
 	pt.y = HIWORD(lparam);	// lParamの上位16ビットはマウスカーソルのy座標
 
 	if(!WindowEvent::hit_model(instance, pt)) {
-		return WindowEvent::forward_message_to_underlying_window(hwnd, message, wparam, lparam);
+		return HTNOWHERE;
+		//return WindowEvent::forward_message_to_underlying_window(hwnd, message, wparam, lparam);
 	}
 
 	if(instance->mouse_state->is_dragging) {
@@ -132,7 +141,7 @@ LRESULT WindowEvent::on_mouse_left_button_down(const Engine* instance, const HWN
 	pt.x = LOWORD(lparam);	// lParamの下位16ビットはマウスカーソルのx座標
 	pt.y = HIWORD(lparam);	// lParamの上位16ビットはマウスカーソルのy座標
 	if(!WindowEvent::hit_model(instance, pt)) {
-		return WindowEvent::forward_message_to_underlying_window(hwnd, message, wparam, lparam);
+		return 0;
 	}
 
 	instance->mouse_state->is_dragging = true;
@@ -147,8 +156,8 @@ LRESULT WindowEvent::on_mouse_right_button_down(const Engine* instance, const HW
 	POINT pt{};
 	pt.x = LOWORD(lparam);	// lParamの下位16ビットはマウスカーソルのx座標
 	pt.y = HIWORD(lparam);	// lParamの上位16ビットはマウスカーソルのy座標
-	if(!WindowEvent::hit_model(instance, pt)) {
-		return WindowEvent::forward_message_to_underlying_window(hwnd, message, wparam, lparam);
+	if(WindowEvent::hit_model(instance, pt)) {
+		return 0;
 	}
 
 	return DefWindowProc(hwnd, message, wparam, lparam);
@@ -159,41 +168,22 @@ LRESULT WindowEvent::on_mouse_wheel(const Engine* instance, const HWND hwnd, con
 }
 
 LRESULT WindowEvent::on_hit_test(const Engine* instance, const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
-	/*
-	*/
 	POINT pt{};
 	pt.x = LOWORD(lparam);	// lParamの下位16ビットはマウスカーソルのx座標
 	pt.y = HIWORD(lparam);	// lParamの上位16ビットはマウスカーソルのy座標
+	ScreenToClient(hwnd, &pt);
 
+	if(WindowEvent::hit_model(instance, pt)) {
+		return HTCLIENT;
+	}
+
+	//forward_message_to_underlying_window(hwnd, message, wparam, lparam);
+
+	//DefWindowProc(hwnd, message, wparam, lparam);
 	return HTTRANSPARENT;
-	if(!WindowEvent::hit_model(instance, pt)) {
-		//return WindowEvent::forward_message_to_underlying_window(hwnd, message, wparam, lparam);
-	}
-
-	return DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-void WindowEvent::snap_to_top_edge(void) {
-	RECT rc;
-	if(!GetWindowRect(WindowEvent::target_hwnd, &rc)) {
-		return;
-	}
-
-	const int x = rc.left;           // 左揃え
-	const int y = rc.top - HEIGHT;   // 上辺にスナップ
-
-	SetWindowPos(
-		WindowEvent::self_hwnd,
-		nullptr,
-		x,
-		y,
-		WIDTH,
-		HEIGHT,
-		SWP_NOZORDER | SWP_NOACTIVATE
-	);
-}
-
-LRESULT WindowEvent::wnd_proc(const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
+LRESULT WindowEvent::input_wnd_proc(const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
 	if(!Engine::instance.has_value()) {
 		if(message == WM_DESTROY) {
 			PostQuitMessage(0);
@@ -204,8 +194,7 @@ LRESULT WindowEvent::wnd_proc(const HWND hwnd, const UINT message, const WPARAM 
 	const Engine* instance = Engine::instance.value();
 
 	switch(message) {
-	case WM_CREATE:
-
+	case WM_INPUT:
 	case WM_MOUSEMOVE:
 		return WindowEvent::on_mouse_move(instance, hwnd, message, wparam, lparam);
 	case WM_RBUTTONDOWN:
@@ -222,8 +211,6 @@ LRESULT WindowEvent::wnd_proc(const HWND hwnd, const UINT message, const WPARAM 
 		return WindowEvent::on_hit_test(instance, hwnd, message, wparam, lparam);
 	case WM_ERASEBKGND:
 		return TRUE; // DWMに任せる(背景のちらつき防止)
-	case WM_MOUSEACTIVATE:
-		return MA_NOACTIVATE;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -234,18 +221,25 @@ LRESULT WindowEvent::wnd_proc(const HWND hwnd, const UINT message, const WPARAM 
 	return DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-void WindowEvent::hook_win_event(const HWINEVENTHOOK, const DWORD event, const HWND hwnd, const LONG idObject, const LONG, const DWORD, const DWORD) {
-	if(event != EVENT_OBJECT_LOCATIONCHANGE) {
-		return;
+LRESULT WindowEvent::render_wnd_proc(const HWND hwnd, const UINT message, const WPARAM wparam, const LPARAM lparam) {
+	if(!Engine::instance.has_value()) {
+		if(message == WM_DESTROY) {
+			PostQuitMessage(0);
+			return 0;
+		}
+		return DefWindowProc(hwnd, message, wparam, lparam);;
+	}
+	const Engine* instance = Engine::instance.value();
+
+	switch(message) {
+	case WM_ERASEBKGND:
+		return TRUE; // DWMに任せる(背景のちらつき防止)
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	default:
+		break;
 	}
 
-	if(idObject != OBJID_WINDOW) {
-		return;
-	}
-
-	if(hwnd != WindowEvent::target_hwnd) {
-		return;
-	}
-
-	WindowEvent::snap_to_top_edge();
+	return DefWindowProc(hwnd, message, wparam, lparam);
 }

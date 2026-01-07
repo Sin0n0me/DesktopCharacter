@@ -3,8 +3,8 @@
 #include <DirectXMath.h>
 
 constexpr float WALL_SIZE = 20.0f;
-constexpr float FRONT_DEPTH = -1.0f;
-constexpr float DEPTH = -2.0f; // ‰œs(°–Ê)
+constexpr float FRONT_DEPTH = 1.0f;
+constexpr float DEPTH = 2.0f; // ‰œs(°–Ê)
 constexpr float OFFSET_Y = 0.0f;
 
 struct ShadowReceiverVertex {
@@ -55,8 +55,8 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 		{{WALL_SIZE / 2.0f, 0.0f, DEPTH}},
 	};
 	constexpr uint32_t INDICES[] = {
-		0, 2, 1,
-		0, 3, 2
+		0, 1, 2,
+		0, 2, 3,
 	};
 
 	this->wall_index_count = sizeof(INDICES) / sizeof(uint32_t);
@@ -121,12 +121,12 @@ bool WallObject::make_mesh_chair(ID3D11Device* const device) {
 	};
 
 	constexpr uint32_t INDICES[] = {
-		0, 2, 1,
-		0, 3, 2,
-		4, 6, 5,
-		4, 7, 6,
-		8, 10, 9,
-		8, 11, 10,
+		0, 1, 2,
+		0, 2, 3,
+		4, 5, 6,
+		4, 6, 7,
+		8, 9, 10,
+		8, 10, 11,
 	};
 
 	this->chair_index_count = sizeof(INDICES) / sizeof(uint32_t);

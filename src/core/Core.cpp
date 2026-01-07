@@ -32,6 +32,11 @@ void Engine::render(void) const {
 	view_port.MinDepth = 0.0f;
 	view_port.MaxDepth = 1.0f;
 
+	this->d3d11->context->ClearRenderTargetView(
+		this->d3d11->render_target_view.Get(),
+		CLEAR_COLOR
+	);
+
 	for(const auto& render_pass : this->render_pass) {
 		this->d3d11->context->RSSetViewports(1, &view_port);
 		this->d3d11->context->RSSetState(this->d3d11->rasterizer_cull_back.Get());
@@ -143,14 +148,14 @@ void Engine::run(void) {
 			DispatchMessage(&msg);
 		}
 
-		const auto end = start;
+		const auto end = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
 		this->update(duration.count());
 		this->render_update();
 		this->render();
 
-		start = std::chrono::high_resolution_clock::now();
+		start = end;
 	}
 }
 

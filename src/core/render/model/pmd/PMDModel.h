@@ -4,6 +4,7 @@
 #include "../../motion/MotionState.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../texrure/Texture.h"
+#include "../ik/IKSolver.h"
 #include "../Model.h"
 #include "PMDFileStruct.h"
 #include <string>
@@ -24,14 +25,15 @@ class PMDModel : public Model {
 private:
 	struct TempBuffer {
 		std::vector<PMDVertex> vertices;
-		std::vector<uint16_t> indices;
+		std::vector<BoneIndex> indices;
 	};
 
 private:
 	std::unique_ptr<TempBuffer> temp;
 	std::vector<PMDMaterial> materials;
-	std::vector<PMDIK> iks;
 	std::vector<PMDMorph> morphs;
+
+	std::shared_ptr<IKSolver> ik_soulver;
 	std::shared_ptr<Bones> bones; // 更新用
 	std::shared_ptr<PMDBoneMap> bone_map; // 参照用
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
@@ -42,8 +44,6 @@ private:
 	std::unordered_map<MotionState, VMDMotion> motion_map;
 
 	MotionState current_motion;
-
-	Microsoft::WRL::ComPtr<ID3D11Buffer> debug_vertex_buffer;
 
 public:
 	PMDModel(const std::filesystem::path& path);

@@ -9,4 +9,7 @@ assets/models/
 *.pdb
 *.idb
 *.log
+*.pmm
+*.vmd
+*.pmd
 

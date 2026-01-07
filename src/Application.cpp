@@ -89,24 +89,24 @@ void set_layered_window(const HWND hwnd) {
 }
 
 int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, const int) {
-	WNDCLASSEX wc{};
-	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpfnWndProc = WindowEvent::wnd_proc;
-	wc.hInstance = hinstance;
-	wc.lpszClassName = L"D3D11AndDXGI";
-	wc.style = CS_DBLCLKS | CS_OWNDC;
-	RegisterClassEx(&wc);
+	WNDCLASSEX render_wc{};
+	render_wc.cbSize = sizeof(decltype(render_wc));
+	render_wc.hCursor = LoadCursor(nullptr, IDC_HAND);
+	render_wc.lpfnWndProc = WindowEvent::input_wnd_proc;
+	render_wc.hInstance = hinstance;
+	render_wc.lpszClassName = L"D3D11AndDXGI";
+	render_wc.style = CS_DBLCLKS | CS_OWNDC;
+	RegisterClassEx(&render_wc);
 
 	// WS_EX_NOREDIRECTIONBITMAP で描画はGPUに任せる
 	// WS_EX_LAYERED を指定してヒットテスト用のビットマップだけ保持してもらう
 	// WS_EX_TRANSPARENT | WS_EX_NOACTIVATE
-	const HWND hwnd = CreateWindowEx(
-		WS_EX_NOREDIRECTIONBITMAP | WS_EX_LAYERED,
-		wc.lpszClassName,
+	const HWND render_hwnd = CreateWindowEx(
+		WS_EX_NOREDIRECTIONBITMAP,
+		render_wc.lpszClassName,
 		WINDOW_NAME,
-		WS_POPUPWINDOW,
-		400,
+		WS_POPUPWINDOW | WS_VISIBLE,
+		800,
 		400,
 		WIDTH,
 		HEIGHT,
@@ -116,20 +116,41 @@ int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, cons
 		nullptr
 	);
 
-	if(hwnd == NULL) {
+	if(render_hwnd == NULL) {
 		return -1;
 	}
 
+	/*
+	RAWINPUTDEVICE raw_input_device[2]{};
+	// mouse
+	raw_input_device[0].usUsagePage = 0x01;
+	raw_input_device[0].usUsage = 0x02;
+	raw_input_device[0].dwFlags = RIDEV_INPUTSINK;
+	raw_input_device[0].hwndTarget = input_hwnd;
+	// keyboard
+	raw_input_device[1].usUsagePage = 0x01;
+	raw_input_device[1].usUsage = 0x06;
+	raw_input_device[1].dwFlags = RIDEV_INPUTSINK;
+	raw_input_device[1].hwndTarget = input_hwnd;
+	RegisterRawInputDevices(
+		raw_input_device,
+		std::size(raw_input_device),
+		sizeof(RAWINPUTDEVICE)
+	);
+	*/
+
+	//set_layered_window(render_hwnd);
+
+	//SetLayeredWindowAttributes(input_hwnd, 0, 1, LWA_ALPHA);
+
 	// 常に最前面にする
-	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(render_hwnd, HWND_TOPMOST, 800, 400, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
-	ShowWindow(hwnd, SW_SHOW);
-
-	set_layered_window(hwnd);
+	//ShowWindow(render_hwnd, SW_SHOW);
 
 	Engine engine = Engine();
 
-	if(!engine.init(hwnd, WIDTH, HEIGHT)) {
+	if(!engine.init(render_hwnd, WIDTH, HEIGHT)) {
 		return -2;
 	}
 

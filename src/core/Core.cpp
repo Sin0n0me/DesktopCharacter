@@ -6,6 +6,7 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <chrono>
+#include "render/render_pass/fxaa/FXAARenderPass.h"
 
 decltype(Engine::instance) Engine::instance;
 
@@ -36,15 +37,31 @@ void Engine::render(void) const {
 		this->d3d11->render_target_view.Get(),
 		CLEAR_COLOR
 	);
+	this->d3d11->context->ClearRenderTargetView(
+		this->d3d11->render_target_view_back.Get(),
+		CLEAR_COLOR
+	);
 
 	for(const auto& render_pass : this->render_pass) {
 		this->d3d11->context->RSSetViewports(1, &view_port);
 		this->d3d11->context->RSSetState(this->d3d11->rasterizer_cull_back.Get());
 
-		render_pass->render_set(
-			this->d3d11->context.Get(),
-			this->d3d11->render_target_view.Get()
-		);
+		if(render_pass->is_post_render()) {
+			render_pass->render_set(
+				this->d3d11->context.Get(),
+				this->d3d11->render_target_view_back.Get()
+			);
+			this->d3d11->context->PSSetShaderResources(
+				0,
+				1,
+				this->d3d11->shader_resouce_view.GetAddressOf()
+			);
+		} else {
+			render_pass->render_set(
+				this->d3d11->context.Get(),
+				this->d3d11->render_target_view.Get()
+			);
+		}
 
 		render_pass->render(this->d3d11->context.Get());
 
@@ -70,6 +87,11 @@ const IMouseStateGetter* Engine::get_mouse_getter(void) const {
 }
 
 bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
+	FILE* fp;
+	AllocConsole();
+	freopen_s(&fp, "CONOUT$", "w", stdout);
+	freopen_s(&fp, "CONOUT$", "w", stderr);
+
 	const HRESULT hr = CoInitializeEx(nullptr, tagCOINIT::COINIT_APARTMENTTHREADED);
 	if(FAILED(hr)) {
 		return false;
@@ -112,6 +134,9 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 	this->render_pass.emplace_back(
 		std::make_unique<ModelRenderPass>(this->common_resouce)
 	);
+	this->render_pass.emplace_back(
+		std::make_unique<FXAARenderPass>(this->common_resouce)
+	);
 
 	// レンダーパスの初期化
 	for(auto& render_pass : this->render_pass) {
@@ -119,19 +144,6 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 			return false;
 		}
 	}
-
-	// フックのセット
-	/*
-	this->hook = SetWinEventHook(
-		EVENT_OBJECT_LOCATIONCHANGE,
-		EVENT_OBJECT_LOCATIONCHANGE,
-		nullptr,
-		WindowEvent::hook_win_event,
-		0,
-		0,
-		WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS
-	);
-	*/
 
 	this->instance.emplace(this);
 
@@ -160,7 +172,6 @@ void Engine::run(void) {
 }
 
 void Engine::uninit(void) {
-	UnhookWinEvent(this->hook);
 	this->instance.reset();
 	CoUninitialize();
 }

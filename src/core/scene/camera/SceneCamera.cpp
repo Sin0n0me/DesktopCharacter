@@ -51,7 +51,7 @@ SceneCamera SceneCamera::make_camera(ID3D11Device* const device, const std::shar
 	const HRESULT hr = device->CreateBuffer(
 		&bd,
 		&init_data,
-		resource->constant_buffers[ConstantBufferPattern::CameraBuffer].GetAddressOf()
+		resource->constant_buffers[ConstantBuffer::Camera].GetAddressOf()
 	);
 	if FAILED(hr) {
 		throw;

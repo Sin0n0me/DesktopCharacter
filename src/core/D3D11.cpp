@@ -5,6 +5,7 @@
 #include <iostream>
 #include "D3D11.h"
 #include "Core.h"
+#include "../Application.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "dcomp.lib")
@@ -56,7 +57,7 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
 }
 
 // デバイスの作成
-bool D3D11::make_device() {
+bool D3D11::make_device(void) {
 	const HRESULT result_device = D3D11CreateDevice(
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
@@ -73,7 +74,7 @@ bool D3D11::make_device() {
 		return false;
 	}
 
-	const HRESULT result_dxgi_device = this->device.As(&dxgi_device);
+	const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
 	if(FAILED(result_device)) {
 		std::cerr << "Failed make DXGIDevice" << std::endl;
 		return false;
@@ -93,7 +94,7 @@ bool D3D11::make_device() {
 }
 
 // DXGIデバイスとFactory取得
-bool D3D11::make_factory() {
+bool D3D11::make_factory(void) {
 	const HRESULT result_factory = CreateDXGIFactory2(
 		DXGI_CREATE_FACTORY_DEBUG,
 		__uuidof(this->dxgi_factory),
@@ -136,26 +137,88 @@ bool D3D11::make_swap_chain(const UINT width, const UINT height) {
 }
 
 // RenderTargetView作成
-bool D3D11::make_render_target_view() {
-	// バックバッファ取得
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
-	this->dxgi_swap_chain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+bool D3D11::make_render_target_view(void) {
+	{
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
+		{
+			D3D11_TEXTURE2D_DESC desc{};
+			desc.Width = WIDTH;
+			desc.Height = HEIGHT;
+			desc.MipLevels = 1;
+			desc.ArraySize = 1;
+			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			desc.SampleDesc.Count = 1;
+			desc.Usage = D3D11_USAGE_DEFAULT;
+			desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	const HRESULT hr = this->device->CreateRenderTargetView(
-		backBuffer.Get(),
-		nullptr,
-		this->render_target_view.ReleaseAndGetAddressOf()
-	);
-	if(FAILED(hr)) {
-		std::cerr << "Failed make RenderTargetView" << std::endl;
-		return false;
+			const HRESULT hr = this->device->CreateTexture2D(
+				&desc,
+				nullptr,
+				texture.GetAddressOf()
+			);
+			if(FAILED(hr)) {
+				std::cerr << "Failed make RenderTargetView" << std::endl;
+				return false;
+			}
+		}
+
+		{
+			const HRESULT hr = this->device->CreateRenderTargetView(
+				texture.Get(),
+				nullptr,
+				this->render_target_view.GetAddressOf()
+			);
+			if(FAILED(hr)) {
+				std::cerr << "Failed make RenderTargetView" << std::endl;
+				return false;
+			}
+		}
+
+		{
+			const HRESULT hr = this->device->CreateShaderResourceView(
+				texture.Get(),
+				nullptr,
+				this->shader_resouce_view.GetAddressOf()
+			);
+			if(FAILED(hr)) {
+				std::cerr << "Failed make RenderTargetView" << std::endl;
+				return false;
+			}
+		}
+	}
+
+	{
+		// バックバッファ取得
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
+		{
+			const HRESULT hr = this->dxgi_swap_chain->GetBuffer(
+				0,
+				IID_PPV_ARGS(back_buffer.GetAddressOf())
+			);
+			if(FAILED(hr)) {
+				std::cerr << "Failed make RenderTargetView" << std::endl;
+				return false;
+			}
+		}
+
+		{
+			const HRESULT hr = this->device->CreateRenderTargetView(
+				back_buffer.Get(),
+				nullptr,
+				this->render_target_view_back.GetAddressOf()
+			);
+			if(FAILED(hr)) {
+				std::cerr << "Failed make RenderTargetView" << std::endl;
+				return false;
+			}
+		}
 	}
 
 	return true;
 }
 
 // ラスタライザの作成
-bool D3D11::make_rasterizer() {
+bool D3D11::make_rasterizer(void) {
 	D3D11_RASTERIZER_DESC desc{};
 	desc.FillMode = D3D11_FILL_SOLID;
 	desc.DepthClipEnable = TRUE;
@@ -193,7 +256,7 @@ bool D3D11::make_target(const HWND hwnd) {
 	return true;
 }
 
-bool D3D11::make_visual() {
+bool D3D11::make_visual(void) {
 	const HRESULT hr = this->dcomp_device->CreateVisual(this->dcomp_visual.GetAddressOf());
 	if(FAILED(hr)) {
 		std::cerr << "Failed make Visual" << std::endl;
@@ -203,7 +266,7 @@ bool D3D11::make_visual() {
 	return true;
 }
 
-bool D3D11::commit() {
+bool D3D11::commit(void) {
 	const HRESULT result_set_context = this->dcomp_visual->SetContent(this->dxgi_swap_chain.Get());
 	if(FAILED(result_set_context)) {
 		std::cerr << "Failed Set Context" << std::endl;

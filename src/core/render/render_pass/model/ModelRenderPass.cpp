@@ -18,63 +18,7 @@ bool ModelRenderPass::init(ID3D11Device* const device) {
 void ModelRenderPass::update(ID3D11DeviceContext* const context) {
 }
 
-void ModelRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
-	context->ClearDepthStencilView(
-		this->resource->depth_stencil_view.at(Pattern::ModelPattern).Get(),
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0
-	);
-
-	context->OMSetRenderTargets(
-		1,
-		&render_target_view,
-		this->resource->depth_stencil_view.at(Pattern::ModelPattern).Get()
-	);
-
-	context->OMSetDepthStencilState(
-		this->resource->depth_stencil_state.at(Pattern::ModelPattern).Get(),
-		0
-	);
-}
-
 void ModelRenderPass::render(ID3D11DeviceContext* const context) const {
-	// シェーダーのバインド
-	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::ModelPattern).Get());
-	context->VSSetShader(
-		this->resource->vertex_shaders.at(Pattern::ModelPattern).Get(),
-		nullptr,
-		0
-	);
-	context->PSSetShader(
-		this->resource->pixel_shaders.at(Pattern::ModelPattern).Get(),
-		nullptr,
-		0
-	);
-
-	// 定数バッファのバインド
-	context->VSSetConstantBuffers(
-		0,
-		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::CameraBuffer).GetAddressOf()
-	);
-	context->VSSetConstantBuffers(
-		2,
-		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::ShadowBuffer).GetAddressOf()
-	);
-
-	// シャドウマップ
-	context->PSSetShaderResources(
-		1,
-		1,
-		this->resource->shader_resouce_view.at(Pattern::ShadowPattern).GetAddressOf()
-	);
-	context->PSSetSamplers(
-		1,
-		1,
-		this->resource->sampler_state.at(Pattern::ShadowPattern).GetAddressOf()
-	);
 }
 
 // 深度ステンシルの作成
@@ -103,7 +47,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateDepthStencilView(
 			this->depth_texture.Get(),
 			nullptr,
-			this->resource->depth_stencil_view[Pattern::ModelPattern].GetAddressOf()
+			this->resource->depth_stencil_view[Pattern::Model].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -118,7 +62,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 
 		const HRESULT hr = device->CreateDepthStencilState(
 			&desc,
-			this->resource->depth_stencil_state[Pattern::ModelPattern].GetAddressOf()
+			this->resource->depth_stencil_state[Pattern::Model].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -128,6 +72,69 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 	return true;
 }
 
+void ModelRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
+	context->ClearDepthStencilView(
+		this->resource->depth_stencil_view.at(Pattern::Model).Get(),
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0
+	);
+
+	context->OMSetRenderTargets(
+		1,
+		&render_target_view,
+		this->resource->depth_stencil_view.at(Pattern::Model).Get()
+	);
+
+	context->OMSetDepthStencilState(
+		this->resource->depth_stencil_state.at(Pattern::Model).Get(),
+		0
+	);
+
+	// シェーダーのバインド
+	context->IASetInputLayout(
+		this->resource->input_layouts.at(Pattern::Model).Get()
+	);
+	context->VSSetShader(
+		this->resource->vertex_shaders.at(Pattern::Model).Get(),
+		nullptr,
+		0
+	);
+	context->PSSetShader(
+		this->resource->pixel_shaders.at(Pattern::Model).Get(),
+		nullptr,
+		0
+	);
+
+	// 定数バッファのバインド
+	context->VSSetConstantBuffers(
+		0,
+		1,
+		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
+	);
+	context->VSSetConstantBuffers(
+		2,
+		1,
+		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
+	);
+
+	// シャドウマップ
+	context->PSSetShaderResources(
+		1,
+		1,
+		this->resource->shader_resouce_view.at(Pattern::Shadow).GetAddressOf()
+	);
+	context->PSSetSamplers(
+		1,
+		1,
+		this->resource->sampler_state.at(Pattern::Shadow).GetAddressOf()
+	);
+}
+
 bool ModelRenderPass::is_render_model(void) const {
 	return true;
+}
+
+bool ModelRenderPass::is_post_render(void) const {
+	return false;
 }

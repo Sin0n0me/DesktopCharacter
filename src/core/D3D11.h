@@ -19,6 +19,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_back;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resouce_view; //
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer_cull_back;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer_cull_none;
 
@@ -28,13 +30,13 @@ public:
 
 private:
 
-	bool make_device();
-	bool make_factory();
+	bool make_device(void);
+	bool make_factory(void);
 	bool make_swap_chain(const UINT width, const UINT height);
-	bool make_render_target_view();
-	bool make_rasterizer();
+	bool make_render_target_view(void);
+	bool make_rasterizer(void);
 	bool make_target(const HWND hwnd);
-	bool make_visual();
-	bool commit();
+	bool make_visual(void);
+	bool commit(void);
 	void set_viewport(const UINT width, const UINT height);
 };

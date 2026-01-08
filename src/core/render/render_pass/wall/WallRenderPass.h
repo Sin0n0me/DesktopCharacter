@@ -30,4 +30,7 @@ private:
 	bool make_shaders(ID3D11Device* const device);
 	bool make_blend_state(ID3D11Device* const device);
 	bool make_depth_state(ID3D11Device* const device);
+
+	// IRenderPass ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
+	bool is_post_render(void) const override;
 };

@@ -23,7 +23,7 @@ void Scene::update(void) {
 void Scene::render_update(ID3D11DeviceContext* const context) {
 	/*
 	context->UpdateSubresource(
-		this->resource->constant_buffers[ConstantBufferPattern::CameraBuffer].Get(),
+		this->resource->constant_buffers[ConstantBuffer::Camera].Get(),
 		0,
 		nullptr,
 		&this->camera.camera,

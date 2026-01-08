@@ -15,9 +15,10 @@ public:
 public:
 	bool init(ID3D11Device* const device) override;
 	void update(ID3D11DeviceContext* const context) override;
-	void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
 	void render(ID3D11DeviceContext* const context) const override;
+	void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
 	bool is_render_model(void) const override;
+	bool is_post_render(void) const override;
 
 private:
 

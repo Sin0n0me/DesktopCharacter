@@ -104,7 +104,7 @@ bool ModelManager::load_current_model(ID3D11Device* const device) {
 		Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
 		if(!model->make_vertex_shader(
 			device,
-			this->resource->vertex_shaders[Pattern::ModelPattern].GetAddressOf(),
+			this->resource->vertex_shaders[Pattern::Model].GetAddressOf(),
 			vs_blob.GetAddressOf(),
 			error_blob.GetAddressOf()
 		)) {
@@ -119,7 +119,7 @@ bool ModelManager::load_current_model(ID3D11Device* const device) {
 		Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
 		if(!model->make_pixel_shader(
 			device,
-			this->resource->pixel_shaders[Pattern::ModelPattern].GetAddressOf(),
+			this->resource->pixel_shaders[Pattern::Model].GetAddressOf(),
 			ps_blob.GetAddressOf(),
 			error_blob.GetAddressOf()
 		)) {
@@ -132,7 +132,7 @@ bool ModelManager::load_current_model(ID3D11Device* const device) {
 
 	if(!model->make_input_layout(
 		device,
-		this->resource->input_layouts[Pattern::ModelPattern].GetAddressOf(),
+		this->resource->input_layouts[Pattern::Model].GetAddressOf(),
 		vs_blob.GetAddressOf()
 	)) {
 		return false;

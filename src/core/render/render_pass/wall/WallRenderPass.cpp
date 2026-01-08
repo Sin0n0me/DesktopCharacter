@@ -40,7 +40,7 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
 	context->OMSetRenderTargets(
 		1,
 		&render_target_view,
-		this->resource->depth_stencil_view.at(Pattern::ModelPattern).Get()
+		this->resource->depth_stencil_view.at(Pattern::Model).Get()
 	);
 	context->OMSetBlendState(
 		this->blend_state.Get(),
@@ -48,34 +48,32 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
 		0xffffffff
 	);
 	context->OMSetDepthStencilState(
-		this->resource->depth_stencil_state.at(Pattern::WallPattern).Get(),
+		this->resource->depth_stencil_state.at(Pattern::Wall).Get(),
 		0
 	);
-}
 
-void WallRenderPass::render(ID3D11DeviceContext* const context) const {
-	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::WallPattern).Get());
+	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::Wall).Get());
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
 		0,
 		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::CameraBuffer).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
 	);
 	context->VSSetConstantBuffers(
 		2,
 		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::ShadowBuffer).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
 	);
 
 	// シェーダーのバインド
 	context->VSSetShader(
-		this->resource->vertex_shaders.at(Pattern::WallPattern).Get(),
+		this->resource->vertex_shaders.at(Pattern::Wall).Get(),
 		nullptr,
 		0
 	);
 	context->PSSetShader(
-		this->resource->pixel_shaders.at(Pattern::WallPattern).Get(),
+		this->resource->pixel_shaders.at(Pattern::Wall).Get(),
 		nullptr,
 		0
 	);
@@ -84,14 +82,16 @@ void WallRenderPass::render(ID3D11DeviceContext* const context) const {
 	context->PSSetShaderResources(
 		0,
 		1,
-		this->resource->shader_resouce_view.at(Pattern::ShadowPattern).GetAddressOf()
+		this->resource->shader_resouce_view.at(Pattern::Shadow).GetAddressOf()
 	);
 	context->PSSetSamplers(
 		0,
 		1,
-		this->resource->sampler_state.at(Pattern::ShadowPattern).GetAddressOf()
+		this->resource->sampler_state.at(Pattern::Shadow).GetAddressOf()
 	);
+}
 
+void WallRenderPass::render(ID3D11DeviceContext* const context) const {
 	this->wall_object->render(context);
 }
 
@@ -148,7 +148,7 @@ bool WallRenderPass::make_shaders(ID3D11Device* const device) {
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
 			nullptr,
-			this->resource->vertex_shaders[Pattern::WallPattern].GetAddressOf()
+			this->resource->vertex_shaders[Pattern::Wall].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -160,7 +160,7 @@ bool WallRenderPass::make_shaders(ID3D11Device* const device) {
 			ps_blob->GetBufferPointer(),
 			ps_blob->GetBufferSize(),
 			nullptr,
-			this->resource->pixel_shaders[Pattern::WallPattern].GetAddressOf()
+			this->resource->pixel_shaders[Pattern::Wall].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -185,7 +185,7 @@ bool WallRenderPass::make_shaders(ID3D11Device* const device) {
 			_countof(layout),
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::WallPattern].GetAddressOf()
+			this->resource->input_layouts[Pattern::Wall].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -225,11 +225,15 @@ bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
 
 	const HRESULT hr = device->CreateDepthStencilState(
 		&desc,
-		this->resource->depth_stencil_state[Pattern::WallPattern].GetAddressOf()
+		this->resource->depth_stencil_state[Pattern::Wall].GetAddressOf()
 	);
 	if(FAILED(hr)) {
 		return false;
 	}
 
 	return true;
+}
+
+bool WallRenderPass::is_post_render(void) const {
+	return false;
 }

@@ -132,6 +132,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\object\full_screen_quad\FullScreenQuad.h" />
+    <ClInclude Include="src\core\render\constant_buffer\FXAA.h" />
+    <ClInclude Include="src\core\render\render_pass\fxaa\FXAARenderPass.h" />
+    <ClInclude Include="src\core\utility\Result.h" />
     <ClInclude Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.h" />
     <ClInclude Include="src\core\render\model\bone\IBoneNameResolver.h" />
     <ClInclude Include="src\core\render\model\ik\IKSolver.h" />
@@ -184,6 +188,8 @@
     <ClInclude Include="src\core\timer\Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\object\full_screen_quad\FullScreenQuad.cpp" />
+    <ClCompile Include="src\core\render\render_pass\fxaa\FXAARenderPass.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.cpp" />
     <ClCompile Include="src\core\render\model\ik\IKSolver.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\BoneKeyFrame.cpp" />

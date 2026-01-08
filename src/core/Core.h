@@ -27,7 +27,6 @@ private:
 	static std::optional<Engine* const> instance;
 
 private:
-	HWINEVENTHOOK hook;
 	std::unique_ptr<D3D11> d3d11;
 	std::unique_ptr<ModelManager> models;
 	std::unique_ptr<Scene> scene;

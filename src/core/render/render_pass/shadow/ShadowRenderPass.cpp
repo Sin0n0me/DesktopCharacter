@@ -27,7 +27,7 @@ void ShadowRenderPass::update(ID3D11DeviceContext* const context) {
 
 void ShadowRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
 	context->ClearDepthStencilView(
-		this->resource->depth_stencil_view.at(Pattern::ShadowPattern).Get(),
+		this->resource->depth_stencil_view.at(Pattern::Shadow).Get(),
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0
@@ -35,7 +35,7 @@ void ShadowRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Rend
 	context->OMSetRenderTargets(
 		0,
 		nullptr,
-		this->resource->depth_stencil_view.at(Pattern::ShadowPattern).Get()
+		this->resource->depth_stencil_view.at(Pattern::Shadow).Get()
 	);
 
 	D3D11_VIEWPORT vp{};
@@ -47,26 +47,33 @@ void ShadowRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Rend
 	vp.MaxDepth = 1.0f;
 
 	context->RSSetViewports(1, &vp);
-}
 
-void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
-	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::ShadowPattern).Get());
+	context->IASetInputLayout(
+		this->resource->input_layouts.at(Pattern::Shadow).Get()
+	);
 
 	// シェーダーのバインド
-	context->VSSetShader(this->resource->vertex_shaders.at(Pattern::ShadowPattern).Get(), nullptr, 0);
+	context->VSSetShader(
+		this->resource->vertex_shaders.at(Pattern::Shadow).Get(),
+		nullptr,
+		0
+	);
 	context->PSSetShader(nullptr, nullptr, 0);
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
 		0,
 		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::CameraBuffer).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
 	);
 	context->VSSetConstantBuffers(
 		1,
 		1,
-		this->resource->constant_buffers.at(ConstantBufferPattern::ShadowBuffer).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
 	);
+}
+
+void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
 }
 
 bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
@@ -100,7 +107,7 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
 			nullptr,
-			this->resource->vertex_shaders[Pattern::ShadowPattern].GetAddressOf()
+			this->resource->vertex_shaders[Pattern::Shadow].GetAddressOf()
 		);
 
 		if(FAILED(hr)) {
@@ -112,8 +119,7 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 	}
 
 	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] =
-		{
+		const D3D11_INPUT_ELEMENT_DESC layout[] = {
 			{
 				"POSITION",
 				0,
@@ -123,42 +129,42 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 				D3D11_INPUT_PER_VERTEX_DATA,
 				0
 			},
-		{
-			"NORMAL",
-			0,
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			12,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"TEXCOORD",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			24,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"BONEINDICES",
-			0,
-			DXGI_FORMAT_R16G16_UINT,
-			0,
-			32,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"BONEWEIGHTS",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			36,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		}
+			{
+				"NORMAL",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				12,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+			{
+				"TEXCOORD",
+				0,
+				DXGI_FORMAT_R32G32_FLOAT,
+				0,
+				24,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+			{
+				"BONEINDICES",
+				0,
+				DXGI_FORMAT_R16G16_UINT,
+				0,
+				32,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+			{
+				"BONEWEIGHTS",
+				0,
+				DXGI_FORMAT_R32G32_FLOAT,
+				0,
+				36,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			}
 		};
 
 		const HRESULT hr = device->CreateInputLayout(
@@ -166,7 +172,7 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
 			_countof(layout),
 			vs_blob->GetBufferPointer(),
 			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::ShadowPattern].GetAddressOf()
+			this->resource->input_layouts[Pattern::Shadow].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			if(error_blob.Get()) {
@@ -208,7 +214,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateDepthStencilView(
 			this->shadow_texture.Get(),
 			&desc,
-			this->resource->depth_stencil_view[Pattern::ShadowPattern].GetAddressOf()
+			this->resource->depth_stencil_view[Pattern::Shadow].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -224,7 +230,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 		const HRESULT hr = device->CreateShaderResourceView(
 			this->shadow_texture.Get(),
 			&desc,
-			this->resource->shader_resouce_view[Pattern::ShadowPattern].GetAddressOf()
+			this->resource->shader_resouce_view[Pattern::Shadow].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -249,7 +255,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 
 		const HRESULT hr = device->CreateSamplerState(
 			&desc,
-			this->resource->sampler_state[Pattern::ShadowPattern].GetAddressOf()
+			this->resource->sampler_state[Pattern::Shadow].GetAddressOf()
 		);
 		if(FAILED(hr)) {
 			return false;
@@ -257,6 +263,10 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
 	}
 
 	return true;
+}
+
+bool ShadowRenderPass::is_post_render(void) const {
+	return false;
 }
 
 bool ShadowRenderPass::is_render_model(void) const {

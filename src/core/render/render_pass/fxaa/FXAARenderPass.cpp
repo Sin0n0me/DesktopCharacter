@@ -4,200 +4,131 @@
 #include "../../constant_buffer/FXAA.h"
 #include "FXAARenderPass.h"
 #include <d3d11.h>
-#include <d3dcompiler.h>
+#include "../../shader/Shader.h"
+#include "../../shader/fxaa/FXAAPixelShader.h"
+#include "../../shader/fxaa/FXAAVertexShader.h"
+#include "../../constant_buffer/ConstantBufferNames.h"
+#include "../../shader/SamplerStateNames.h"
 
-constexpr wchar_t PATH_PIXEL_SHADER_FXAA[] = L"assets/shader/ps_fxaa.hlsl";
-constexpr wchar_t PATH_VERTEX_SHADER_FXAA[] = L"assets/shader/vs_fxaa.hlsl";
-
-FXAARenderPass::FXAARenderPass(const std::shared_ptr<CommonResource>& common_resouce) :
-	IRenderPass(common_resouce) {
-	this->resource = common_resouce;
+FXAARenderPass::FXAARenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept :
+	RenderPass(common_resouce) {
 	this->quad_object = std::make_unique<FullScreenQuad>();
 }
 
 bool FXAARenderPass::make_shader(ID3D11Device* const device) {
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
+	Shader vertex_shader = Shader(std::make_unique<FXAAVertexShader>());
+	Shader pixel_shader = Shader(std::make_unique<FXAAPixelShader>());
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PATH_VERTEX_SHADER_FXAA,
-			nullptr,
-			D3D_COMPILE_STANDARD_FILE_INCLUDE,
-			"main",
-			"vs_5_0",
-			0,
-			0,
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!vertex_shader.make_shader(
+		device,
+		this->resource->vertex_shaders[Pattern::FXAA].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PATH_PIXEL_SHADER_FXAA,
-			nullptr,
-			nullptr,
-			"main",
-			"ps_5_0",
-			0, 0,
-			ps_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!vertex_shader.make_input_layout(
+		device,
+		this->resource->input_layouts[Pattern::FXAA].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = device->CreateVertexShader(
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			nullptr,
-			this->resource->vertex_shaders[Pattern::FXAA].GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!pixel_shader.make_shader(
+		device,
+		this->resource->pixel_shaders[Pattern::FXAA].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = device->CreatePixelShader(
-			ps_blob->GetBufferPointer(),
-			ps_blob->GetBufferSize(),
-			nullptr,
-			this->resource->pixel_shaders[Pattern::FXAA].GetAddressOf()
-		);
+	// slot�̎擾
+	this->binding_slots->merge(pixel_shader);
 
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	return true;
+}
+
+bool FXAARenderPass::make_constant_buffer(ID3D11Device* const device) {
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = sizeof(FXAA);
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	FXAA fxaa{};
+	fxaa.inverse_screen_size = {
+		1.0f / WIDTH,
+		1.0f / HEIGHT
+	};
+	fxaa.span_max = 8.0f;
+	fxaa.reduce_min = 1.0f / 128.0f;
+	fxaa.reduce_mul = 1.0f / 8.0f;
+
+	D3D11_SUBRESOURCE_DATA init_data{};
+	init_data.pSysMem = &fxaa;
+	init_data.SysMemPitch = 0;
+	init_data.SysMemSlicePitch = sizeof(decltype(fxaa));
+
+	const HRESULT hr = device->CreateBuffer(
+		&desc,
+		&init_data,
+		this->resource->constant_buffers[ConstantBuffer::FXAA].GetAddressOf()
+	);
+	if(FAILED(hr)) {
+		return false;
 	}
 
-	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"TEXCOORD",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				8,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-		};
+	return true;
+}
 
-		const HRESULT hr = device->CreateInputLayout(
-			layout,
-			_countof(layout),
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::FXAA].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+bool FXAARenderPass::make_sampler(ID3D11Device* const device) {
+	D3D11_SAMPLER_DESC desc = {};
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	desc.MinLOD = 0;
+	desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	const HRESULT hr = device->CreateSamplerState(
+		&desc,
+		this->resource->sampler_state[Pattern::FXAA].GetAddressOf()
+	);
+	if(FAILED(hr)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool FXAARenderPass::make_depth_stencil(ID3D11Device* const device) {
+	D3D11_DEPTH_STENCIL_DESC desc = {};
+	desc.DepthEnable = FALSE;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	desc.StencilEnable = FALSE;
+
+	const HRESULT hr = device->CreateDepthStencilState(
+		&desc,
+		this->resource->depth_stencil_state[Pattern::FXAA].GetAddressOf()
+	);
+	if(FAILED(hr)) {
+		return false;
 	}
 
 	return true;
 }
 
 bool FXAARenderPass::init(ID3D11Device* const device) {
-	{
-		D3D11_BUFFER_DESC desc = {};
-		desc.ByteWidth = sizeof(FXAA);
-		desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		FXAA fxaa{};
-		fxaa.inverse_screen_size = {
-			1.0f / WIDTH,
-			1.0f / HEIGHT
-		};
-		fxaa.span_max = 8.0f;
-		fxaa.reduce_min = 1.0f / 128.0f;
-		fxaa.reduce_mul = 1.0f / 8.0f;
-
-		D3D11_SUBRESOURCE_DATA init_data{};
-		init_data.pSysMem = &fxaa;
-		init_data.SysMemPitch = 0;
-		init_data.SysMemSlicePitch = sizeof(decltype(fxaa));
-
-		const HRESULT hr = device->CreateBuffer(
-			&desc,
-			&init_data,
-			this->resource->constant_buffers[ConstantBuffer::FXAA].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
+	if(!this->make_constant_buffer(device)) {
+		return false;
 	}
 
-	{
-		D3D11_SAMPLER_DESC desc = {};
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.MinLOD = 0;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-		const HRESULT hr = device->CreateSamplerState(
-			&desc,
-			this->resource->sampler_state[Pattern::FXAA].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
+	if(!this->make_sampler(device)) {
+		return false;
 	}
 
-	{
-		D3D11_DEPTH_STENCIL_DESC desc = {};
-		desc.DepthEnable = FALSE;
-		desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-		desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-		desc.StencilEnable = FALSE;
-
-		const HRESULT hr = device->CreateDepthStencilState(
-			&desc,
-			this->resource->depth_stencil_state[Pattern::FXAA].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
+	if(!this->make_depth_stencil(device)) {
+		return false;
 	}
 
 	if(!this->make_shader(device)) {
@@ -242,19 +173,27 @@ void FXAARenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
 	);
 
 	context->PSSetSamplers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Pixel,
+			BindingSlotKind::SamplerState,
+			static_cast<uint32_t>(SamplerStateName::FXAA)
+		),
 		1,
 		this->resource->sampler_state.at(Pattern::FXAA).GetAddressOf()
 	);
 	context->PSSetConstantBuffers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Pixel,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::FXAA)
+		),
 		1,
 		this->resource->constant_buffers.at(ConstantBuffer::FXAA).GetAddressOf()
 	);
 }
 
 void FXAARenderPass::render(ID3D11DeviceContext* const context) const {
-	this->quad_object->render(context);
+	this->quad_object->render(context, this->binding_slots.get());
 }
 
 bool FXAARenderPass::is_render_model(void) const {

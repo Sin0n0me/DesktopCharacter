@@ -45,7 +45,7 @@ Light Light::make_light(ID3D11Device* const device, const std::shared_ptr<Common
 	const HRESULT hr = device->CreateBuffer(
 		&desc,
 		&init_data,
-		resource->constant_buffers[ConstantBuffer::Shadow].GetAddressOf()
+		resource->constant_buffers[ConstantBuffer::ShadowMap].GetAddressOf()
 	);
 	if FAILED(hr) {
 		throw;

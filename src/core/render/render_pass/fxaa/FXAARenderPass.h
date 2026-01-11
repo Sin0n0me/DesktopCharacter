@@ -1,19 +1,20 @@
 #pragma once
 #include "../../../object/IObjectRenderer.h"
-#include "../IRenderPass.h"
-#include <wrl/client.h>
+#include "../RenderPass.h"
 
 struct ID3D11Texture2D;
 
-class FXAARenderPass : public IRenderPass {
+class FXAARenderPass : public RenderPass {
 private:
-	std::shared_ptr<CommonResource> resource;
 	std::unique_ptr<IObjectRenderer> quad_object;
 
 	bool make_shader(ID3D11Device* const device);
+	bool make_constant_buffer(ID3D11Device* const device);
+	bool make_sampler(ID3D11Device* const device);
+	bool make_depth_stencil(ID3D11Device* const device);
 
 public:
-	FXAARenderPass(const std::shared_ptr<CommonResource>& common_resouce);
+	explicit FXAARenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
 
 	bool init(ID3D11Device* const device) override;
 	void update(ID3D11DeviceContext* const context) override;

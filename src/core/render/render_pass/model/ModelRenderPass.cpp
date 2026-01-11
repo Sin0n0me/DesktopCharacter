@@ -1,14 +1,21 @@
 #include "../../../../Application.h"
 #include "../../CommonResource.h"
+#include "../../constant_buffer/ConstantBufferNames.h"
+#include "../../shader/model/PMDModelPixelShader.h"
+#include "../../shader/model/PMDModelVertexShader.h"
+#include "../../shader/Shader.h"
 #include "ModelRenderPass.h"
 #include <d3d11.h>
+#include "../../shader/SamplerStateNames.h"
 
-ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) : IRenderPass(common_resouce) {
-	this->resource = common_resouce;
-}
+ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {}
 
 bool ModelRenderPass::init(ID3D11Device* const device) {
 	if(!this->make_depth_stencil(device)) {
+		return false;
+	}
+
+	if(!this->make_shader(device)) {
 		return false;
 	}
 
@@ -72,6 +79,38 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
 	return true;
 }
 
+bool ModelRenderPass::make_shader(ID3D11Device* const device) {
+	Shader vertex_shader = Shader(std::make_unique<PMDModelVertexShader>());
+	Shader pixel_shader = Shader(std::make_unique<PMDModelPixelShader>());
+
+	if(!vertex_shader.make_shader(
+		device,
+		this->resource->vertex_shaders[Pattern::Model].GetAddressOf()
+	)) {
+		return false;
+	}
+
+	if(!vertex_shader.make_input_layout(
+		device,
+		this->resource->input_layouts[Pattern::Model].GetAddressOf()
+	)) {
+		return false;
+	}
+
+	if(!pixel_shader.make_shader(
+		device,
+		this->resource->pixel_shaders[Pattern::Model].GetAddressOf()
+	)) {
+		return false;
+	}
+
+	// slot番号の取得
+	this->binding_slots->merge(vertex_shader);
+	this->binding_slots->merge(pixel_shader);
+
+	return true;
+}
+
 void ModelRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
 	context->ClearDepthStencilView(
 		this->resource->depth_stencil_view.at(Pattern::Model).Get(),
@@ -108,27 +147,32 @@ void ModelRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Rende
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::Camera)
+		),
 		1,
 		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
 	);
-	context->VSSetConstantBuffers(
-		2,
-		1,
-		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
-	);
 
+	/*
 	// シャドウマップ
 	context->PSSetShaderResources(
-		1,
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::Camera)
+		),
 		1,
 		this->resource->shader_resouce_view.at(Pattern::Shadow).GetAddressOf()
 	);
 	context->PSSetSamplers(
-		1,
+		2,
 		1,
 		this->resource->sampler_state.at(Pattern::Shadow).GetAddressOf()
 	);
+	*/
 }
 
 bool ModelRenderPass::is_render_model(void) const {

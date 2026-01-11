@@ -22,7 +22,10 @@ bool WallObject::init(ID3D11Device* const device) {
 void WallObject::update(ID3D11DeviceContext* const context) {
 }
 
-void WallObject::render(ID3D11DeviceContext* const context) const {
+void WallObject::render(
+	ID3D11DeviceContext* const context,
+	const ShaderBindingSlots* slots
+) const {
 	const UINT stride = sizeof(ShadowReceiverVertex);
 	const UINT offset = 0;
 

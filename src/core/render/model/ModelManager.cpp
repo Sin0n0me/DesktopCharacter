@@ -12,8 +12,8 @@ constexpr char RESOURCE_FILE_NAME[] = "model_list.txt";
 using model_list = std::vector<std::filesystem::path>;
 std::optional<model_list> get_model_files(const char* resouce_file_path);
 
-std::unique_ptr<Model> load_pmd(const std::filesystem::path& path) {
-	return std::make_unique<PMDModel>(path);
+std::shared_ptr<Model> load_pmd(const std::filesystem::path& path) {
+	return std::make_shared<PMDModel>(path);
 }
 
 ModelManager::ModelManager(const std::shared_ptr<CommonResource>& common_resource) {
@@ -69,11 +69,7 @@ bool ModelManager::init(void) {
 	return true;
 }
 
-bool ModelManager::add_model(std::unique_ptr<Model> model) {
-	if(!model->init()) {
-		return false;
-	}
-
+bool ModelManager::add_model(std::shared_ptr<Model> model) {
 	const auto& model_name = model->get_file_name();
 	this->model_obb_map.emplace(model_name, OBBMap{});
 	this->models[model_name] = std::move(model);
@@ -85,8 +81,8 @@ void ModelManager::set_model(const std::u8string& model_name) {
 	this->current_model = model_name;
 }
 
-const Model* ModelManager::get_current_model(void) const {
-	return this->models.at(this->current_model).get();
+const std::shared_ptr<Model> ModelManager::get_current_model(void) const {
+	return this->models.at(this->current_model);
 }
 
 const OBBMap& ModelManager::get_obb_map(void) const {
@@ -97,48 +93,7 @@ bool ModelManager::load_current_model(ID3D11Device* const device) {
 	const auto& model_name = this->current_model;
 	const auto& model = this->models.at(model_name);
 
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-
-	{
-		Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
-		if(!model->make_vertex_shader(
-			device,
-			this->resource->vertex_shaders[Pattern::Model].GetAddressOf(),
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
-
-	{
-		Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
-		if(!model->make_pixel_shader(
-			device,
-			this->resource->pixel_shaders[Pattern::Model].GetAddressOf(),
-			ps_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
-
-	if(!model->make_input_layout(
-		device,
-		this->resource->input_layouts[Pattern::Model].GetAddressOf(),
-		vs_blob.GetAddressOf()
-	)) {
-		return false;
-	}
-
-	if(!model->load_model(device)) {
+	if(!model->init(device)) {
 		return false;
 	}
 
@@ -159,11 +114,7 @@ void ModelManager::update(const int64_t delta_time) {
 
 void ModelManager::update_render(ID3D11DeviceContext* const context) {
 	const auto& model = this->models.at(this->current_model);
-	model->update_render(context);
-}
-
-void ModelManager::render(ID3D11DeviceContext* const context) const {
-	this->models.at(this->current_model)->render(context);
+	model->update(context);
 }
 
 // 拡張子付きのファイルであればモデルファイルとみなす
@@ -198,5 +149,5 @@ std::optional<model_list> get_model_files(const char* resouce_file_path) {
 
 	ifs.close(); // ファイルを閉じる
 
-	return std::optional<model_list>(list);
+	return list;
 }

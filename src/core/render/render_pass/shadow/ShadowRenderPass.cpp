@@ -1,13 +1,14 @@
 #include "../../CommonResource.h"
 #include "ShadowRenderPass.h"
 #include <d3d11.h>
-#include <d3dcompiler.h>
+#include "../../shader/Shader.h"
+#include "../../shader/shadow/ShadowMapVertexShader.h"
+#include "../../constant_buffer/ConstantBufferNames.h"
 
 constexpr wchar_t PATH_VERTEX_SHADER_SHADOW[] = L"assets/shader/vs_shadow.hlsl";
 constexpr UINT SHADOW_MAP_SIZE = 2048;
 
-ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) : IRenderPass(common_resouce) {
-	this->resource = common_resouce;
+ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {
 }
 
 bool ShadowRenderPass::init(ID3D11Device* const device) {
@@ -62,14 +63,22 @@ void ShadowRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Rend
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::Camera)
+		),
 		1,
 		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
 	);
 	context->VSSetConstantBuffers(
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::ShadowMap)
+		),
 		1,
-		1,
-		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::ShadowMap).GetAddressOf()
 	);
 }
 
@@ -77,110 +86,24 @@ void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
 }
 
 bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
+	Shader vertex_shader = Shader(std::make_unique<ShadowMapVertexShader>());
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PATH_VERTEX_SHADER_SHADOW,
-			nullptr,
-			D3D_COMPILE_STANDARD_FILE_INCLUDE,
-			"main",
-			"vs_5_0",
-			0,
-			0,
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!vertex_shader.make_shader(
+		device,
+		this->resource->vertex_shaders[Pattern::Shadow].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = device->CreateVertexShader(
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			nullptr,
-			this->resource->vertex_shaders[Pattern::Shadow].GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!vertex_shader.make_input_layout(
+		device,
+		this->resource->input_layouts[Pattern::Shadow].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"NORMAL",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				12,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"TEXCOORD",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				24,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"BONEINDICES",
-				0,
-				DXGI_FORMAT_R16G16_UINT,
-				0,
-				32,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"BONEWEIGHTS",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				36,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			}
-		};
-
-		const HRESULT hr = device->CreateInputLayout(
-			layout,
-			_countof(layout),
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::Shadow].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
+	// slot番号の取得
+	this->binding_slots->merge(vertex_shader);
 
 	return true;
 }

@@ -1,16 +1,15 @@
 #pragma once
-#include "../IRenderPass.h"
+#include "../RenderPass.h"
 #include <wrl/client.h>
 
 struct ID3D11Texture2D;
 
-class ModelRenderPass : public IRenderPass {
+class ModelRenderPass : public RenderPass {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depth_texture;
-	std::shared_ptr<CommonResource> resource;
 
 public:
-	ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce);
+	explicit ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
 
 public:
 	bool init(ID3D11Device* const device) override;
@@ -23,4 +22,5 @@ public:
 private:
 
 	bool make_depth_stencil(ID3D11Device* const device);
+	bool make_shader(ID3D11Device* const device);
 };

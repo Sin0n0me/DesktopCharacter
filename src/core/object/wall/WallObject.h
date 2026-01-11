@@ -17,7 +17,7 @@ private:
 public:
 	bool init(ID3D11Device* const device) override;
 	void update(ID3D11DeviceContext* const context) override;
-	void render(ID3D11DeviceContext* const context) const override;
+	void render(ID3D11DeviceContext* const context, const ShaderBindingSlots* slots) const override;
 
 private:
 	bool make_mesh_wall(ID3D11Device* const device);

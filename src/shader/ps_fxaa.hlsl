@@ -1,12 +1,7 @@
+#include "common/constant_buffer/fxaa.hlsl"
+
 Texture2D fxaa_texture : register(t0);
 SamplerState linear_sampler : register(s0);
-
-cbuffer FXAA : register(b0) {
-    float2 inverse_screen_size;
-    float fxaa_reduce_min;
-    float fxaa_reduce_mul;
-    float fxaa_span_max;
-};
 
 struct PSInput {
     float4 position : SV_POSITION;
@@ -60,5 +55,6 @@ float4 main(PSInput input) : SV_TARGET {
     );
 
     const float3 final_rgb = (rgb_a + rgb_b) * 0.5;
-    return float4(final_rgb, rgb_m.a);
+    
+    return float4(final_rgb.rgb, rgb_m.a);
 }

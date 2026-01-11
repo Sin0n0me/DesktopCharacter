@@ -1,148 +1,46 @@
 #include "../../../utility/BinaryReader.h"
 #include "../../constant_buffer/Bones.h"
 #include "../../model/ik/IKSolver.h"
-#include "VMDFileStruct.h"
 #include "VMDMotion.h"
 #include <algorithm>
 #include <ranges>
-#include <filesystem>
+#include "../../model/pmd/IBoneAccessor.h"
+#include "VMDLoader.h"
 
-VMDMotion::VMDMotion(
-	const std::shared_ptr<Bones>& bones,
-	const std::shared_ptr<const PMDBoneMap>& bone_map,
-	const std::shared_ptr<const IKSolver>& ik_solver
-) {
-	this->bones = bones;
-	this->bone_map = bone_map;
+VMDMotion::VMDMotion(const std::shared_ptr<IBoneAccessor>& bone_accessor) {
+	this->bone_accessor = bone_accessor;
 	this->elapsed_time = 0;
 	this->current_frame = 0;
 	this->last_frame = 0;
-	this->ik = std::make_unique<IKKeyFrameManager>(ik_solver);
 }
 
-bool VMDMotion::load_vmd_header(BinaryReader& binary_reader) {
-	VMDHeader header{};
-	binary_reader.read_to(&header);
+bool VMDMotion::init_motion(void) {
+	return true;
+}
 
-	if(std::strncmp(header.header, "Vocaloid Motion Data", 21) == 0) {
-		return true;
-	}
-	if(std::strncmp(header.header, "Vocaloid Motion Data 0002", 26) == 0) {
+bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
+	if(bool(this->ik)) {
 		return true;
 	}
 
-	return false;
-}
-
-bool VMDMotion::load_vmd_bone_key_frame(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
+	VMDLoader loader = VMDLoader(path);
+	if(!loader.load_vmd()) {
 		return false;
 	}
 
-	if(!binary_reader.read_to_vec(this->bone_key_frame_list, count)) {
-		return false;
-	}
+	this->ik = std::make_unique<IKKeyFrameManager>(
+		this->bone_accessor->get_ik_soulver()
+	);
 
-	return true;
-}
-
-bool VMDMotion::load_vmd_morph_key_frame(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
-		return false;
-	}
-
-	if(!binary_reader.read_to_vec(this->morph_key_frame, count)) {
-		return false;
-	}
-
-	return true;
-}
-
-bool VMDMotion::load_vmd_camera(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
-		return false;
-	}
-
-	// 今のところ使用しない
-	std::vector<VMDCameraKeyframe> camera;
-	if(!binary_reader.read_to_vec(camera, count)) {
-		return false;
-	}
-
-	return true;
-}
-
-bool VMDMotion::load_vmd_light(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
-		return false;
-	}
-
-	// 今のところ使用しない
-	std::vector<VMDLight> camera;
-	if(!binary_reader.read_to_vec(camera, count)) {
-		return false;
-	}
-
-	return true;
-}
-
-bool VMDMotion::load_vmd_shadow(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
-		return false;
-	}
-
-	// 今のところ使用しない
-	std::vector<VMDShadow> camera;
-	if(!binary_reader.read_to_vec(camera, count)) {
-		return false;
-	}
-
-	return true;
-}
-
-bool VMDMotion::load_vmd_ik(BinaryReader& binary_reader) {
-	uint32_t count = 0;
-	if(!binary_reader.read_to(&count)) {
-		return false;
-	}
-
-	std::vector<VMDIK> iks(count);
-	for(decltype(count) i = 0; i < count; i++) {
-		auto& ik = iks[i];
-		//
-		const bool result = binary_reader.read(
-			&ik,
-			sizeof(VMDIK) - sizeof(VMDIK::ik_infos)
-		);
-		if(!result) {
-			return false;
-		}
-
-		if(!binary_reader.read_to_vec(ik.ik_infos, ik.count)) {
-			return false;
-		}
-	}
-	this->ik->set_vmd_iks(std::move(iks));
-
-	return true;
-}
-
-bool VMDMotion::resolve_bones(const std::unordered_map<std::string, BoneIndex>& bone_name_map) {
 	std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
 
-	for(const auto& bone_key_frame : this->bone_key_frame_list) {
-		const auto& iter = bone_name_map.find(bone_key_frame.bone_name);
-		if(iter == bone_name_map.end()) {
-			// TODO: log
+	for(const auto& bone_key_frame : loader.get_bone_key_frames()) {
+		try {
+			const auto& bone_index = this->bone_accessor->get_bone_index(bone_key_frame.bone_name);
+			temp_map[bone_index].emplace_back(BoneKeyFrame::make(bone_key_frame));
+		} catch(const std::exception&) {
 			continue;
 		}
-		const auto& bone_index = iter->second;
-		temp_map[bone_index].emplace_back(BoneKeyFrame::make(bone_key_frame));
 	}
 
 	// 変換
@@ -168,56 +66,10 @@ bool VMDMotion::resolve_bones(const std::unordered_map<std::string, BoneIndex>& 
 	this->sorted_bones = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
 	std::sort(this->sorted_bones.begin(), this->sorted_bones.end());
 
-	this->ik->resolve_bones(bone_name_map);
-
-	return true;
-}
-
-bool VMDMotion::init_motion(void) {
-	return true;
-}
-
-bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
-	auto reader = BinaryReader::make_reader(path);
-	if(!reader.has_value()) {
-		return false;
-	}
-	auto& binary_reader = reader.value();
-
-	// ヘッダ読み込み
-	if(!this->load_vmd_header(binary_reader)) {
-		return false;
-	}
-
-	// ボーンキーフレームの読み込み
-	if(!this->load_vmd_bone_key_frame(binary_reader)) {
-		return false;
-	}
-
-	// モーフの読み込み
-	if(!this->load_vmd_morph_key_frame(binary_reader)) {
-		return false;
-	}
-
-	// カメラの読み込み
-	if(!this->load_vmd_camera(binary_reader)) {
-		return false;
-	}
-
-	// ライトの読み込み
-	if(!this->load_vmd_light(binary_reader)) {
-		return false;
-	}
-
-	// 影の読み込み
-	if(!this->load_vmd_shadow(binary_reader)) {
-		return false;
-	}
-
-	// IKの読み込み
-	if(!this->load_vmd_ik(binary_reader)) {
-		return false;
-	}
+	this->ik->resolve_bones(
+		loader.get_iks(),
+		this->bone_accessor->get_bone_name_map()
+	);
 
 	return true;
 }
@@ -247,7 +99,7 @@ void VMDMotion::update_motion(const int64_t delta_time) {
 		const auto& opt_previous_key_frame = key_frame_list.get_previous_key_frame();
 		const auto& opt_bone_key_frame = key_frame_list.get_current_key_frame();
 		const auto& bone_key_frame = opt_bone_key_frame.value();
-		const auto& bind_bone = this->bone_map->at(bone_index);
+		const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
 
 		// ローカル行列作成
 		const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
@@ -264,7 +116,7 @@ void VMDMotion::update_motion(const int64_t delta_time) {
 	// グローバル行列作成
 	for(const auto& bone_index : this->sorted_bones) {
 		auto& matrix = this->bone_matrix_map.at(bone_index);
-		const auto& bind_bone = this->bone_map->at(bone_index);
+		const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
 		const int parent_index = bind_bone.parent;
 		if(parent_index < 0) {
 			matrix.global = matrix.local;
@@ -280,7 +132,8 @@ void VMDMotion::update_motion(const int64_t delta_time) {
 	// スキニング用の定数バッファ結果を格納
 	for(const auto& bone_index : this->sorted_bones) {
 		const auto& matrix = this->bone_matrix_map.at(bone_index);
-		const auto& inverse = this->bone_map->at(bone_index).inverse_bind;
-		this->bones->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
+		const auto& inverse = this->bone_accessor->get_bone(bone_index).inverse_bind;
+		auto mutable_matrix = this->bone_accessor->get_mutable_bones();
+		mutable_matrix->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
 	}
 }

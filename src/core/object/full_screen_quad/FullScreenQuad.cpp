@@ -41,7 +41,10 @@ bool FullScreenQuad::init(ID3D11Device* const device) {
 void FullScreenQuad::update(ID3D11DeviceContext* const context) {
 }
 
-void FullScreenQuad::render(ID3D11DeviceContext* const context) const {
+void FullScreenQuad::render(
+	ID3D11DeviceContext* const context,
+	const ShaderBindingSlots* slots
+) const {
 	const UINT stride = sizeof(QuadVertex);
 	const UINT offset = 0;
 

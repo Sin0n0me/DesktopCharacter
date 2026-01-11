@@ -1,0 +1,20 @@
+#include "common/ps_input_clear_wall.hlsl"
+#include "common/constant_buffer/camera.hlsl"
+#include "common/constant_buffer/shadow_map.hlsl"
+
+Texture2D<float> shadow_map : register(t0);
+SamplerComparisonState shadow_sampler : register(s0);
+
+float4 main(PSInput input) : SV_TARGET {       
+    const float depth = input.shadow.z;
+    const float shadow = shadow_map.SampleCmpLevelZero(
+        shadow_sampler, 
+        input.shadow.xy,
+        depth
+    );
+    
+    // ”wŒi‚ªŒ©‚¦‚é‚æ‚¤‚É‚ ‚é’ö“x“§‰ß‚³‚¹‚é
+    const float alpha = (1.0f - shadow) * 0.25;
+ 
+    return float4(0.0f, 0.0f, 0.0f, alpha);
+}

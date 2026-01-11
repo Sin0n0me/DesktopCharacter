@@ -2,14 +2,17 @@
 #include "../../CommonResource.h"
 #include "WallRenderPass.h"
 #include <d3d11.h>
-#include <d3dcompiler.h>
+#include "../../shader/Shader.h"
+#include "../../shader/clear_wall/ClearWallVertexShader.h"
+#include "../../shader/clear_wall/ClearWallPixelShader.h"
+#include "../../shader/SamplerStateNames.h"
+#include "../../constant_buffer/ConstantBufferNames.h"
+#include "../../texrure/TextureNames.h"
 
-constexpr wchar_t VERTEX_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";
-constexpr wchar_t PIXEL_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";
 constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_resource) : IRenderPass(common_resource) {
-	this->resource = common_resource;
+WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept :
+	RenderPass(common_resource) {
 	this->wall_object = std::make_unique<WallObject>();
 }
 
@@ -48,51 +51,67 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
 		0xffffffff
 	);
 	context->OMSetDepthStencilState(
-		this->resource->depth_stencil_state.at(Pattern::Wall).Get(),
+		this->resource->depth_stencil_state.at(Pattern::ClearWall).Get(),
 		0
 	);
 
-	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::Wall).Get());
+	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::ClearWall).Get());
 
 	// 定数バッファのバインド
 	context->VSSetConstantBuffers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::Camera)
+		),
 		1,
 		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
 	);
 	context->VSSetConstantBuffers(
-		2,
+		this->binding_slots->get(
+			ShaderType::Vertex,
+			BindingSlotKind::ConstantBuffer,
+			static_cast<uint32_t>(ConstantBufferName::ShadowMap)
+		),
 		1,
-		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
+		this->resource->constant_buffers.at(ConstantBuffer::ShadowMap).GetAddressOf()
 	);
 
 	// シェーダーのバインド
 	context->VSSetShader(
-		this->resource->vertex_shaders.at(Pattern::Wall).Get(),
+		this->resource->vertex_shaders.at(Pattern::ClearWall).Get(),
 		nullptr,
 		0
 	);
 	context->PSSetShader(
-		this->resource->pixel_shaders.at(Pattern::Wall).Get(),
+		this->resource->pixel_shaders.at(Pattern::ClearWall).Get(),
 		nullptr,
 		0
 	);
 
 	// シャドウマップ
 	context->PSSetShaderResources(
-		0,
+		this->binding_slots->get(
+			ShaderType::Pixel,
+			BindingSlotKind::Texture,
+			static_cast<uint32_t>(TextureName::ShadowMap)
+		),
 		1,
 		this->resource->shader_resouce_view.at(Pattern::Shadow).GetAddressOf()
 	);
 	context->PSSetSamplers(
-		0,
+		this->binding_slots->get(
+			ShaderType::Pixel,
+			BindingSlotKind::SamplerState,
+			static_cast<uint32_t>(SamplerStateName::ShadowMap)
+		),
 		1,
 		this->resource->sampler_state.at(Pattern::Shadow).GetAddressOf()
 	);
 }
 
 void WallRenderPass::render(ID3D11DeviceContext* const context) const {
-	this->wall_object->render(context);
+	this->wall_object->render(context, this->binding_slots.get());
 }
 
 bool WallRenderPass::is_render_model(void) const {
@@ -100,97 +119,33 @@ bool WallRenderPass::is_render_model(void) const {
 }
 
 bool WallRenderPass::make_shaders(ID3D11Device* const device) {
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
+	Shader vertex_shader = Shader(std::make_unique<ClearWallVertexShader>());
+	Shader pixel_shader = Shader(std::make_unique<ClearWallPixelShader>());
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			VERTEX_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"VSMain",
-			"vs_5_0",
-			0, 0,
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!pixel_shader.make_shader(
+		device,
+		this->resource->pixel_shaders[Pattern::ClearWall].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PIXEL_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"PSMain",
-			"ps_5_0",
-			0, 0,
-			ps_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
+	if(!vertex_shader.make_shader(
+		device,
+		this->resource->vertex_shaders[Pattern::ClearWall].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = device->CreateVertexShader(
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			nullptr,
-			this->resource->vertex_shaders[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
+	if(!vertex_shader.make_input_layout(
+		device,
+		this->resource->input_layouts[Pattern::ClearWall].GetAddressOf()
+	)) {
+		return false;
 	}
 
-	{
-		const HRESULT hr = device->CreatePixelShader(
-			ps_blob->GetBufferPointer(),
-			ps_blob->GetBufferSize(),
-			nullptr,
-			this->resource->pixel_shaders[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-		};
-
-		const HRESULT hr = device->CreateInputLayout(
-			layout,
-			_countof(layout),
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
+	// slot番号の取得
+	this->binding_slots->merge(vertex_shader);
+	this->binding_slots->merge(pixel_shader);
 
 	return true;
 }
@@ -225,7 +180,7 @@ bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
 
 	const HRESULT hr = device->CreateDepthStencilState(
 		&desc,
-		this->resource->depth_stencil_state[Pattern::Wall].GetAddressOf()
+		this->resource->depth_stencil_state[Pattern::ClearWall].GetAddressOf()
 	);
 	if(FAILED(hr)) {
 		return false;

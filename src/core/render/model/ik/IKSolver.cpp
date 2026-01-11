@@ -6,14 +6,13 @@
 #include <DirectXMath.h>
 #include <stack>
 
-IKSolver::IKSolver(const std::shared_ptr<const PMDBoneMap>& bone_map) noexcept : bone_map(bone_map) {
-}
-
-void IKSolver::set_pmd_ik(const std::vector<PMDIK>&& iks) {
-	this->iks = iks;
-	for(int i = 0; i < this->iks.size(); ++i) {
-		const auto& ik = this->iks[i];
-		this->ik_map[ik.ik_bone] = i;
+IKSolver::IKSolver(
+	const std::vector<PMDIK>& iks,
+	const std::shared_ptr<const PMDBoneMap>& bone_map
+) noexcept : bone_map(bone_map) {
+	for(int i = 0; i < iks.size(); ++i) {
+		const auto& ik = iks[i];
+		this->ik_map[ik.ik_bone] = ik;
 	}
 
 	this->childern_tree.resize(this->bone_map->size());
@@ -30,16 +29,8 @@ void IKSolver::set_pmd_ik(const std::vector<PMDIK>&& iks) {
 	}
 }
 
-std::optional<PMDIK> IKSolver::get_ik(const BoneIndex& bone_index) const {
-	const auto& iter = this->ik_map.find(bone_index);
-	if(iter == this->ik_map.end()) {
-		return std::optional<PMDIK>();
-	}
-
-	return this->iks.at(iter->second);
-}
-
-void IKSolver::apply_ik(const PMDIK& ik, std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map) const {
+void IKSolver::apply_ik(const BoneIndex& bone_index, std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map) const {
+	const auto& ik = this->ik_map.at(bone_index);
 	if(ik.chain.empty()) {
 		return;
 	}

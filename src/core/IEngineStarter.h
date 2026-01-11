@@ -1,7 +1,5 @@
 #pragma once
-
-typedef HWND;
-typedef UINT;
+#include <Windows.h>
 
 class IEngineStarter {
 public:

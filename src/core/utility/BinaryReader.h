@@ -23,4 +23,6 @@ public:
 		data.resize(count);
 		return this->read(data.data(), sizeof(T) * count);
 	}
+
+	std::vector<uint8_t> read_all(void);
 };

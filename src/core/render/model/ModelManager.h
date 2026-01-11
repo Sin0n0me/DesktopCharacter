@@ -6,11 +6,11 @@
 #include <unordered_map>
 
 struct CommonResource;
-using ModelLoaderFunc = std::unique_ptr<Model>(*)(const std::filesystem::path&);
+using ModelLoaderFunc = std::shared_ptr<Model>(*)(const std::filesystem::path&);
 
 class ModelManager {
 private:
-	std::unordered_map<std::u8string, std::unique_ptr<Model>> models; // firlst: name second: model
+	std::unordered_map<std::u8string, std::shared_ptr<Model>> models; // firlst: name second: model
 	std::u8string current_model;
 	std::unordered_map<std::string, ModelLoaderFunc> support_extensions;
 	std::unordered_map<std::u8string, OBBMap> model_obb_map;
@@ -21,10 +21,10 @@ public:
 	ModelManager(const std::shared_ptr<CommonResource>& common_resource);
 
 	bool init(void);
-	bool add_model(std::unique_ptr<Model> model);
+	bool add_model(std::shared_ptr<Model> model);
 
 	void set_model(const std::u8string& model_name);
-	const Model* get_current_model(void) const;
+	const std::shared_ptr<Model> get_current_model(void) const;
 	const OBBMap& get_obb_map(void) const;
 
 	bool load_current_model(ID3D11Device* const device);
@@ -32,5 +32,4 @@ public:
 
 	void update(const int64_t delta_time);
 	void update_render(ID3D11DeviceContext* const context);
-	void render(ID3D11DeviceContext* const context) const;
 };

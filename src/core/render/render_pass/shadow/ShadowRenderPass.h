@@ -1,16 +1,15 @@
 #pragma once
-#include "../IRenderPass.h"
+#include "../RenderPass.h"
 #include <wrl/client.h>
 
 struct ID3D11Texture2D;
 
-class ShadowRenderPass : public IRenderPass {
+class ShadowRenderPass : public RenderPass {
 private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadow_texture;
 
-	std::shared_ptr<CommonResource> resource;
 public:
-	ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce);
+	explicit ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
 
 public:
 

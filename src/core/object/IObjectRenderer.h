@@ -2,6 +2,7 @@
 
 struct ID3D11DeviceContext;
 struct ID3D11Device;
+class ShaderBindingSlots;
 
 class IObjectRenderer {
 public:
@@ -11,5 +12,5 @@ public:
 
 	virtual void update(ID3D11DeviceContext* const context) = 0;
 
-	virtual void render(ID3D11DeviceContext* const context) const = 0;
+	virtual void render(ID3D11DeviceContext* const context, const ShaderBindingSlots* slots) const = 0;
 };

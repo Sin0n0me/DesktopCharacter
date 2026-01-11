@@ -17,20 +17,14 @@ Scene::Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& 
 	//this->camera.camera.view = this->light.shadow.light_view_proj;
 }
 
-void Scene::update(void) {
+bool Scene::init(ID3D11Device* const device) {
+	return true;
+}
+
+void Scene::update(const int64_t delta_time) {
 }
 
 void Scene::render_update(ID3D11DeviceContext* const context) {
-	/*
-	context->UpdateSubresource(
-		this->resource->constant_buffers[ConstantBuffer::Camera].Get(),
-		0,
-		nullptr,
-		&this->camera.camera,
-		0,
-		0
-	);
-	*/
 }
 
 void Scene::render(ID3D11DeviceContext* const context) const {

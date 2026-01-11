@@ -22,6 +22,17 @@ bool BinaryReader::read(void* data, const int size) {
 	return true;
 }
 
+std::vector<uint8_t> BinaryReader::read_all(void) {
+	// 一旦終端まで移動しtellgで現在位置からサイズを求める
+	this->file.seekg(0, std::ios::end);
+	const std::streamsize size = this->file.tellg();
+	this->file.seekg(0, std::ios::beg);
+
+	std::vector<uint8_t> vec;
+	this->read_to_vec(vec, size);
+	return vec;
+}
+
 std::optional<BinaryReader> BinaryReader::make_reader(const std::filesystem::path& path) {
 	BinaryReader reader{};
 

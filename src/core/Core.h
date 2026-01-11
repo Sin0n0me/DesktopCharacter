@@ -1,15 +1,12 @@
 #pragma once
 #include "collider/Collider.h"
-#include "D3D11.h"
 #include "event/mouse/MouseState.h"
 #include "IEngineStarter.h"
-#include "render/CommonResource.h"
 #include "render/model/ModelManager.h"
-#include "render/render_pass/IRenderPass.h"
 #include "scene/Scene.h"
 #include <memory>
 #include <optional>
-#include <vector>
+#include "render/render_pipeline/RenderPipeline.h"
 
 #ifdef _DEBUG
 constexpr bool IS_DEBUG_MODE = true;
@@ -17,7 +14,8 @@ constexpr bool IS_DEBUG_MODE = true;
 constexpr bool IS_DEBUG_MODE = false;
 #endif // _DEBUG
 
-constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+struct D3D11;
+struct CommonResource;
 
 class Engine : public IEngineStarter {
 private:
@@ -27,13 +25,14 @@ private:
 	static std::optional<Engine* const> instance;
 
 private:
-	std::unique_ptr<D3D11> d3d11;
+	std::shared_ptr<D3D11> d3d11;
+	std::shared_ptr<CommonResource> common_resouce;
+	std::unique_ptr<RenderPipeline> render_pipeline;
+
 	std::unique_ptr<ModelManager> models;
 	std::unique_ptr<Scene> scene;
 	std::unique_ptr<MouseState> mouse_state;
 	std::unique_ptr<Collider> collider;
-	std::shared_ptr<CommonResource> common_resouce;
-	std::vector<std::unique_ptr<IRenderPass>> render_pass;
 
 private:
 	void update(const int64_t delta_time);
@@ -41,6 +40,7 @@ private:
 	void render(void) const;
 
 public:
+	explicit Engine(void) noexcept;
 
 	//static Engine get_engine();
 

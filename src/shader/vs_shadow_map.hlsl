@@ -1,25 +1,7 @@
-cbuffer Camera : register(b0) {
-    matrix world;
-    matrix view;
-    matrix proj;
-}
-
-cbuffer Shadow : register(b1)
-{
-    matrix light_view_proj;
-};
-
-cbuffer Bones : register(b3) {
-    matrix bone_matrices[256];
-};
-
-struct VSInput {
-    float3 position : POSITION;
-    float3 normal : NORMAL;
-    float2 uv : TEXCOORD;
-    uint2 bones : BONEINDICES;
-    float2 weights : BONEWEIGHTS;
-};
+#include "common/vs_input_model.hlsl"
+#include "common/constant_buffer/camera.hlsl"
+#include "common/constant_buffer/bones.hlsl"
+#include "common/constant_buffer/shadow_map.hlsl"
 
 struct VSOutput {
     float4 position : SV_POSITION;

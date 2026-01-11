@@ -120,6 +120,11 @@ int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, cons
 		return -1;
 	}
 
+	FILE* fp;
+	AllocConsole();
+	freopen_s(&fp, "CONOUT$", "w", stdout);
+	freopen_s(&fp, "CONOUT$", "w", stderr);
+
 	/*
 	RAWINPUTDEVICE raw_input_device[2]{};
 	// mouse

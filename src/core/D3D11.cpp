@@ -62,7 +62,7 @@ bool D3D11::make_device(void) {
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
 		nullptr,
-		D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+		D3D11_CREATE_DEVICE_BGRA_SUPPORT | (IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0),
 		nullptr, 0,
 		D3D11_SDK_VERSION,
 		this->device.GetAddressOf(),
@@ -119,7 +119,6 @@ bool D3D11::make_swap_chain(const UINT width, const UINT height) {
 	description.BufferCount = 2;
 	description.SampleDesc.Count = 1;
 	description.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
-	description.Flags = IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0;
 
 	const HRESULT result_swap_chain = this->dxgi_factory->CreateSwapChainForComposition(
 		this->dxgi_device.Get(),

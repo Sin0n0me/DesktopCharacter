@@ -29,7 +29,7 @@ public:
 	) noexcept;
 
 	bool init(ID3D11Device* const device) override;
-	void update(ID3D11DeviceContext* const context) override;
+	void render_update(ID3D11DeviceContext* const context) override;
 	void render(ID3D11DeviceContext* const context, const ShaderBindingSlots* slots) const override;
 
 	std::shared_ptr<Bones> get_mutable_bones(void) const override;

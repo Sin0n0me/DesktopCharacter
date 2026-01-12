@@ -24,6 +24,7 @@ public:
 	void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
 	bool is_render_model(void) const override;
 	bool is_post_render(void) const override;
+	void back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const override;
 
 private:
 

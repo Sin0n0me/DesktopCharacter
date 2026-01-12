@@ -151,7 +151,7 @@ int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, cons
 	// 常に最前面にする
 	SetWindowPos(render_hwnd, HWND_TOPMOST, 800, 400, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
-	//ShowWindow(render_hwnd, SW_SHOW);
+	ShowWindow(render_hwnd, SW_SHOW);
 
 	Engine engine = Engine();
 

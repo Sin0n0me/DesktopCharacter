@@ -23,7 +23,7 @@ public:
 	void on_clicked(const short obb_index) override;
 
 	bool init(ID3D11Device* const device) override;
-	void update(ID3D11DeviceContext* const context) override;
+	void render_update(ID3D11DeviceContext* const context) override;
 	void render(ID3D11DeviceContext* const context, const ShaderBindingSlots* slots) const override;
 	bool is_loaded_model(void) override;
 	void unload_model(void) override;

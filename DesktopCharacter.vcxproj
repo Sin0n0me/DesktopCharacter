@@ -132,12 +132,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\render\shader\shadow\ShadowMapPixelShader.h" />
+    <ClInclude Include="src\core\render\model\pmd\IBoneAccessor.h" />
+    <ClInclude Include="src\core\render\model\pmd\PMDBoneManager.h" />
+    <ClInclude Include="src\core\render\model\pmd\PMDModelLoader.h" />
+    <ClInclude Include="src\core\render\shader\BindingSlotKey.h" />
+    <ClInclude Include="src\core\render\shader\BindingSlotKind.h" />
+    <ClInclude Include="src\core\utility\Hash.h" />
+    <ClInclude Include="src\core\render\shader\ShaderBindingSlots.h" />
+    <ClInclude Include="src\core\render\shader\clear_wall\ClearWallPixelShader.h" />
+    <ClInclude Include="src\core\render\shader\clear_wall\ClearWallVertexShader.h" />
+    <ClInclude Include="src\core\render\shader\SamplerStateNames.h" />
+    <ClInclude Include="src\core\render\shader\shadow\ShadowMapVertexShader.h" />
+    <ClInclude Include="src\core\render\shader\model\PMDModelPixelShader.h" />
+    <ClInclude Include="src\core\render\shader\model\PMDModelVertexShader.h" />
+    <ClInclude Include="src\core\render\shader\fxaa\FXAAVertexShader.h" />
+    <ClInclude Include="src\core\render\render_pipeline\RenderPassName.h" />
+    <ClInclude Include="src\core\render\IRenderer.h" />
+    <ClInclude Include="src\core\render\render_pipeline\RenderPipeline.h" />
+    <ClInclude Include="src\core\scene\IScene.h" />
+    <ClInclude Include="src\core\render\constant_buffer\ConstantBufferNames.h" />
+    <ClInclude Include="src\core\render\shader\ShaderType.h" />
+    <ClInclude Include="src\core\render\shader\Shader.h" />
+    <ClInclude Include="src\core\render\shader\fxaa\FXAAPixelShader.h" />
+    <ClInclude Include="src\core\render\shader\ShaderRelfection.h" />
+    <ClInclude Include="src\core\render\model\pmd\material\PMDMaterialData.h" />
+    <ClInclude Include="src\core\render\model\pmd\material\SphereMode.h" />
     <ClInclude Include="src\core\object\full_screen_quad\FullScreenQuad.h" />
     <ClInclude Include="src\core\render\constant_buffer\FXAA.h" />
     <ClInclude Include="src\core\render\render_pass\fxaa\FXAARenderPass.h" />
+    <ClInclude Include="src\core\scene\SceneManager.h" />
     <ClInclude Include="src\core\utility\Result.h" />
     <ClInclude Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.h" />
-    <ClInclude Include="src\core\render\model\bone\IBoneNameResolver.h" />
     <ClInclude Include="src\core\render\model\ik\IKSolver.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\BoneNode.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\BoneKeyFrame.h" />
@@ -177,7 +203,7 @@
     <ClInclude Include="src\core\render\model\ModelConfig.h" />
     <ClInclude Include="src\core\render\model\ModelManager.h" />
     <ClInclude Include="src\core\render\model\pmd\PMDModel.h" />
-    <ClInclude Include="src\core\render\render_pass\IRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pass\RenderPass.h" />
     <ClInclude Include="src\core\render\constant_buffer\Shadow.h" />
     <ClInclude Include="src\core\render\texrure\Texture.h" />
     <ClInclude Include="src\core\render\render_pass\wall\WallRenderPass.h" />
@@ -185,9 +211,27 @@
     <ClInclude Include="src\core\object\wall\WallObject.h" />
     <ClInclude Include="src\core\event\WindowEvent.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDMotion.h" />
-    <ClInclude Include="src\core\timer\Timer.h" />
+    <ClInclude Include="src\core\render\texrure\TextureNames.h" />
+    <ClInclude Include="src\core\render\motion\vmd\VMDMotionManager.h" />
+    <ClInclude Include="src\core\render\motion\vmd\VMDLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\render\shader\shadow\ShadowMapPixelShader.cpp" />
+    <ClCompile Include="src\core\render\model\pmd\PMDBoneManager.cpp" />
+    <ClCompile Include="src\core\render\model\pmd\PMDModelLoader.cpp" />
+    <ClCompile Include="src\core\render\render_pass\RenderPass.cpp" />
+    <ClCompile Include="src\core\render\shader\BindingSlotKey.cpp" />
+    <ClCompile Include="src\core\render\shader\clear_wall\ClearWallPixelShader.cpp" />
+    <ClCompile Include="src\core\render\shader\clear_wall\ClearWallVertexShader.cpp" />
+    <ClCompile Include="src\core\render\shader\ShaderBindingSlots.cpp" />
+    <ClCompile Include="src\core\render\shader\shadow\ShadowMapVertexShader.cpp" />
+    <ClCompile Include="src\core\render\shader\model\PMDModelPixelShader.cpp" />
+    <ClCompile Include="src\core\render\shader\model\PMDModelVertexShader.cpp" />
+    <ClCompile Include="src\core\render\shader\fxaa\FXAAVertexShader.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\RenderPipeline.cpp" />
+    <ClCompile Include="src\core\render\shader\fxaa\FXAAPixelShader.cpp" />
+    <ClCompile Include="src\core\render\shader\Shader.cpp" />
+    <ClCompile Include="src\core\render\shader\ShaderRelfection.cpp" />
     <ClCompile Include="src\core\object\full_screen_quad\FullScreenQuad.cpp" />
     <ClCompile Include="src\core\render\render_pass\fxaa\FXAARenderPass.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.cpp" />
@@ -220,7 +264,8 @@
     <ClCompile Include="src\core\utility\Utility.cpp" />
     <ClCompile Include="src\core\object\wall\WallObject.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDMotion.cpp" />
-    <ClCompile Include="src\core\timer\Timer.cpp" />
+    <ClCompile Include="src\core\render\motion\vmd\VMDMotionManager.cpp" />
+    <ClCompile Include="src\core\render\motion\vmd\VMDLoader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,16 +1,16 @@
-struct VS_IN {
-    float2 pos : POSITION;
+struct VSInput {
+    float2 position : POSITION;
     float2 uv : TEXCOORD0;
 };
 
-struct VS_OUT {
-    float4 pos : SV_POSITION;
+struct VSOutput {
+    float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 
-VS_OUT main(VS_IN input) {
-    VS_OUT o;
-    o.pos = float4(input.pos, 0.0f, 1.0f);
-    o.uv = input.uv;
-    return o;
+VSOutput main(const VSInput input) {
+    VSOutput output;
+    output.position = float4(input.position, 0.0f, 1.0f);
+    output.uv = input.uv;
+    return output;
 }

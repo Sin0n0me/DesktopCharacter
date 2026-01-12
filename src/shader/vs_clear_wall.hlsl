@@ -6,7 +6,7 @@ struct VSInput {
     float3 position : POSITION;
 };
 
-PSInput main(VSInput input) {
+PSInput main(const VSInput input) {
     PSInput output;
     
     const float4 wpos = mul(float4(input.position, 1.0f), world);

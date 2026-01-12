@@ -1,18 +1,18 @@
 #include "common/constant_buffer/fxaa.hlsl"
 
-Texture2D fxaa_texture : register(t0);
-SamplerState linear_sampler : register(s0);
+Texture2D fxaa_texture;
+SamplerState linear_sampler;
 
 struct PSInput {
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
 };
 
-float luminance(float3 color) {
+float luminance(const float3 color) {
     return dot(color, float3(0.299, 0.587, 0.114));
 }
 
-float4 main(PSInput input) : SV_TARGET { 
+float4 main(const PSInput input) : SV_TARGET {
     //return fxaa_texture.Sample(linear_sampler, input.uv);
     
     // 

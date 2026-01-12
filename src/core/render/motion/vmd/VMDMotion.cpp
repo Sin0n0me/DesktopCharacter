@@ -1,139 +1,141 @@
 #include "../../../utility/BinaryReader.h"
 #include "../../constant_buffer/Bones.h"
 #include "../../model/ik/IKSolver.h"
+#include "../../model/pmd/IBoneAccessor.h"
+#include "VMDLoader.h"
 #include "VMDMotion.h"
 #include <algorithm>
 #include <ranges>
-#include "../../model/pmd/IBoneAccessor.h"
-#include "VMDLoader.h"
 
 VMDMotion::VMDMotion(const std::shared_ptr<IBoneAccessor>& bone_accessor) {
-	this->bone_accessor = bone_accessor;
-	this->elapsed_time = 0;
-	this->current_frame = 0;
-	this->last_frame = 0;
+    this->bone_accessor = bone_accessor;
+    this->elapsed_time = 0;
+    this->current_frame = 0;
+    this->last_frame = 0;
 }
 
 bool VMDMotion::init_motion(void) {
-	return true;
+    return true;
 }
 
 bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
-	if(bool(this->ik)) {
-		return true;
-	}
+    if(bool(this->ik)) {
+        return true;
+    }
 
-	VMDLoader loader = VMDLoader(path);
-	if(!loader.load_vmd()) {
-		return false;
-	}
+    VMDLoader loader = VMDLoader(path);
+    if(!loader.load_vmd()) {
+        return false;
+    }
 
-	this->ik = std::make_unique<IKKeyFrameManager>(
-		this->bone_accessor->get_ik_soulver()
-	);
+    this->ik = std::make_unique<IKKeyFrameManager>(
+        this->bone_accessor->get_ik_soulver()
+    );
 
-	std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
+    std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
 
-	for(const auto& bone_key_frame : loader.get_bone_key_frames()) {
-		try {
-			const auto& bone_index = this->bone_accessor->get_bone_index(bone_key_frame.bone_name);
-			temp_map[bone_index].emplace_back(BoneKeyFrame::make(bone_key_frame));
-		} catch(const std::exception&) {
-			continue;
-		}
-	}
+    for(const auto& bone_key_frame : loader.get_bone_key_frames()) {
+        try {
+            const auto& bone_index = this->bone_accessor->get_bone_index(bone_key_frame.bone_name);
+            temp_map[bone_index].emplace_back(BoneKeyFrame::make(bone_key_frame));
+        } catch(const std::exception&) {
+            continue;
+        }
+    }
 
-	// •ÏŠ·
-	for(auto& pair : temp_map) {
-		const auto& bone_index = pair.first;
+    // å¤‰æ›
+    for(auto& pair : temp_map) {
+        const auto& bone_index = pair.first;
 
-		this->bone_key_frame_map.emplace(
-			bone_index,
-			BoneKeyFrameManager::make(std::move(pair.second))
-		);
+        this->bone_key_frame_map.emplace(
+            bone_index,
+            BoneKeyFrameManager::make(std::move(pair.second))
+        );
 
-		// ÅIƒL[ƒtƒŒ[ƒ€‚ğ‹‚ß‚é
-		const auto& opt_last = this->bone_key_frame_map
-			.at(bone_index)
-			.get_last_key_frame();
-		if(opt_last.has_value()) {
-			const auto& last = opt_last.value().frame_index;
-			this->last_frame = this->last_frame < last ? last : this->last_frame;
-		}
-	}
+        // æœ€çµ‚ã‚­ãƒ¼ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’æ±‚ã‚ã‚‹
+        const auto& opt_last = this->bone_key_frame_map
+            .at(bone_index)
+            .get_last_key_frame();
+        if(opt_last.has_value()) {
+            const auto& last = opt_last.value().frame_index;
+            this->last_frame = this->last_frame < last ? last : this->last_frame;
+        }
+    }
 
-	const auto& keys_view = std::views::keys(temp_map);
-	this->sorted_bones = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
-	std::sort(this->sorted_bones.begin(), this->sorted_bones.end());
+    const auto& keys_view = std::views::keys(temp_map);
+    this->sorted_bones = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
+    std::sort(this->sorted_bones.begin(), this->sorted_bones.end());
 
-	this->ik->resolve_bones(
-		loader.get_iks(),
-		this->bone_accessor->get_bone_name_map()
-	);
+    this->ik->resolve_bones(
+        loader.get_iks(),
+        this->bone_accessor->get_bone_name_map()
+    );
 
-	return true;
+    return true;
 }
 
 void VMDMotion::update_motion(const int64_t delta_time) {
-	this->elapsed_time += delta_time;
+    this->elapsed_time += delta_time;
 
-	// Œo‰ßŠÔ‚ÌƒŠƒZƒbƒg
-	if(FRAME_TIME < this->elapsed_time) {
-		this->current_frame += 1;
-		this->elapsed_time = 0;
-	}
+    // çµŒéæ™‚é–“ã®ãƒªã‚»ãƒƒãƒˆ
+    if(FRAME_TIME < this->elapsed_time) {
+        this->current_frame += 1;
+        this->elapsed_time = 0;
+    }
 
-	// ƒtƒŒ[ƒ€‚ÌƒŠƒZƒbƒg
-	if(this->last_frame < this->current_frame) {
-		this->current_frame = 0;
-	}
+    // ãƒ•ãƒ¬ãƒ¼ãƒ ã®ãƒªã‚»ãƒƒãƒˆ
+    if(this->last_frame < this->current_frame) {
+        this->current_frame = 0;
+    }
 
-	// TODO: to GPU (ƒ[ƒJƒ‹s—ñì¬ˆÈŠO)
+    // TODO: to GPU (ãƒ­ãƒ¼ã‚«ãƒ«è¡Œåˆ—ä½œæˆä»¥å¤–)
 
-	// ƒ[ƒJƒ‹s—ñì¬
-	for(const auto& bone_index : this->sorted_bones) {
-		auto& matrix = this->bone_matrix_map[bone_index];
-		auto& key_frame_list = this->bone_key_frame_map.at(bone_index);
-		key_frame_list.set_frame(this->current_frame);
+    // ãƒ­ãƒ¼ã‚«ãƒ«è¡Œåˆ—ä½œæˆ
+    for(const auto& bone_index : this->sorted_bones) {
+        auto& matrix = this->bone_matrix_map[bone_index];
+        auto& key_frame_list = this->bone_key_frame_map.at(bone_index);
+        key_frame_list.set_frame(this->current_frame);
 
-		const auto& opt_previous_key_frame = key_frame_list.get_previous_key_frame();
-		const auto& opt_bone_key_frame = key_frame_list.get_current_key_frame();
-		const auto& bone_key_frame = opt_bone_key_frame.value();
-		const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
+        const auto& opt_previous_key_frame = key_frame_list.get_previous_key_frame();
+        const auto& opt_bone_key_frame = key_frame_list.get_current_key_frame();
+        const auto& bone_key_frame = opt_bone_key_frame.value();
+        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
 
-		// ƒ[ƒJƒ‹s—ñì¬
-		const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
-			key_frame_list.get_translate(this->elapsed_time)
-		);
-		const DirectX::XMMATRIX translate = bind_bone.local * anim_translate;
-		const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(
-			key_frame_list.get_rotate(this->elapsed_time)
-		);
+        // ãƒ­ãƒ¼ã‚«ãƒ«è¡Œåˆ—ä½œæˆ
+        const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
+            key_frame_list.get_translate(
+                static_cast<uint32_t>(this->elapsed_time)
+            )
+        );
+        const DirectX::XMMATRIX translate = bind_bone.local * anim_translate;
+        const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(
+            key_frame_list.get_rotate(this->elapsed_time)
+        );
 
-		matrix.local = rotate * translate;
-	}
+        matrix.local = rotate * translate;
+    }
 
-	// ƒOƒ[ƒoƒ‹s—ñì¬
-	for(const auto& bone_index : this->sorted_bones) {
-		auto& matrix = this->bone_matrix_map.at(bone_index);
-		const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
-		const int parent_index = bind_bone.parent;
-		if(parent_index < 0) {
-			matrix.global = matrix.local;
-		} else {
-			const auto& parent_global = this->bone_matrix_map.at(parent_index).global;
-			matrix.global = matrix.local * parent_global;
-		}
-	}
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«è¡Œåˆ—ä½œæˆ
+    for(const auto& bone_index : this->sorted_bones) {
+        auto& matrix = this->bone_matrix_map.at(bone_index);
+        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
+        const int parent_index = bind_bone.parent;
+        if(parent_index < 0) {
+            matrix.global = matrix.local;
+        } else {
+            const auto& parent_global = this->bone_matrix_map.at(parent_index).global;
+            matrix.global = matrix.local * parent_global;
+        }
+    }
 
-	// IK
-	this->ik->apply_ik(this->bone_matrix_map, this->current_frame);
+    // IK
+    this->ik->apply_ik(this->bone_matrix_map, this->current_frame);
 
-	// ƒXƒLƒjƒ“ƒO—p‚Ì’è”ƒoƒbƒtƒ@Œ‹‰Ê‚ğŠi”[
-	for(const auto& bone_index : this->sorted_bones) {
-		const auto& matrix = this->bone_matrix_map.at(bone_index);
-		const auto& inverse = this->bone_accessor->get_bone(bone_index).inverse_bind;
-		auto mutable_matrix = this->bone_accessor->get_mutable_bones();
-		mutable_matrix->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
-	}
+    // ã‚¹ã‚­ãƒ‹ãƒ³ã‚°ç”¨ã®å®šæ•°ãƒãƒƒãƒ•ã‚¡çµæœã‚’æ ¼ç´
+    for(const auto& bone_index : this->sorted_bones) {
+        const auto& matrix = this->bone_matrix_map.at(bone_index);
+        const auto& inverse = this->bone_accessor->get_bone(bone_index).inverse_bind;
+        auto mutable_matrix = this->bone_accessor->get_mutable_bones();
+        mutable_matrix->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
+    }
 }

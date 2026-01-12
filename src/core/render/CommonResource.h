@@ -23,7 +23,7 @@ enum class ConstantBuffer {
 enum class Pattern {
 	Model,
 	ClearWall,
-	Shadow,
+	ShadowMap,
 	FXAA,
 	SMAA,
 };

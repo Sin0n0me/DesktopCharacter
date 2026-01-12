@@ -5,6 +5,7 @@
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 struct ID3D11RenderTargetView;
+struct ID3D11ShaderResourceView;
 struct CommonResource;
 
 class RenderPass {
@@ -33,4 +34,9 @@ public:
 	virtual bool is_post_render(void) const = 0;
 
 	virtual const ShaderBindingSlots* get_shader_binding_slots(void) const;
+
+	virtual void back_buffer_resouce(
+		ID3D11DeviceContext* const context,
+		ID3D11ShaderResourceView* const shader_resouce_view
+	) const = 0;
 };

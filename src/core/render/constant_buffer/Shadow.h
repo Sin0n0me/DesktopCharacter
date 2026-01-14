@@ -2,5 +2,5 @@
 #include <DirectXMath.h>
 
 struct alignas(16) Shadow {
-	DirectX::XMMATRIX light_view_proj;
+    DirectX::XMMATRIX light_view_proj;
 };

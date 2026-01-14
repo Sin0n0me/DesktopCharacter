@@ -178,7 +178,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
     }
 
     {
-        D3D11_DEPTH_STENCIL_DESC desc{
+        constexpr D3D11_DEPTH_STENCIL_DESC desc{
             .DepthEnable = TRUE,
             .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
             .DepthFunc = D3D11_COMPARISON_LESS,
@@ -196,6 +196,7 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
     {
         constexpr D3D11_SAMPLER_DESC desc{
             .Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
+            //.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,
             .AddressU = D3D11_TEXTURE_ADDRESS_BORDER,
             .AddressV = D3D11_TEXTURE_ADDRESS_BORDER,
             .AddressW = D3D11_TEXTURE_ADDRESS_BORDER,

@@ -105,11 +105,12 @@ bool FXAARenderPass::make_sampler(ID3D11Device* const device) {
 }
 
 bool FXAARenderPass::make_depth_stencil(ID3D11Device* const device) {
-    D3D11_DEPTH_STENCIL_DESC desc = {};
-    desc.DepthEnable = FALSE;
-    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-    desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-    desc.StencilEnable = FALSE;
+    constexpr D3D11_DEPTH_STENCIL_DESC desc{
+        .DepthEnable = FALSE,
+        .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO,
+        .DepthFunc = D3D11_COMPARISON_ALWAYS,
+        .StencilEnable = FALSE,
+    };
 
     const HRESULT hr = device->CreateDepthStencilState(
         &desc,

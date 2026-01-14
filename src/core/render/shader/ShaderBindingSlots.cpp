@@ -30,7 +30,7 @@ uint32_t ShaderBindingSlots::get(
     return this->get(BindingSlotKey{name_hash, type, kind});
 }
 
-bool ShaderBindingSlots::get(const BindingSlotKey& key) const {
+uint32_t ShaderBindingSlots::get(const BindingSlotKey& key) const {
     return this->bind_map.at(key);
 }
 
@@ -43,7 +43,7 @@ uint32_t ShaderBindingSlots::get_or(
     return this->get_or(BindingSlotKey{name_hash, type, kind}, or_value);
 }
 
-bool ShaderBindingSlots::get_or(
+uint32_t ShaderBindingSlots::get_or(
     const BindingSlotKey& key,
     const uint32_t& or_value
 ) const {

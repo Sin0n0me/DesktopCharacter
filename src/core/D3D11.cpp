@@ -227,7 +227,7 @@ bool D3D11::make_rasterizer(void) {
         .FillMode = D3D11_FILL_SOLID,
         .CullMode = D3D11_CULL_BACK,
         .FrontCounterClockwise = FALSE,
-        .DepthBias = 1,
+        .DepthBias = 0,
         .SlopeScaledDepthBias = 0.5f,
         .DepthClipEnable = TRUE,
     };

@@ -7,6 +7,7 @@
 #include "../../shader/fxaa/FXAAVertexShader.h"
 #include "../../shader/SamplerStateNames.h"
 #include "../../shader/Shader.h"
+#include "../../texrure/TextureNames.h"
 #include "FXAARenderPass.h"
 #include <d3d11.h>
 
@@ -204,7 +205,7 @@ void FXAARenderPass::back_buffer_resouce(
         this->binding_slots->get(
             ShaderType::Pixel,
             BindingSlotKind::Texture,
-            static_cast<uint32_t>(SamplerStateName::FXAA)
+            static_cast<uint32_t>(TextureName::FXAA)
         ),
         1,
         &shader_resouce_view

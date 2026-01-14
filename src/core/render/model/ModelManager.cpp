@@ -1,4 +1,4 @@
-﻿#include "../CommonResource.h"
+#include "../CommonResource.h"
 #include "ModelManager.h"
 #include "pmd/PMDModel.h"
 #include <filesystem>

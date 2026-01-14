@@ -15,7 +15,7 @@ Scene::Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& 
     this->camera = SceneCamera::make_camera(device, resource);
     this->light = Light::make_light(device, resource);
 
-    this->camera.camera.view = this->light.shadow.light_view_proj;
+    //this->camera.camera.view = this->light.shadow.light_view_proj;
 }
 
 bool Scene::init(ID3D11Device* const device) {

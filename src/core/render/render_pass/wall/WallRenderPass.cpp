@@ -40,23 +40,23 @@ void WallRenderPass::update(ID3D11DeviceContext* const context) {
 }
 
 void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
+    // モデルと同じ
     context->OMSetRenderTargets(
         1,
         &render_target_view,
         nullptr
     );
-    /*
-    context->OMSetBlendState(
-        this->blend_state.Get(),
-        BLEND_COLOR,
-        0xffffffff
-    );
-    */
 
     context->OMSetDepthStencilState(
         this->resource->depth_stencil_state.at(Pattern::ClearWall).Get(),
         0
     );
+    context->OMSetBlendState(
+        this->blend_state.Get(),
+        BLEND_COLOR,
+        0xFFFFFFFF
+    );
+
     context->IASetInputLayout(
         this->resource->input_layouts.at(Pattern::ClearWall).Get()
     );
@@ -83,7 +83,6 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
         1,
         this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
     );
-    /*
     context->VSSetConstantBuffers(
         this->binding_slots->get(
             ShaderType::Vertex,
@@ -93,7 +92,6 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
         1,
         this->resource->constant_buffers.at(ConstantBuffer::ShadowMap).GetAddressOf()
     );
-    */
 
     // シャドウマップ
     context->PSSetShaderResources(
@@ -114,8 +112,6 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
         1,
         this->resource->sampler_state.at(Pattern::ShadowMap).GetAddressOf()
     );
-    /*
-    */
 }
 
 void WallRenderPass::render(ID3D11DeviceContext* const context) const {

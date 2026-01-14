@@ -91,10 +91,7 @@ void PMDModel::render(
     uint32_t index_offset = 0;
     for(const auto& material : this->materials) {
         material.texture.render_set_resource(context, slots);
-
-        if(material.sphere_mode != SphereMode::None) {
-            material.sphere.render_set_resource(context, slots);
-        }
+        material.sphere.render_set_resource(context, slots);
 
         // シャドウマップなどで使用しない場合もある
         const BindingSlotKey key = BindingSlotKey{
@@ -257,6 +254,11 @@ bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
         const auto pos = texture_path.find('*');
         if(pos == std::string::npos) {
             material_data.sphere_mode = SphereMode::None;
+
+            // スフィアがない場合はダミーを作成
+            if(!material_data.sphere.make_dummy_texture(device)) {
+                return false;
+            }
         } else {
             std::string sphere = texture_path.substr(pos + 1);
             texture_path = texture_path.substr(0, pos);
@@ -292,6 +294,23 @@ bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
         Material mat{};
         memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
         memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
+
+        switch(material_data.sphere_mode) {
+        case SphereMode::None:
+            mat.sphere_add = 0.0f;
+            mat.sphere_mul = 0.0f;
+            break;
+        case SphereMode::Multiply:
+            mat.sphere_add = 0.0f;
+            mat.sphere_mul = 1.0f;
+            break;
+        case SphereMode::Add:
+            mat.sphere_add = 1.0f;
+            mat.sphere_mul = 0.0f;
+            break;
+        default:
+            return false;
+        }
 
         D3D11_SUBRESOURCE_DATA init_data{};
         init_data.pSysMem = &mat;

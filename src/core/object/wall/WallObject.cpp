@@ -3,8 +3,9 @@
 #include <DirectXMath.h>
 
 constexpr float WALL_SIZE = 20.0f;
-constexpr float FRONT_DEPTH = 1.0f;
-constexpr float DEPTH = 2.0f; // 奥行(床面)
+constexpr float HALF_WALL_SIZE = WALL_SIZE / 2.0f;
+constexpr float FRONT_DEPTH = 0.0f;
+constexpr float FLOOR_DEPTH = 2.5f; // 奥行(床面)
 constexpr float OFFSET_Y = 0.0f;
 
 struct ShadowReceiverVertex {
@@ -57,10 +58,10 @@ void WallObject::render(
 
 bool WallObject::make_mesh_wall(ID3D11Device* const device) {
     constexpr ShadowReceiverVertex WALL_VERTICES[] = {
-        {{-WALL_SIZE / 2.0f, 0.0f, DEPTH}},
-        {{-WALL_SIZE / 2.0f, WALL_SIZE, DEPTH}},
-        {{WALL_SIZE / 2.0f, WALL_SIZE, DEPTH}},
-        {{WALL_SIZE / 2.0f, 0.0f, DEPTH}},
+        {{-HALF_WALL_SIZE, 0.0f, FLOOR_DEPTH}},
+        {{-HALF_WALL_SIZE, WALL_SIZE, FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, WALL_SIZE, FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, 0.0f, FLOOR_DEPTH}},
     };
     constexpr uint32_t INDICES[] = {
         0, 1, 2,
@@ -112,29 +113,32 @@ bool WallObject::make_mesh_wall(ID3D11Device* const device) {
 
 bool WallObject::make_mesh_chair(ID3D11Device* const device) {
     constexpr ShadowReceiverVertex CHAIR_VERTICES[] = {
-        {{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
-        {{-WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + DEPTH}},
-        {{WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + DEPTH}},
-        {{WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
+        // Wall
+        {{-HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{-HALF_WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, WALL_SIZE + OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
 
-        {{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
-        {{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
-        {{WALL_SIZE, OFFSET_Y, FRONT_DEPTH + DEPTH}},
-        {{WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+        // Floor
+        {{-HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+        {{-HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
 
-        {{-WALL_SIZE, -WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
-        {{-WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
-        {{WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
-        {{WALL_SIZE, -WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
+        // UnderWall
+        {{-HALF_WALL_SIZE, -HALF_WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
+        {{-HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+        {{HALF_WALL_SIZE, OFFSET_Y, FRONT_DEPTH}},
+        {{HALF_WALL_SIZE, -HALF_WALL_SIZE + OFFSET_Y, FRONT_DEPTH}},
     };
 
     constexpr uint32_t INDICES[] = {
         0, 1, 2,
         0, 2, 3,
-        4, 5, 6,
-        4, 6, 7,
-        8, 9, 10,
-        8, 10, 11,
+        4, 5, 7,
+        5, 6, 7,
+        10, 8, 9,
+        10, 11, 8,
     };
 
     this->chair_index_count = sizeof(INDICES) / sizeof(uint32_t);

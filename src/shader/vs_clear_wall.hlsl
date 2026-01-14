@@ -1,4 +1,4 @@
-#include "common/ps_input_clear_wall.hlsl"
+#include "common/input_ps_clear_wall.hlsl"
 #include "common/constant_buffer/camera.hlsl"
 #include "common/constant_buffer/shadow_map.hlsl"
 
@@ -7,8 +7,7 @@ struct VSInput {
 };
 
 PSInput main(const VSInput input) {
-    PSInput output;
-    
+    PSInput output;    
     const float4 wpos = mul(float4(input.position, 1.0f), world);
     const float4 vpos = mul(wpos, view);
     output.position = mul(vpos, proj);

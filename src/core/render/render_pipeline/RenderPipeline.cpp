@@ -113,6 +113,10 @@ void RenderPipeline::render(void) const {
     view_port.MinDepth = 0.0f;
     view_port.MaxDepth = 1.0f;
 
+    ID3D11RenderTargetView* const null_rtv[8] = {};
+    ID3D11ShaderResourceView* const null_srv[8] = {};
+    ID3D11SamplerState* const null_sampler[8] = {};
+
     const auto& context = this->d3d11->context;
 
     context->ClearRenderTargetView(
@@ -125,9 +129,6 @@ void RenderPipeline::render(void) const {
     );
 
     for(const auto& render_pass : this->pipe_line) {
-        ID3D11RenderTargetView* null_rtv[8] = {};
-        ID3D11ShaderResourceView* null_srv[8] = {};
-        ID3D11SamplerState* null_sampler[8] = {};
         context->OMSetRenderTargets(8, null_rtv, nullptr);
         context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
         context->OMSetDepthStencilState(nullptr, 0);
@@ -135,7 +136,9 @@ void RenderPipeline::render(void) const {
         context->VSSetShader(nullptr, nullptr, 0);
         context->PSSetShader(nullptr, nullptr, 0);
         context->PSSetShaderResources(0, 8, null_srv);
+        context->VSSetShaderResources(0, 8, null_srv);
         context->PSSetSamplers(0, 8, null_sampler);
+
         context->RSSetViewports(1, &view_port);
         context->RSSetState(this->d3d11->rasterizer_cull_back.Get());
 

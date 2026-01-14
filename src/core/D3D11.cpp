@@ -1,11 +1,11 @@
-#include <dxgi.h>
-#include <dxgi1_2.h>
+#include "../Application.h"
+#include "Core.h"
+#include "D3D11.h"
 #include <d3d11.h>
 #include <dcomp.h>
+#include <dxgi.h>
+#include <dxgi1_2.h>
 #include <iostream>
-#include "D3D11.h"
-#include "Core.h"
-#include "../Application.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "dcomp.lib")
@@ -19,283 +19,283 @@
 //
 
 bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
-	if(!this->make_device()) {
-		return false;
-	}
+    if(!this->make_device()) {
+        return false;
+    }
 
-	if(!this->make_factory()) {
-		return false;
-	}
+    if(!this->make_factory()) {
+        return false;
+    }
 
-	if(!this->make_swap_chain(width, height)) {
-		return false;
-	}
+    if(!this->make_swap_chain(width, height)) {
+        return false;
+    }
 
-	if(!this->make_render_target_view()) {
-		return false;
-	}
+    if(!this->make_render_target_view()) {
+        return false;
+    }
 
-	if(!this->make_target(hwnd)) {
-		return false;
-	}
+    if(!this->make_target(hwnd)) {
+        return false;
+    }
 
-	if(!this->make_rasterizer()) {
-		return false;
-	}
+    if(!this->make_rasterizer()) {
+        return false;
+    }
 
-	if(!this->make_visual()) {
-		return false;
-	}
+    if(!this->make_visual()) {
+        return false;
+    }
 
-	if(!this->commit()) {
-		return false;
-	}
+    if(!this->commit()) {
+        return false;
+    }
 
-	this->set_viewport(width, height);
+    this->set_viewport(width, height);
 
-	return true;
+    return true;
 }
 
-// ƒfƒoƒCƒX‚Ìì¬
+// ãƒ‡ãƒã‚¤ã‚¹ã®ä½œæˆ
 bool D3D11::make_device(void) {
-	const HRESULT result_device = D3D11CreateDevice(
-		nullptr,
-		D3D_DRIVER_TYPE_HARDWARE,
-		nullptr,
-		D3D11_CREATE_DEVICE_BGRA_SUPPORT | (IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0),
-		nullptr, 0,
-		D3D11_SDK_VERSION,
-		this->device.GetAddressOf(),
-		nullptr,
-		this->context.GetAddressOf()
-	);
-	if(FAILED(result_device)) {
-		std::cerr << "Failed make D3D11Device" << std::endl;
-		return false;
-	}
+    const HRESULT result_device = D3D11CreateDevice(
+        nullptr,
+        D3D_DRIVER_TYPE_HARDWARE,
+        nullptr,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT | (IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0),
+        nullptr, 0,
+        D3D11_SDK_VERSION,
+        this->device.GetAddressOf(),
+        nullptr,
+        this->context.GetAddressOf()
+    );
+    if(FAILED(result_device)) {
+        std::cerr << "Failed make D3D11Device" << std::endl;
+        return false;
+    }
 
-	const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
-	if(FAILED(result_device)) {
-		std::cerr << "Failed make DXGIDevice" << std::endl;
-		return false;
-	}
+    const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
+    if(FAILED(result_device)) {
+        std::cerr << "Failed make DXGIDevice" << std::endl;
+        return false;
+    }
 
-	const HRESULT result_dcom_device = DCompositionCreateDevice(
-		dxgi_device.Get(),
-		__uuidof(this->dcomp_device),
-		reinterpret_cast<void**>(this->dcomp_device.GetAddressOf())
-	);
-	if(FAILED(result_device)) {
-		std::cerr << "Failed make DCompositionDevice" << std::endl;
-		return false;
-	}
+    const HRESULT result_dcom_device = DCompositionCreateDevice(
+        dxgi_device.Get(),
+        __uuidof(this->dcomp_device),
+        reinterpret_cast<void**>(this->dcomp_device.GetAddressOf())
+    );
+    if(FAILED(result_device)) {
+        std::cerr << "Failed make DCompositionDevice" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-// DXGIƒfƒoƒCƒX‚ÆFactoryŽæ“¾
+// DXGIãƒ‡ãƒã‚¤ã‚¹ã¨Factoryå–å¾—
 bool D3D11::make_factory(void) {
-	const HRESULT result_factory = CreateDXGIFactory2(
-		DXGI_CREATE_FACTORY_DEBUG,
-		__uuidof(this->dxgi_factory),
-		reinterpret_cast<void**>(this->dxgi_factory.GetAddressOf())
-	);
-	if(FAILED(result_factory)) {
-		std::cerr << "Failed make Factory" << std::endl;
-		return false;
-	}
+    const HRESULT result_factory = CreateDXGIFactory2(
+        DXGI_CREATE_FACTORY_DEBUG,
+        __uuidof(this->dxgi_factory),
+        reinterpret_cast<void**>(this->dxgi_factory.GetAddressOf())
+    );
+    if(FAILED(result_factory)) {
+        std::cerr << "Failed make Factory" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-// ƒXƒƒbƒvƒ`ƒF[ƒ“‚Ìì¬
+// ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ã®ä½œæˆ
 bool D3D11::make_swap_chain(const UINT width, const UINT height) {
-	DXGI_SWAP_CHAIN_DESC1 description{};
-	description.Width = width;
-	description.Height = height;
-	description.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-	description.BufferCount = 2;
-	description.SampleDesc.Count = 1;
-	description.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+    DXGI_SWAP_CHAIN_DESC1 description{};
+    description.Width = width;
+    description.Height = height;
+    description.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+    description.BufferCount = 2;
+    description.SampleDesc.Count = 1;
+    description.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
 
-	const HRESULT result_swap_chain = this->dxgi_factory->CreateSwapChainForComposition(
-		this->dxgi_device.Get(),
-		&description,
-		nullptr,
-		this->dxgi_swap_chain.GetAddressOf()
-	);
+    const HRESULT result_swap_chain = this->dxgi_factory->CreateSwapChainForComposition(
+        this->dxgi_device.Get(),
+        &description,
+        nullptr,
+        this->dxgi_swap_chain.GetAddressOf()
+    );
 
-	if(FAILED(result_swap_chain)) {
-		std::cerr << "Failed make SwapChain" << std::endl;
-		return false;
-	}
+    if(FAILED(result_swap_chain)) {
+        std::cerr << "Failed make SwapChain" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-// RenderTargetViewì¬
+// RenderTargetViewä½œæˆ
 bool D3D11::make_render_target_view(void) {
-	{
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
-		{
-			D3D11_TEXTURE2D_DESC desc{};
-			desc.Width = WIDTH;
-			desc.Height = HEIGHT;
-			desc.MipLevels = 1;
-			desc.ArraySize = 1;
-			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			desc.SampleDesc.Count = 1;
-			desc.Usage = D3D11_USAGE_DEFAULT;
-			desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    {
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
+        {
+            D3D11_TEXTURE2D_DESC desc{};
+            desc.Width = WIDTH;
+            desc.Height = HEIGHT;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-			const HRESULT hr = this->device->CreateTexture2D(
-				&desc,
-				nullptr,
-				texture.GetAddressOf()
-			);
-			if(FAILED(hr)) {
-				std::cerr << "Failed make RenderTargetView" << std::endl;
-				return false;
-			}
-		}
+            const HRESULT hr = this->device->CreateTexture2D(
+                &desc,
+                nullptr,
+                texture.GetAddressOf()
+            );
+            if(FAILED(hr)) {
+                std::cerr << "Failed make RenderTargetView" << std::endl;
+                return false;
+            }
+        }
 
-		{
-			const HRESULT hr = this->device->CreateRenderTargetView(
-				texture.Get(),
-				nullptr,
-				this->render_target_view.GetAddressOf()
-			);
-			if(FAILED(hr)) {
-				std::cerr << "Failed make RenderTargetView" << std::endl;
-				return false;
-			}
-		}
+        {
+            const HRESULT hr = this->device->CreateRenderTargetView(
+                texture.Get(),
+                nullptr,
+                this->render_target_view.GetAddressOf()
+            );
+            if(FAILED(hr)) {
+                std::cerr << "Failed make RenderTargetView" << std::endl;
+                return false;
+            }
+        }
 
-		{
-			const HRESULT hr = this->device->CreateShaderResourceView(
-				texture.Get(),
-				nullptr,
-				this->shader_resouce_view.GetAddressOf()
-			);
-			if(FAILED(hr)) {
-				std::cerr << "Failed make RenderTargetView" << std::endl;
-				return false;
-			}
-		}
-	}
+        {
+            const HRESULT hr = this->device->CreateShaderResourceView(
+                texture.Get(),
+                nullptr,
+                this->shader_resouce_view.GetAddressOf()
+            );
+            if(FAILED(hr)) {
+                std::cerr << "Failed make RenderTargetView" << std::endl;
+                return false;
+            }
+        }
+    }
 
-	{
-		// ƒoƒbƒNƒoƒbƒtƒ@Žæ“¾
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
-		{
-			const HRESULT hr = this->dxgi_swap_chain->GetBuffer(
-				0,
-				IID_PPV_ARGS(back_buffer.GetAddressOf())
-			);
-			if(FAILED(hr)) {
-				std::cerr << "Failed make RenderTargetView" << std::endl;
-				return false;
-			}
-		}
+    {
+        // ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡å–å¾—
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
+        {
+            const HRESULT hr = this->dxgi_swap_chain->GetBuffer(
+                0,
+                IID_PPV_ARGS(back_buffer.GetAddressOf())
+            );
+            if(FAILED(hr)) {
+                std::cerr << "Failed make RenderTargetView" << std::endl;
+                return false;
+            }
+        }
 
-		{
-			const HRESULT hr = this->device->CreateRenderTargetView(
-				back_buffer.Get(),
-				nullptr,
-				this->render_target_view_back.GetAddressOf()
-			);
-			if(FAILED(hr)) {
-				std::cerr << "Failed make RenderTargetView" << std::endl;
-				return false;
-			}
-		}
-	}
+        {
+            const HRESULT hr = this->device->CreateRenderTargetView(
+                back_buffer.Get(),
+                nullptr,
+                this->render_target_view_back.GetAddressOf()
+            );
+            if(FAILED(hr)) {
+                std::cerr << "Failed make RenderTargetView" << std::endl;
+                return false;
+            }
+        }
+    }
 
-	return true;
+    return true;
 }
 
-// ƒ‰ƒXƒ^ƒ‰ƒCƒU‚Ìì¬
+// ãƒ©ã‚¹ã‚¿ãƒ©ã‚¤ã‚¶ã®ä½œæˆ
 bool D3D11::make_rasterizer(void) {
-	D3D11_RASTERIZER_DESC desc{};
-	desc.FillMode = D3D11_FILL_SOLID;
-	desc.DepthClipEnable = TRUE;
-	desc.FrontCounterClockwise = FALSE;
-	desc.DepthBias = 1;
-	desc.SlopeScaledDepthBias = 0.5f;
+    D3D11_RASTERIZER_DESC desc{};
+    desc.FillMode = D3D11_FILL_SOLID;
+    desc.DepthClipEnable = TRUE;
+    desc.FrontCounterClockwise = FALSE;
+    desc.DepthBias = 0.01f;
+    desc.SlopeScaledDepthBias = 0.5f;
 
-	// ”w–ÊƒJƒŠƒ“ƒO‚ ‚è
-	desc.CullMode = D3D11_CULL_BACK;
-	if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_back.GetAddressOf()))) {
-		return false;
-	}
+    // èƒŒé¢ã‚«ãƒªãƒ³ã‚°ã‚ã‚Š
+    desc.CullMode = D3D11_CULL_BACK;
+    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_back.GetAddressOf()))) {
+        return false;
+    }
 
-	// ƒJƒŠƒ“ƒO‚È‚µ(—¼–Ê)
-	desc.CullMode = D3D11_CULL_NONE;
-	if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_none.GetAddressOf()))) {
-		return false;
-	}
+    // ã‚«ãƒªãƒ³ã‚°ãªã—(ä¸¡é¢)
+    desc.CullMode = D3D11_CULL_NONE;
+    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_none.GetAddressOf()))) {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool D3D11::make_target(const HWND hwnd) {
-	const HRESULT hr = this->dcomp_device->CreateTargetForHwnd(
-		hwnd,
-		true, // Top most
-		this->dcomp_target.GetAddressOf()
-	);
+    const HRESULT hr = this->dcomp_device->CreateTargetForHwnd(
+        hwnd,
+        true, // Top most
+        this->dcomp_target.GetAddressOf()
+    );
 
-	if(FAILED(hr)) {
-		std::cerr << "Failed make Target" << std::endl;
-		return false;
-	}
+    if(FAILED(hr)) {
+        std::cerr << "Failed make Target" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool D3D11::make_visual(void) {
-	const HRESULT hr = this->dcomp_device->CreateVisual(this->dcomp_visual.GetAddressOf());
-	if(FAILED(hr)) {
-		std::cerr << "Failed make Visual" << std::endl;
-		return false;
-	}
+    const HRESULT hr = this->dcomp_device->CreateVisual(this->dcomp_visual.GetAddressOf());
+    if(FAILED(hr)) {
+        std::cerr << "Failed make Visual" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool D3D11::commit(void) {
-	const HRESULT result_set_context = this->dcomp_visual->SetContent(this->dxgi_swap_chain.Get());
-	if(FAILED(result_set_context)) {
-		std::cerr << "Failed Set Context" << std::endl;
-		return false;
-	}
+    const HRESULT result_set_context = this->dcomp_visual->SetContent(this->dxgi_swap_chain.Get());
+    if(FAILED(result_set_context)) {
+        std::cerr << "Failed Set Context" << std::endl;
+        return false;
+    }
 
-	const HRESULT result_set_root = this->dcomp_target->SetRoot(this->dcomp_visual.Get());
-	if(FAILED(result_set_root)) {
-		std::cerr << "Failed Set Root" << std::endl;
-		return false;
-	}
+    const HRESULT result_set_root = this->dcomp_target->SetRoot(this->dcomp_visual.Get());
+    if(FAILED(result_set_root)) {
+        std::cerr << "Failed Set Root" << std::endl;
+        return false;
+    }
 
-	// ‡¬ƒGƒ“ƒWƒ“‚ÉŠ®—¹‚ð’Ê’m
-	const HRESULT result_commit = this->dcomp_device->Commit();
-	if(FAILED(result_commit)) {
-		std::cerr << "Failed Set Root" << std::endl;
-		return false;
-	}
+    // åˆæˆã‚¨ãƒ³ã‚¸ãƒ³ã«å®Œäº†ã‚’é€šçŸ¥
+    const HRESULT result_commit = this->dcomp_device->Commit();
+    if(FAILED(result_commit)) {
+        std::cerr << "Failed Set Root" << std::endl;
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 void D3D11::set_viewport(const UINT width, const UINT height) {
-	D3D11_VIEWPORT vp{};
-	vp.TopLeftX = 0.0f;
-	vp.TopLeftY = 0.0f;
-	vp.Width = static_cast<FLOAT>(width);
-	vp.Height = static_cast<FLOAT>(height);
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
+    D3D11_VIEWPORT vp{};
+    vp.TopLeftX = 0.0f;
+    vp.TopLeftY = 0.0f;
+    vp.Width = static_cast<FLOAT>(width);
+    vp.Height = static_cast<FLOAT>(height);
+    vp.MinDepth = 0.0f;
+    vp.MaxDepth = 1.0f;
 
-	this->context->RSSetViewports(1, &vp);;
+    this->context->RSSetViewports(1, &vp);;
 }

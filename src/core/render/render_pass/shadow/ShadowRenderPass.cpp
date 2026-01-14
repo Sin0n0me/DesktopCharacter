@@ -1,12 +1,10 @@
 #include "../../CommonResource.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../shader/Shader.h"
-#include "../../shader/shadow/ShadowMapPixelShader.h"
 #include "../../shader/shadow/ShadowMapVertexShader.h"
 #include "ShadowRenderPass.h"
 #include <d3d11.h>
 
-constexpr wchar_t PATH_VERTEX_SHADER_SHADOW[] = L"assets/shader/vs_shadow.hlsl";
 constexpr UINT SHADOW_MAP_SIZE = 2048;
 
 ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {
@@ -31,6 +29,13 @@ void ShadowRenderPass::render_set(
     ID3D11DeviceContext* const context,
     ID3D11RenderTargetView* const render_target_view
 ) const {
+    context->ClearDepthStencilView(
+        this->resource->depth_stencil_view.at(Pattern::ShadowMap).Get(),
+        D3D11_CLEAR_DEPTH,
+        1.0f,
+        0
+    );
+
     context->OMSetRenderTargets(
         0,
         nullptr,
@@ -50,13 +55,6 @@ void ShadowRenderPass::render_set(
     vp.MaxDepth = 1.0f;
 
     context->RSSetViewports(1, &vp);
-
-    context->ClearDepthStencilView(
-        this->resource->depth_stencil_view.at(Pattern::ShadowMap).Get(),
-        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-        1.0f,
-        0
-    );
 
     context->IASetInputLayout(
         this->resource->input_layouts.at(Pattern::ShadowMap).Get()
@@ -110,16 +108,6 @@ bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {
     )) {
         return false;
     }
-
-    /*
-    Shader pixel_shader = Shader(std::make_unique<ShadowMapPixelShader>());
-    if(!pixel_shader.make_shader(
-        device,
-        this->resource->pixel_shaders[Pattern::ShadowMap].GetAddressOf()
-    )) {
-        return false;
-    }
-    */
 
     // slot番号の取得
     this->binding_slots->merge(vertex_shader);
@@ -209,6 +197,13 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
         desc.MaxLOD = D3D11_FLOAT32_MAX;
         desc.MipLODBias = 0;
         desc.MaxAnisotropy = 1;
+
+        /*
+        desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+        desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+        */
 
         const HRESULT hr = device->CreateSamplerState(
             &desc,

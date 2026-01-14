@@ -279,6 +279,7 @@ std::unordered_map<BindingSlotKey, uint32_t> Shader::get_all_slots(void) const {
 
             std::cout << "--------------------" << std::endl;
             std::cout << "Name: " << desc.Name << std::endl;
+            std::cout << "NameHash: " << hash_u32(desc.Name) << std::endl;
             std::cout << "Point: " << desc.BindPoint << std::endl;
             std::cout << "Type: " << desc.Type << std::endl;
 

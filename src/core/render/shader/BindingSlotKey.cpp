@@ -1,13 +1,13 @@
 #include "BindingSlotKey.h"
 
 bool BindingSlotKey::operator==(const BindingSlotKey& rhs) const {
-	return this->name_hash == this->name_hash &&
-		this->slot_kind == this->slot_kind &&
-		this->shader_type == this->shader_type;
+    return this->name_hash == rhs.name_hash &&
+        this->slot_kind == rhs.slot_kind &&
+        this->shader_type == rhs.shader_type;
 }
 
 bool BindingSlotKey::operator!=(const BindingSlotKey& rhs) const {
-	return this->name_hash != this->name_hash ||
-		this->slot_kind != this->slot_kind ||
-		this->shader_type != this->shader_type;
+    return this->name_hash != rhs.name_hash ||
+        this->slot_kind != rhs.slot_kind ||
+        this->shader_type != rhs.shader_type;
 }

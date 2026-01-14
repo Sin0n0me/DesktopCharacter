@@ -13,7 +13,7 @@ struct ID3D11SamplerState;
 
 enum class ConstantBuffer {
 	Camera,
-	Shadow,
+	ShadowMap,
 	Material,
 	Bones,
 	FXAA,
@@ -22,8 +22,8 @@ enum class ConstantBuffer {
 
 enum class Pattern {
 	Model,
-	Wall,
-	Shadow,
+	ClearWall,
+	ShadowMap,
 	FXAA,
 	SMAA,
 };

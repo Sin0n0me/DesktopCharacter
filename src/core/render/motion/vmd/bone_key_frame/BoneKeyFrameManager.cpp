@@ -8,7 +8,7 @@ BoneKeyFrameManager::BoneKeyFrameManager(const std::vector<BoneKeyFrame>& key_fr
 }
 
 BoneKeyFrameManager BoneKeyFrameManager::make(std::vector<BoneKeyFrame>&& key_frame_list) {
-	// ¸‡‚Éƒ\[ƒg
+	// æ˜‡é †ã«ã‚½ãƒ¼ãƒˆ
 	std::sort(
 		key_frame_list.begin(),
 		key_frame_list.end(),
@@ -31,7 +31,7 @@ void BoneKeyFrameManager::set_frame(const uint32_t& frame) {
 
 	this->current_key_frame = frame;
 
-	// Ÿ‚ÌƒtƒŒ[ƒ€‚Ö
+	// æ¬¡ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã¸
 	if(current_key_frame.frame_index < frame) {
 		if(this->get_next_key_frame().has_value()) {
 			this->key_frame_index += 1;
@@ -39,7 +39,7 @@ void BoneKeyFrameManager::set_frame(const uint32_t& frame) {
 		return;
 	}
 
-	// w’è‚µ‚½ƒL[ƒtƒŒ[ƒ€‚É‚È‚é‚Ü‚ÅŠª‚«–ß‚·
+	// æŒ‡å®šã—ãŸã‚­ãƒ¼ãƒ•ãƒ¬ãƒ¼ãƒ ã«ãªã‚‹ã¾ã§å·»ãæˆ»ã™
 	for(auto previous = this->get_previous_key_frame(); previous.has_value(); previous = this->get_previous_key_frame()) {
 		if(frame < previous.value().frame_index) {
 			this->key_frame_index -= 1;
@@ -66,7 +66,7 @@ std::optional<BoneKeyFrame> BoneKeyFrameManager::get_next_key_frame(void) const 
 		return std::optional<BoneKeyFrame>();
 	}
 
-	// ––’[‚Æ“¯‚¶ê‡‚ÍŸ‚Í‚È‚¢ˆµ‚¢
+	// æœ«ç«¯ã¨åŒã˜å ´åˆã¯æ¬¡ã¯ãªã„æ‰±ã„
 	const auto& opt_current = this->get_current_key_frame();
 	const auto& opt_last = this->get_last_key_frame();
 	if(!opt_current.has_value() || !opt_last.has_value()) {

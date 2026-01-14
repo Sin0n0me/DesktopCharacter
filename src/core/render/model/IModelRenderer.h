@@ -1,25 +1,11 @@
 #pragma once
+#include "../../object/IObjectRenderer.h"
 
-struct ID3D11DeviceContext;
-struct ID3D11Device;
-
-namespace std::filesystem {
-	class path;
-}
-
-class IModelRenderer {
+class IModelRenderer : public IObjectRenderer {
 public:
-	virtual ~IModelRenderer() = default;
-
-	virtual bool init(void) = 0;
-
-	virtual bool load_model(ID3D11Device* const device) = 0;
+	virtual ~IModelRenderer(void) noexcept = default;
 
 	virtual void unload_model(void) = 0;
 
 	virtual bool is_loaded_model(void) = 0;
-
-	virtual void update_render(ID3D11DeviceContext* const context) = 0;
-
-	virtual void render(ID3D11DeviceContext* const context) const = 0;
 };

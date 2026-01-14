@@ -1,0 +1,20 @@
+#include "common/input_ps_clear_wall.hlsl"
+#include "common/constant_buffer/camera.hlsl"
+#include "common/constant_buffer/shadow_map.hlsl"
+
+struct VSInput {
+    float3 position : POSITION;
+};
+
+PSInput main(const VSInput input) {
+    PSInput output;    
+    const float4 wpos = mul(float4(input.position, 1.0f), world);
+    const float4 vpos = mul(wpos, view);
+    output.position = mul(vpos, proj);
+    output.shadow = apply_shadow_map_light(wpos);
+    output.shadow.xyz /= output.shadow.w;
+    output.shadow.y *= -1.0f;
+    output.shadow.xy = output.shadow.xy * 0.5f + 0.5f;
+    
+    return output;
+}

@@ -1,29 +1,29 @@
 #pragma once
-#include "../IRenderPass.h"
+#include "../RenderPass.h"
 #include <wrl/client.h>
 
 struct ID3D11Texture2D;
 
-class ShadowRenderPass : public IRenderPass {
+class ShadowRenderPass : public RenderPass {
 private:
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadow_texture;
-
-	std::shared_ptr<CommonResource> resource;
-public:
-	ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce);
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> shadow_texture;
 
 public:
+    explicit ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
 
-	bool init(ID3D11Device* const device) override;
-	void update(ID3D11DeviceContext* const context) override;
-	void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
-	void render(ID3D11DeviceContext* const context) const override;
-	bool is_render_model(void) const override;
-	bool is_post_render(void) const override;
+public:
+
+    bool init(ID3D11Device* const device) override;
+    void update(ID3D11DeviceContext* const context) override;
+    void render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const override;
+    void render(ID3D11DeviceContext* const context) const override;
+    bool is_render_model(void) const override;
+    bool is_post_render(void) const override;
+    void back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const override;
 
 private:
 
-	bool make_shaders(ID3D11Device* const device);
+    bool make_shaders(ID3D11Device* const device);
 
-	bool make_shadow_map(ID3D11Device* const device);
+    bool make_shadow_map(ID3D11Device* const device);
 };

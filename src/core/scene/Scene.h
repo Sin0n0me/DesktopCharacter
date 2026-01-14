@@ -3,6 +3,7 @@
 #include "light/Light.h"
 
 struct ID3D11DeviceContext;
+struct ID3D11Device;
 
 class Scene {
 private:
@@ -18,7 +19,9 @@ public:
 
 	Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resouce);
 
-	void update(void);
+	bool init(ID3D11Device* const device);
+
+	void update(const int64_t delta_time);
 
 	void render_update(ID3D11DeviceContext* const context);
 

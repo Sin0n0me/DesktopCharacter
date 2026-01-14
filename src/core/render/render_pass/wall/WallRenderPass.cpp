@@ -1,239 +1,206 @@
 #include "../../../object/wall/WallObject.h"
 #include "../../CommonResource.h"
+#include "../../constant_buffer/ConstantBufferNames.h"
+#include "../../shader/clear_wall/ClearWallPixelShader.h"
+#include "../../shader/clear_wall/ClearWallVertexShader.h"
+#include "../../shader/SamplerStateNames.h"
+#include "../../shader/Shader.h"
+#include "../../texrure/TextureNames.h"
 #include "WallRenderPass.h"
 #include <d3d11.h>
-#include <d3dcompiler.h>
 
-constexpr wchar_t VERTEX_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";
-constexpr wchar_t PIXEL_SHADER_PATH[] = L"assets/shader/clear_wall.hlsl";
 constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_resource) : IRenderPass(common_resource) {
-	this->resource = common_resource;
-	this->wall_object = std::make_unique<WallObject>();
+WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept :
+    RenderPass(common_resource) {
+    this->wall_object = std::make_unique<WallObject>();
 }
 
 bool WallRenderPass::init(ID3D11Device* const device) {
-	if(!this->make_blend_state(device)) {
-		return false;
-	}
+    if(!this->make_blend_state(device)) {
+        return false;
+    }
 
-	if(!this->make_depth_state(device)) {
-		return false;
-	}
+    if(!this->make_depth_state(device)) {
+        return false;
+    }
 
-	if(!this->make_shaders(device)) {
-		return false;
-	}
+    if(!this->make_shaders(device)) {
+        return false;
+    }
 
-	if(!this->wall_object->init(device)) {
-		return false;
-	}
+    if(!this->wall_object->init(device)) {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 void WallRenderPass::update(ID3D11DeviceContext* const context) {
 }
 
 void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11RenderTargetView* const render_target_view) const {
-	context->OMSetRenderTargets(
-		1,
-		&render_target_view,
-		this->resource->depth_stencil_view.at(Pattern::Model).Get()
-	);
-	context->OMSetBlendState(
-		this->blend_state.Get(),
-		BLEND_COLOR,
-		0xffffffff
-	);
-	context->OMSetDepthStencilState(
-		this->resource->depth_stencil_state.at(Pattern::Wall).Get(),
-		0
-	);
+    // ãƒ¢ãƒ‡ãƒ«ã¨åŒã˜
+    context->OMSetRenderTargets(
+        1,
+        &render_target_view,
+        nullptr
+    );
 
-	context->IASetInputLayout(this->resource->input_layouts.at(Pattern::Wall).Get());
+    context->OMSetDepthStencilState(
+        this->resource->depth_stencil_state.at(Pattern::ClearWall).Get(),
+        0
+    );
+    context->OMSetBlendState(
+        this->blend_state.Get(),
+        BLEND_COLOR,
+        0xFFFFFFFF
+    );
 
-	// ’è”ƒoƒbƒtƒ@‚ÌƒoƒCƒ“ƒh
-	context->VSSetConstantBuffers(
-		0,
-		1,
-		this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
-	);
-	context->VSSetConstantBuffers(
-		2,
-		1,
-		this->resource->constant_buffers.at(ConstantBuffer::Shadow).GetAddressOf()
-	);
+    context->IASetInputLayout(
+        this->resource->input_layouts.at(Pattern::ClearWall).Get()
+    );
 
-	// ƒVƒF[ƒ_[‚ÌƒoƒCƒ“ƒh
-	context->VSSetShader(
-		this->resource->vertex_shaders.at(Pattern::Wall).Get(),
-		nullptr,
-		0
-	);
-	context->PSSetShader(
-		this->resource->pixel_shaders.at(Pattern::Wall).Get(),
-		nullptr,
-		0
-	);
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ãƒã‚¤ãƒ³ãƒ‰
+    context->VSSetShader(
+        this->resource->vertex_shaders.at(Pattern::ClearWall).Get(),
+        nullptr,
+        0
+    );
+    context->PSSetShader(
+        this->resource->pixel_shaders.at(Pattern::ClearWall).Get(),
+        nullptr,
+        0
+    );
 
-	// ƒVƒƒƒhƒEƒ}ƒbƒv
-	context->PSSetShaderResources(
-		0,
-		1,
-		this->resource->shader_resouce_view.at(Pattern::Shadow).GetAddressOf()
-	);
-	context->PSSetSamplers(
-		0,
-		1,
-		this->resource->sampler_state.at(Pattern::Shadow).GetAddressOf()
-	);
+    // å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®ãƒã‚¤ãƒ³ãƒ‰
+    context->VSSetConstantBuffers(
+        this->binding_slots->get(
+            ShaderType::Vertex,
+            BindingSlotKind::ConstantBuffer,
+            static_cast<uint32_t>(ConstantBufferName::Camera)
+        ),
+        1,
+        this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
+    );
+    context->VSSetConstantBuffers(
+        this->binding_slots->get(
+            ShaderType::Vertex,
+            BindingSlotKind::ConstantBuffer,
+            static_cast<uint32_t>(ConstantBufferName::ShadowMap)
+        ),
+        1,
+        this->resource->constant_buffers.at(ConstantBuffer::ShadowMap).GetAddressOf()
+    );
+
+    // ã‚·ãƒ£ãƒ‰ã‚¦ãƒžãƒƒãƒ—
+    context->PSSetShaderResources(
+        this->binding_slots->get(
+            ShaderType::Pixel,
+            BindingSlotKind::Texture,
+            static_cast<uint32_t>(TextureName::ShadowMap)
+        ),
+        1,
+        this->resource->shader_resouce_view.at(Pattern::ShadowMap).GetAddressOf()
+    );
+    context->PSSetSamplers(
+        this->binding_slots->get(
+            ShaderType::Pixel,
+            BindingSlotKind::SamplerState,
+            static_cast<uint32_t>(SamplerStateName::ShadowMap)
+        ),
+        1,
+        this->resource->sampler_state.at(Pattern::ShadowMap).GetAddressOf()
+    );
 }
 
 void WallRenderPass::render(ID3D11DeviceContext* const context) const {
-	this->wall_object->render(context);
+    this->wall_object->render(context, this->binding_slots.get());
 }
 
 bool WallRenderPass::is_render_model(void) const {
-	return false;
+    return false;
 }
 
 bool WallRenderPass::make_shaders(ID3D11Device* const device) {
-	Microsoft::WRL::ComPtr<ID3DBlob> vs_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> ps_blob;
-	Microsoft::WRL::ComPtr<ID3DBlob> error_blob;
+    Shader vertex_shader = Shader(std::make_unique<ClearWallVertexShader>());
+    Shader pixel_shader = Shader(std::make_unique<ClearWallPixelShader>());
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			VERTEX_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"VSMain",
-			"vs_5_0",
-			0, 0,
-			vs_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
+    if(!pixel_shader.make_shader(
+        device,
+        this->resource->pixel_shaders[Pattern::ClearWall].GetAddressOf()
+    )) {
+        return false;
+    }
 
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
+    if(!vertex_shader.make_shader(
+        device,
+        this->resource->vertex_shaders[Pattern::ClearWall].GetAddressOf()
+    )) {
+        return false;
+    }
 
-	{
-		const HRESULT hr = D3DCompileFromFile(
-			PIXEL_SHADER_PATH,
-			nullptr,
-			nullptr,
-			"PSMain",
-			"ps_5_0",
-			0, 0,
-			ps_blob.GetAddressOf(),
-			error_blob.GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			if(error_blob.Get()) {
-				OutputDebugStringA((char*)error_blob->GetBufferPointer());
-			}
-			return false;
-		}
-	}
+    if(!vertex_shader.make_input_layout(
+        device,
+        this->resource->input_layouts[Pattern::ClearWall].GetAddressOf()
+    )) {
+        return false;
+    }
 
-	{
-		const HRESULT hr = device->CreateVertexShader(
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			nullptr,
-			this->resource->vertex_shaders[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
+    // slotç•ªå·ã®å–å¾—
+    this->binding_slots->merge(vertex_shader);
+    this->binding_slots->merge(pixel_shader);
 
-	{
-		const HRESULT hr = device->CreatePixelShader(
-			ps_blob->GetBufferPointer(),
-			ps_blob->GetBufferSize(),
-			nullptr,
-			this->resource->pixel_shaders[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	{
-		const D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-		};
-
-		const HRESULT hr = device->CreateInputLayout(
-			layout,
-			_countof(layout),
-			vs_blob->GetBufferPointer(),
-			vs_blob->GetBufferSize(),
-			this->resource->input_layouts[Pattern::Wall].GetAddressOf()
-		);
-		if(FAILED(hr)) {
-			return false;
-		}
-	}
-
-	return true;
+    return true;
 }
 
 bool WallRenderPass::make_blend_state(ID3D11Device* const device) {
-	D3D11_BLEND_DESC desc{};
-	desc.RenderTarget[0].BlendEnable = TRUE;
-	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    constexpr D3D11_RENDER_TARGET_BLEND_DESC blend_desc{
+        .BlendEnable = TRUE,
+        .SrcBlend = D3D11_BLEND_SRC_ALPHA,
+        .DestBlend = D3D11_BLEND_INV_SRC_ALPHA,
+        .BlendOp = D3D11_BLEND_OP_ADD,
+        .SrcBlendAlpha = D3D11_BLEND_ONE,
+        .DestBlendAlpha = D3D11_BLEND_ZERO,
+        .BlendOpAlpha = D3D11_BLEND_OP_ADD,
+        .RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL,
+    };
+    constexpr D3D11_BLEND_DESC desc{
+        .RenderTarget = {blend_desc}
+    };
 
-	const HRESULT hr = device->CreateBlendState(
-		&desc,
-		this->blend_state.GetAddressOf()
-	);
-	if(FAILED(hr)) {
-		return false;
-	}
+    const HRESULT hr = device->CreateBlendState(
+        &desc,
+        this->blend_state.GetAddressOf()
+    );
+    if(FAILED(hr)) {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
-	D3D11_DEPTH_STENCIL_DESC desc{};
-	desc.DepthEnable = TRUE;
-	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // ‘‚©‚È‚¢
-	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    constexpr D3D11_DEPTH_STENCIL_DESC desc{
+        .DepthEnable = TRUE,
+        .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO, // æ›¸ã‹ãªã„
+        .DepthFunc = D3D11_COMPARISON_LESS_EQUAL,
+    };
 
-	const HRESULT hr = device->CreateDepthStencilState(
-		&desc,
-		this->resource->depth_stencil_state[Pattern::Wall].GetAddressOf()
-	);
-	if(FAILED(hr)) {
-		return false;
-	}
+    const HRESULT hr = device->CreateDepthStencilState(
+        &desc,
+        this->resource->depth_stencil_state[Pattern::ClearWall].GetAddressOf()
+    );
+    if(FAILED(hr)) {
+        return false;
+    }
 
-	return true;
+    return true;
+}
+
+void WallRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {
 }
 
 bool WallRenderPass::is_post_render(void) const {
-	return false;
+    return false;
 }

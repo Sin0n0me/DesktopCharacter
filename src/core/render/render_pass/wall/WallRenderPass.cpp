@@ -155,15 +155,19 @@ bool WallRenderPass::make_shaders(ID3D11Device* const device) {
 }
 
 bool WallRenderPass::make_blend_state(ID3D11Device* const device) {
-    D3D11_BLEND_DESC desc{};
-    desc.RenderTarget[0].BlendEnable = TRUE;
-    desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-    desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-    desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    constexpr D3D11_RENDER_TARGET_BLEND_DESC blend_desc{
+        .BlendEnable = TRUE,
+        .SrcBlend = D3D11_BLEND_SRC_ALPHA,
+        .DestBlend = D3D11_BLEND_INV_SRC_ALPHA,
+        .BlendOp = D3D11_BLEND_OP_ADD,
+        .SrcBlendAlpha = D3D11_BLEND_ONE,
+        .DestBlendAlpha = D3D11_BLEND_ZERO,
+        .BlendOpAlpha = D3D11_BLEND_OP_ADD,
+        .RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL,
+    };
+    constexpr D3D11_BLEND_DESC desc{
+        .RenderTarget = {blend_desc}
+    };
 
     const HRESULT hr = device->CreateBlendState(
         &desc,
@@ -177,10 +181,11 @@ bool WallRenderPass::make_blend_state(ID3D11Device* const device) {
 }
 
 bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
-    D3D11_DEPTH_STENCIL_DESC desc{};
-    desc.DepthEnable = TRUE;
-    desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 書かない
-    desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    constexpr D3D11_DEPTH_STENCIL_DESC desc{
+        .DepthEnable = TRUE,
+        .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO, // 書かない
+        .DepthFunc = D3D11_COMPARISON_LESS_EQUAL,
+    };
 
     const HRESULT hr = device->CreateDepthStencilState(
         &desc,

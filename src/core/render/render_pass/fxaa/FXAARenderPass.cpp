@@ -49,25 +49,26 @@ bool FXAARenderPass::make_shader(ID3D11Device* const device) {
 }
 
 bool FXAARenderPass::make_constant_buffer(ID3D11Device* const device) {
-    D3D11_BUFFER_DESC desc = {};
-    desc.ByteWidth = sizeof(FXAA);
-    desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-    FXAA fxaa{};
-    fxaa.inverse_screen_size = {
-        1.0f / WIDTH,
-        1.0f / HEIGHT
+    constexpr D3D11_BUFFER_DESC desc = {
+        .ByteWidth = sizeof(FXAA),
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
     };
-    fxaa.span_max = 8.0f;
-    fxaa.reduce_min = 1.0f / 128.0f;
-    fxaa.reduce_mul = 1.0f / 8.0f;
-
-    D3D11_SUBRESOURCE_DATA init_data{};
-    init_data.pSysMem = &fxaa;
-    init_data.SysMemPitch = 0;
-    init_data.SysMemSlicePitch = sizeof(decltype(fxaa));
+    constexpr FXAA fxaa{
+        .inverse_screen_size = {
+            1.0f / WIDTH,
+            1.0f / HEIGHT
+    },
+        .span_max = 8.0f,
+        .reduce_min = 1.0f / 128.0f,
+        .reduce_mul = 1.0f / 8.0f,
+    };
+    const D3D11_SUBRESOURCE_DATA init_data{
+        .pSysMem = &fxaa,
+        .SysMemPitch = 0,
+        .SysMemSlicePitch = sizeof(decltype(fxaa)),
+    };
 
     const HRESULT hr = device->CreateBuffer(
         &desc,
@@ -82,14 +83,15 @@ bool FXAARenderPass::make_constant_buffer(ID3D11Device* const device) {
 }
 
 bool FXAARenderPass::make_sampler(ID3D11Device* const device) {
-    D3D11_SAMPLER_DESC desc{};
-    desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    desc.MinLOD = 0;
-    desc.MaxLOD = D3D11_FLOAT32_MAX;
+    constexpr D3D11_SAMPLER_DESC desc{
+        .Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+        .AddressU = D3D11_TEXTURE_ADDRESS_CLAMP,
+        .AddressV = D3D11_TEXTURE_ADDRESS_CLAMP,
+        .AddressW = D3D11_TEXTURE_ADDRESS_CLAMP,
+        .ComparisonFunc = D3D11_COMPARISON_NEVER,
+        .MinLOD = 0,
+        .MaxLOD = D3D11_FLOAT32_MAX,
+    };
 
     const HRESULT hr = device->CreateSamplerState(
         &desc,

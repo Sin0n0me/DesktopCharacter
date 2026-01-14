@@ -82,16 +82,17 @@ bool PMDBoneManager::make_constant_buffer(ID3D11Device* const device) {
         );
     }
 
-    D3D11_BUFFER_DESC desc{};
-    desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.ByteWidth = sizeof(Bones);
-    desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-    D3D11_SUBRESOURCE_DATA init_data{};
-    init_data.pSysMem = this->bones.get();
-    init_data.SysMemPitch = 0;
-    init_data.SysMemSlicePitch = sizeof(Bones);
+    constexpr D3D11_BUFFER_DESC desc{
+        .ByteWidth = sizeof(Bones),
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+    };
+    const D3D11_SUBRESOURCE_DATA init_data{
+        .pSysMem = this->bones.get(),
+        .SysMemPitch = 0,
+        .SysMemSlicePitch = sizeof(Bones),
+    };
 
     const HRESULT hr = device->CreateBuffer(
         &desc,

@@ -6,6 +6,7 @@
 #include "../render_pass/shadow/ShadowRenderPass.h"
 #include "../render_pass/wall/WallRenderPass.h"
 #include "RenderPipeline.h"
+#include <iostream>
 
 RenderPipeline::RenderPipeline(
     const std::shared_ptr<D3D11>& d3d11,
@@ -105,13 +106,14 @@ void RenderPipeline::render_update(void) {
 }
 
 void RenderPipeline::render(void) const {
-    D3D11_VIEWPORT view_port{};
-    view_port.TopLeftX = 0.0f;
-    view_port.TopLeftY = 0.0f;
-    view_port.Width = static_cast<FLOAT>(WIDTH);
-    view_port.Height = static_cast<FLOAT>(HEIGHT);
-    view_port.MinDepth = 0.0f;
-    view_port.MaxDepth = 1.0f;
+    constexpr D3D11_VIEWPORT view_port{
+        .TopLeftX = 0.0f,
+        .TopLeftY = 0.0f,
+        .Width = static_cast<FLOAT>(WIDTH),
+        .Height = static_cast<FLOAT>(HEIGHT),
+        .MinDepth = 0.0f,
+        .MaxDepth = 1.0f,
+    };
 
     ID3D11RenderTargetView* const null_rtv[8] = {};
     ID3D11ShaderResourceView* const null_srv[8] = {};

@@ -51,8 +51,6 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
         return false;
     }
 
-    this->set_viewport(width, height);
-
     return true;
 }
 
@@ -110,16 +108,19 @@ bool D3D11::make_factory(void) {
 
 // スワップチェーンの作成
 bool D3D11::make_swap_chain(const UINT width, const UINT height) {
-    DXGI_SWAP_CHAIN_DESC1 description{};
-    description.Width = width;
-    description.Height = height;
-    description.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-    description.BufferCount = 2;
-    description.SampleDesc.Count = 1;
-    description.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
-
+    constexpr DXGI_SAMPLE_DESC sample{
+        .Count = 1
+    };
+    const DXGI_SWAP_CHAIN_DESC1 description{
+        .Width = width,
+        .Height = height,
+        .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+        .SampleDesc = sample,
+        .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+        .BufferCount = 2,
+        .SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL,
+        .AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED,
+    };
     const HRESULT result_swap_chain = this->dxgi_factory->CreateSwapChainForComposition(
         this->dxgi_device.Get(),
         &description,
@@ -140,15 +141,19 @@ bool D3D11::make_render_target_view(void) {
     {
         Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
         {
-            D3D11_TEXTURE2D_DESC desc{};
-            desc.Width = WIDTH;
-            desc.Height = HEIGHT;
-            desc.MipLevels = 1;
-            desc.ArraySize = 1;
-            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            desc.SampleDesc.Count = 1;
-            desc.Usage = D3D11_USAGE_DEFAULT;
-            desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+            constexpr DXGI_SAMPLE_DESC sample{
+                .Count = 1
+            };
+            constexpr D3D11_TEXTURE2D_DESC desc{
+                .Width = WIDTH,
+                .Height = HEIGHT,
+                .MipLevels = 1,
+                .ArraySize = 1,
+                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                .SampleDesc = sample,
+                .Usage = D3D11_USAGE_DEFAULT,
+                .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
+            };
 
             const HRESULT hr = this->device->CreateTexture2D(
                 &desc,
@@ -218,22 +223,16 @@ bool D3D11::make_render_target_view(void) {
 
 // ラスタライザの作成
 bool D3D11::make_rasterizer(void) {
-    D3D11_RASTERIZER_DESC desc{};
-    desc.FillMode = D3D11_FILL_SOLID;
-    desc.DepthClipEnable = TRUE;
-    desc.FrontCounterClockwise = FALSE;
-    desc.DepthBias = 0.01f;
-    desc.SlopeScaledDepthBias = 0.5f;
+    constexpr D3D11_RASTERIZER_DESC desc{
+        .FillMode = D3D11_FILL_SOLID,
+        .CullMode = D3D11_CULL_BACK,
+        .FrontCounterClockwise = FALSE,
+        .DepthBias = 1,
+        .SlopeScaledDepthBias = 0.5f,
+        .DepthClipEnable = TRUE,
+    };
 
-    // 背面カリングあり
-    desc.CullMode = D3D11_CULL_BACK;
     if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_back.GetAddressOf()))) {
-        return false;
-    }
-
-    // カリングなし(両面)
-    desc.CullMode = D3D11_CULL_NONE;
-    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_none.GetAddressOf()))) {
         return false;
     }
 
@@ -286,16 +285,4 @@ bool D3D11::commit(void) {
     }
 
     return true;
-}
-
-void D3D11::set_viewport(const UINT width, const UINT height) {
-    D3D11_VIEWPORT vp{};
-    vp.TopLeftX = 0.0f;
-    vp.TopLeftY = 0.0f;
-    vp.Width = static_cast<FLOAT>(width);
-    vp.Height = static_cast<FLOAT>(height);
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-
-    this->context->RSSetViewports(1, &vp);;
 }

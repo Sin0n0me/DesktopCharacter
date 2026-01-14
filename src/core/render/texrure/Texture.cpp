@@ -127,7 +127,7 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
 }
 
 bool Texture::make_dummy_texture(ID3D11Device* const device) {
-    const std::uint32_t white_pixel = 0xffffffff; // RGBA = 1,1,1,1
+    const std::uint32_t white_pixel = 0xFFFFFFFF; // RGBA = 1,1,1,1
     const D3D11_TEXTURE2D_DESC texture_desc{
         .Width = 1,
         .Height = 1,
@@ -203,15 +203,19 @@ bool Texture::make_texture(
     const  UINT height,
     const D3D11_SUBRESOURCE_DATA& data
 ) {
-    D3D11_TEXTURE2D_DESC desc{};
-    desc.Width = width;
-    desc.Height = height;
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    constexpr DXGI_SAMPLE_DESC sample{
+        .Count = 1
+    };
+    const D3D11_TEXTURE2D_DESC desc{
+        .Width = width,
+        .Height = height,
+        .MipLevels = 1,
+        .ArraySize = 1,
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .SampleDesc = sample,
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+    };
 
     const HRESULT hr = device->CreateTexture2D(&desc, &data, texture);
     if(FAILED(hr)) {
@@ -222,20 +226,18 @@ bool Texture::make_texture(
 }
 
 bool Texture::make_sampler(ID3D11Device* const device) {
-    D3D11_SAMPLER_DESC desc{};
-    desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    desc.MipLODBias = 0.0f;
-    desc.MaxAnisotropy = 1;
-    desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    desc.BorderColor[0] = 0;
-    desc.BorderColor[1] = 0;
-    desc.BorderColor[2] = 0;
-    desc.BorderColor[3] = 0;
-    desc.MinLOD = 0;
-    desc.MaxLOD = D3D11_FLOAT32_MAX;
+    constexpr D3D11_SAMPLER_DESC desc{
+        .Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+        .AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
+        .AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
+        .AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
+        .MipLODBias = 0.0f,
+        .MaxAnisotropy = 1,
+        .ComparisonFunc = D3D11_COMPARISON_ALWAYS,
+        .BorderColor = {0, 0, 0, 0},
+        .MinLOD = 0,
+        .MaxLOD = D3D11_FLOAT32_MAX,
+    };
 
     const HRESULT hr = device->CreateSamplerState(
         &desc,

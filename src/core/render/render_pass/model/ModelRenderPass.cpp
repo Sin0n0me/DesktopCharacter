@@ -30,17 +30,21 @@ void ModelRenderPass::render(ID3D11DeviceContext* const context) const {
 // 深度ステンシルの作成
 bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
     {
-        D3D11_TEXTURE2D_DESC texDesc{};
-        texDesc.Width = WIDTH;
-        texDesc.Height = HEIGHT;
-        texDesc.MipLevels = 1;
-        texDesc.ArraySize = 1;
-        texDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        constexpr DXGI_SAMPLE_DESC sample{
+            .Count = 1
+        };
+        constexpr D3D11_TEXTURE2D_DESC desc{
+            .Width = WIDTH,
+            .Height = HEIGHT,
+            .MipLevels = 1,
+            .ArraySize = 1,
+            .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+            .SampleDesc = sample,
+            .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+        };
 
         const HRESULT hr = device->CreateTexture2D(
-            &texDesc,
+            &desc,
             nullptr,
             this->depth_texture.GetAddressOf()
         );
@@ -61,10 +65,11 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
     }
 
     {
-        D3D11_DEPTH_STENCIL_DESC desc{};
-        desc.DepthEnable = TRUE;
-        desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-        desc.DepthFunc = D3D11_COMPARISON_LESS;
+        constexpr D3D11_DEPTH_STENCIL_DESC desc{
+            .DepthEnable = TRUE,
+            .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+            .DepthFunc = D3D11_COMPARISON_LESS,
+        };
 
         const HRESULT hr = device->CreateDepthStencilState(
             &desc,

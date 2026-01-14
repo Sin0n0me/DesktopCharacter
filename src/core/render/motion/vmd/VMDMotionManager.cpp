@@ -2,9 +2,8 @@
 #include "VMDMotion.h"
 #include "VMDMotionManager.h"
 #include <filesystem>
-#include <iostream>
 
-constexpr wchar_t MOTION_WAVE[] = L"assets/motion/手を振る.vmd";
+constexpr char8_t MOTION_WAVE[] = u8"assets/motion/手を振る.vmd";
 
 VMDMotionManager::VMDMotionManager(const std::shared_ptr<IBoneAccessor>& bone_accessor) {
     this->bone_accessor = bone_accessor;
@@ -40,7 +39,5 @@ bool VMDMotionManager::load() {
 }
 
 void VMDMotionManager::update_motion(const int64_t delta_time) {
-    std::cout << delta_time << "micro second" << std::endl;
-
     this->motion_map.at(this->current_motion).update_motion(delta_time);
 }

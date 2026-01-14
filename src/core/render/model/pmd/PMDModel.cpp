@@ -200,13 +200,14 @@ bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
         );
     }
 
-    D3D11_BUFFER_DESC desc = {};
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.ByteWidth = UINT(sizeof(Vertex) * vertices.size());
-    desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-    D3D11_SUBRESOURCE_DATA init_data = {};
-    init_data.pSysMem = vertices.data();
+    const D3D11_BUFFER_DESC desc{
+        .ByteWidth = UINT(sizeof(Vertex) * vertices.size()),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+    };
+    const D3D11_SUBRESOURCE_DATA init_data{
+        .pSysMem = vertices.data(),
+    };
 
     const HRESULT hr = device->CreateBuffer(
         &desc,
@@ -222,13 +223,14 @@ bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
 
 bool PMDModel::make_index_buffer(ID3D11Device* const device) {
     const auto& indices = this->model_loader->get_indices();
-    D3D11_BUFFER_DESC desc = {};
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.ByteWidth = UINT(sizeof(uint16_t) * indices.size());
-    desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-    D3D11_SUBRESOURCE_DATA init_data = {};
-    init_data.pSysMem = indices.data();
+    const D3D11_BUFFER_DESC desc{
+        .ByteWidth = UINT(sizeof(uint16_t) * indices.size()),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_INDEX_BUFFER,
+    };
+    const D3D11_SUBRESOURCE_DATA init_data = {
+        .pSysMem = indices.data()
+    };
 
     const HRESULT hr = device->CreateBuffer(
         &desc,
@@ -286,11 +288,11 @@ bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
             return false;
         }
 
-        D3D11_BUFFER_DESC desc{};
-        desc.Usage = D3D11_USAGE_DEFAULT;
-        desc.ByteWidth = sizeof(Material);
-        desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
+        const D3D11_BUFFER_DESC desc{
+            .ByteWidth = sizeof(Material),
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        };
         Material mat{};
         memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
         memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
@@ -312,10 +314,11 @@ bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
             return false;
         }
 
-        D3D11_SUBRESOURCE_DATA init_data{};
-        init_data.pSysMem = &mat;
-        init_data.SysMemPitch = 0;
-        init_data.SysMemSlicePitch = sizeof(Material);
+        D3D11_SUBRESOURCE_DATA init_data{
+            .pSysMem = &mat,
+            .SysMemPitch = 0,
+            .SysMemSlicePitch = sizeof(Material),
+        };
 
         const HRESULT hr = device->CreateBuffer(
             &desc,

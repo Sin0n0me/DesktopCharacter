@@ -249,8 +249,6 @@ const IShaderBlueprint* Shader::get_blueprint(void) const {
 std::unordered_map<BindingSlotKey, uint32_t> Shader::get_all_slots(void) const {
     std::unordered_map<BindingSlotKey, uint32_t> map;
 
-    std::cout << "===========================" << std::endl;
-
     ShaderRelfection::get_all_desc(
         (void*)this->shader_raw_data.data(),
         static_cast<uint32_t>(this->shader_raw_data.size()),
@@ -277,11 +275,13 @@ std::unordered_map<BindingSlotKey, uint32_t> Shader::get_all_slots(void) const {
                 kind
             };
 
+            /*
             std::cout << "--------------------" << std::endl;
             std::cout << "Name: " << desc.Name << std::endl;
             std::cout << "NameHash: " << hash_u32(desc.Name) << std::endl;
             std::cout << "Point: " << desc.BindPoint << std::endl;
             std::cout << "Type: " << desc.Type << std::endl;
+            */
 
             map.emplace(key, desc.BindPoint);
         }

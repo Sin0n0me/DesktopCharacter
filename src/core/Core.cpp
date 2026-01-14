@@ -4,6 +4,7 @@
 #include "render/CommonResource.h"
 #include "render/render_pipeline/RenderPipeline.h"
 #include <chrono>
+#include <iostream>
 
 decltype(Engine::instance) Engine::instance;
 
@@ -80,21 +81,21 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 void Engine::run(void) {
     // main loop
     MSG msg{};
-    auto start = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     while(msg.message != WM_QUIT) {
         if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        const auto end = std::chrono::high_resolution_clock::now();
-        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        const auto start = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(start - end).count();
 
-        this->update(duration.count());
         this->render_update();
+        this->update(duration);
         this->render();
 
-        start = end;
+        end = start;
     }
 }
 

@@ -5,7 +5,7 @@
 #include "BoneKeyFrame.h"
 
 constexpr uint32_t VMD_FPS = 30;
-constexpr uint32_t FRAME_TIME = 1'000'000 / VMD_FPS; // 1ƒtƒŒ[ƒ€‚ÌŠÔ
+constexpr uint32_t FRAME_TIME = 1'000'000 / VMD_FPS; // 1ãƒ•ãƒ¬ãƒ¼ãƒ ã®æ™‚é–“
 
 class BoneKeyFrameManager {
 private:
@@ -27,7 +27,7 @@ public:
 	std::optional<BoneKeyFrame> get_first_key_frame(void) const;
 	std::optional<BoneKeyFrame> get_last_key_frame(void) const;
 
-	// üŒ`•âŠ®Ï‚İ
+	// ç·šå½¢è£œå®Œæ¸ˆã¿
 	DirectX::XMVECTOR get_rotate(const uint32_t elapsed_time) const;
 	DirectX::XMVECTOR get_translate(const uint32_t elapsed_time) const;
 

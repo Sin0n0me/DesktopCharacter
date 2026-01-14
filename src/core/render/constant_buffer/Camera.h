@@ -1,7 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 
-// ƒJƒƒ‰—ps—ñ
+// ã‚«ãƒ¡ãƒ©ç”¨è¡Œåˆ—
 struct alignas(16) Camera {
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;

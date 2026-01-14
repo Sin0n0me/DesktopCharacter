@@ -13,7 +13,7 @@ class PMDModelLoader;
 
 class PMDBoneManager : public IObjectRenderer, public IBoneAccessor {
 private:
-	std::shared_ptr<Bones> bones; // XV—p
+	std::shared_ptr<Bones> bones; // æ›´æ–°ç”¨
 	std::shared_ptr<PMDBoneMap> bone_map;
 	std::shared_ptr<IKSolver> ik_soulver;
 	std::unordered_map<std::string, BoneIndex> bone_name_map;

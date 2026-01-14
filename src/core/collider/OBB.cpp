@@ -5,14 +5,14 @@
 OBB OBB::make_by_covariance_matrix(const std::vector<DirectX::XMFLOAT3>& positions) {
 	const float positions_size = static_cast<float>(positions.size());
 
-	// dS‚ğ‹‚ß‚é
+	// é‡å¿ƒã‚’æ±‚ã‚ã‚‹
 	DirectX::XMVECTOR mean = DirectX::XMVectorZero();
 	for(const auto& position : positions) {
 		mean += position;
 	}
 	mean /= positions_size;
 
-	// ‹¤•ªUs—ñ‚Ìì¬
+	// å…±åˆ†æ•£è¡Œåˆ—ã®ä½œæˆ
 	DirectX::XMMATRIX matrix{};
 	for(const auto& position : positions) {
 		const DirectX::XMFLOAT3 df = position - mean;
@@ -27,9 +27,9 @@ OBB OBB::make_by_covariance_matrix(const std::vector<DirectX::XMFLOAT3>& positio
 		matrix.r[2].m128_f32[2] += df.z * df.z;
 	}
 	matrix *= 1.0f / positions_size;
-	matrix.r[3].m128_f32[3] = 1.0f; // Œ³‚Ìs—ñ‚Í’PˆÊs—ñ‚Å‚Í‚È‚¢‚Ì‚Å
+	matrix.r[3].m128_f32[3] = 1.0f; // å…ƒã®è¡Œåˆ—ã¯å˜ä½è¡Œåˆ—ã§ã¯ãªã„ã®ã§
 
-	// ƒ„ƒRƒr–@‚É‚æ‚éŒÅ—LƒxƒNƒgƒ‹æ“¾
+	// ãƒ¤ã‚³ãƒ“æ³•ã«ã‚ˆã‚‹å›ºæœ‰ãƒ™ã‚¯ãƒˆãƒ«å–å¾—
 	DirectX::XMMATRIX eigenvectors{};
 	jacobi_eigen_decomposition(matrix, eigenvectors);
 
@@ -41,14 +41,14 @@ OBB OBB::make(
 	const DirectX::XMVECTOR& mean,
 	const DirectX::XMMATRIX& eigen_vectors
 ) {
-	// OBB‚Ìì¬
+	// OBBã®ä½œæˆ
 	OBB obb{};
 	for(int i = 0; i < 3; ++i) {
 		const DirectX::XMVECTOR axis = DirectX::XMVector3Normalize(eigen_vectors.r[i]);
 		DirectX::XMStoreFloat3(&obb.axis[i], axis);
 	}
 
-	// ²‹óŠÔ‚ÅAABB
+	// è»¸ç©ºé–“ã§AABB
 	const DirectX::XMVECTOR minV = DirectX::XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0);
 	const DirectX::XMVECTOR maxV = DirectX::XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0);
 
@@ -76,7 +76,7 @@ OBB OBB::make(
 		obb.axis[1] * offset.m128_f32[1] +
 		obb.axis[2] * offset.m128_f32[2];
 
-	// ’†S•â³
+	// ä¸­å¿ƒè£œæ­£
 	DirectX::XMStoreFloat3(&obb.center, offset_mean);
 
 	return obb;

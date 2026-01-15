@@ -1,9 +1,9 @@
 #pragma once
 
 enum class MotionState {
-	Wait,
-	WaveHand,
-	Sitting,
-	Standing,
-	Random,
+    Wait,
+    WaveHand,
+    Sitting,
+    Standing,
+    Random,
 };

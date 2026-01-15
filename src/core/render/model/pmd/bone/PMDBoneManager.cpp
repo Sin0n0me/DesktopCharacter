@@ -1,11 +1,11 @@
-#include "../../constant_buffer/Bones.h"
-#include "../../constant_buffer/ConstantBufferNames.h"
-#include "../../shader/BindingSlotKind.h"
-#include "../../shader/ShaderBindingSlots.h"
-#include "../../shader/ShaderType.h"
+#include "../../../constant_buffer/Bones.h"
+#include "../../../constant_buffer/ConstantBufferNames.h"
+#include "../../../shader/BindingSlotKind.h"
+#include "../../../shader/ShaderBindingSlots.h"
+#include "../../../shader/ShaderType.h"
 #include "../ik/IKSolver.h"
+#include "../PMDModelLoader.h"
 #include "PMDBoneManager.h"
-#include "PMDModelLoader.h"
 #include <d3d11.h>
 #include <ranges>
 
@@ -117,9 +117,7 @@ bool PMDBoneManager::init(ID3D11Device* const device) {
 void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
     D3D11_MAPPED_SUBRESOURCE mapped;
     context->Map(this->bone_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-
-    // TODO: 更新された部分だけのコピー
-    memcpy(mapped.pData, this->bones.get(), sizeof(Bones));
+    memcpy(mapped.pData, this->bones.get(), sizeof(decltype(this->bones)::element_type));
     context->Unmap(this->bone_buffer.Get(), 0);
 }
 

@@ -7,5 +7,5 @@ private:
 
 public:
 
-	bool hit_model(const Ray& ray, const OBB& obb);
+    bool hit_model(const Ray& ray, const OBB& obb);
 };

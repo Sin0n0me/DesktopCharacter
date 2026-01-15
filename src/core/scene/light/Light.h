@@ -6,7 +6,7 @@ struct ID3D11Device;
 struct CommonResource;
 
 struct Light {
-	Shadow shadow;
+    Shadow shadow;
 
-	static Light make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource);
+    static Light make_light(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource);
 };

@@ -1,5 +1,5 @@
-#include "../../../utility/Utility.h"
-#include "../../model/pmd/PMDFileStruct.h"
+#include "../../../../utility/Utility.h"
+#include "..//PMDFileStruct.h"
 #include "IKSolver.h"
 #include <algorithm>
 #include <cmath>

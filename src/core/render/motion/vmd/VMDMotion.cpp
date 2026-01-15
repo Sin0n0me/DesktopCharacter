@@ -1,14 +1,19 @@
 #include "../../../utility/BinaryReader.h"
 #include "../../constant_buffer/Bones.h"
-#include "../../model/ik/IKSolver.h"
-#include "../../model/pmd/IBoneAccessor.h"
+#include "../../model/pmd/bone/IBoneAccessor.h"
+#include "../../model/pmd/ik/IKSolver.h"
+#include "../../model/pmd/morph/IMorphAccessor.h"
 #include "VMDLoader.h"
 #include "VMDMotion.h"
 #include <algorithm>
 #include <ranges>
 
-VMDMotion::VMDMotion(const std::shared_ptr<IBoneAccessor>& bone_accessor) {
+VMDMotion::VMDMotion(
+    const std::shared_ptr<IBoneAccessor>& bone_accessor,
+    const std::shared_ptr<IMorphAccessor>& morph_accessor
+) {
     this->bone_accessor = bone_accessor;
+    this->morph_accessor = morph_accessor;
     this->elapsed_time = 0;
     this->current_frame = 0;
     this->last_frame = 0;

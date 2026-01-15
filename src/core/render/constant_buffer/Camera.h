@@ -3,7 +3,7 @@
 
 // カメラ用行列
 struct alignas(16) Camera {
-	DirectX::XMMATRIX world;
-	DirectX::XMMATRIX view;
-	DirectX::XMMATRIX projection;
+    DirectX::XMMATRIX world;
+    DirectX::XMMATRIX view;
+    DirectX::XMMATRIX projection;
 };

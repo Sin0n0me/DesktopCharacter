@@ -1,11 +1,16 @@
-#include "../../model/pmd/IBoneAccessor.h"
+#include "../../model/pmd/bone/IBoneAccessor.h"
+#include "../../model/pmd/morph/IMorphAccessor.h"
 #include "VMDMotion.h"
 #include "VMDMotionManager.h"
 #include <filesystem>
 
 constexpr char8_t MOTION_WAVE[] = u8"assets/motion/手を振る.vmd";
 
-VMDMotionManager::VMDMotionManager(const std::shared_ptr<IBoneAccessor>& bone_accessor) {
+VMDMotionManager::VMDMotionManager(
+    const std::shared_ptr<IBoneAccessor>& bone_accessor,
+    const std::shared_ptr<IMorphAccessor>& morph_accessor
+) {
+    this->morph_accessor = morph_accessor;
     this->bone_accessor = bone_accessor;
     this->current_motion = MotionState::WaveHand;
 }
@@ -13,7 +18,7 @@ VMDMotionManager::VMDMotionManager(const std::shared_ptr<IBoneAccessor>& bone_ac
 bool VMDMotionManager::init() {
     this->motion_map.emplace(
         MotionState::WaveHand,
-        VMDMotion(this->bone_accessor)
+        VMDMotion{this->bone_accessor, this->morph_accessor}
     );
 
     if(!this->load()) {

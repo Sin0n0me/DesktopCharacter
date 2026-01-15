@@ -6,7 +6,7 @@ struct ID3D11Device;
 struct CommonResource;
 
 struct SceneCamera {
-	Camera camera;
+    Camera camera;
 
-	static SceneCamera make_camera(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource);
+    static SceneCamera make_camera(ID3D11Device* const device, const std::shared_ptr<CommonResource>& common_resource);
 };

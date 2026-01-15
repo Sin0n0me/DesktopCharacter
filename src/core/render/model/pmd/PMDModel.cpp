@@ -1,26 +1,21 @@
 #include "../../../utility/Algorithm.h"
 #include "../../../utility/BinaryReader.h"
+#include "../../../utility/Maker.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../constant_buffer/Material.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../shader/Shader.h"
 #include "../../shader/ShaderBindingSlots.h"
+#include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
 
-struct Vertex {
-    float position[3];
-    float normal[3];
-    float uv[2];
-    uint16_t bone_index[2];	// ボーン番号(GPU上では32bitのuint扱い)
-    float bone_weight[2]; // 0-1
-};
-
 PMDModel::PMDModel(const std::filesystem::path& path) : Model(path) {
-    this->model_loader = std::make_shared<PMDModelLoader>(path);
+    Maker::make_shared(this->model_loader, path);
+    Maker::make_shared(this->vertices);
 }
 
 Model::Model(const std::filesystem::path& path) : path(path) {}
@@ -44,7 +39,8 @@ bool PMDModel::init(ID3D11Device* const device) {
     }
 
     // ボーン名の解決
-    this->bone_manager = std::make_shared<PMDBoneManager>(
+    Maker::make_shared(
+        this->bone_manager,
         this->model_loader->get_bones(),
         this->model_loader->get_iks()
     );
@@ -52,8 +48,21 @@ bool PMDModel::init(ID3D11Device* const device) {
         return false;
     }
 
-    //
-    this->motion_manager = std::make_shared<VMDMotionManager>(this->bone_manager);
+    // モーフ
+    Maker::make_shared(
+        this->morph_manager,
+        this->model_loader->get_morphs(),
+        this->vertices
+    );
+    if(!this->morph_manager->init(device)) {
+        return false;
+    }
+
+    // モーション
+    Maker::make_shared(
+        this->motion_manager,
+        this->bone_manager
+    );
     if(!this->motion_manager->init()) {
         return false;
     }
@@ -63,6 +72,12 @@ bool PMDModel::init(ID3D11Device* const device) {
 
 void PMDModel::render_update(ID3D11DeviceContext* const context) {
     this->bone_manager->render_update(context);
+    this->morph_manager->render_update(context);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    context->Map(this->vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    memcpy(mapped.pData, this->vertices.get(), sizeof(decltype(this->vertices)::element_type));
+    context->Unmap(this->vertex_buffer.Get(), 0);
 }
 
 void PMDModel::render(
@@ -71,7 +86,7 @@ void PMDModel::render(
 ) const {
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    const UINT stride = sizeof(Vertex);
+    const UINT stride = sizeof(PMDVertexData);
     const UINT offset = 0;
     context->IASetVertexBuffers(
         0,
@@ -116,7 +131,9 @@ void PMDModel::unload_model() {
 }
 
 bool PMDModel::is_loaded_model() {
-    return bool(this->bone_manager) && bool(this->motion_manager);
+    return bool(this->bone_manager)
+        && bool(this->motion_manager)
+        && bool(this->morph_manager);
 }
 
 // 主成分分析による最小体積のOBBを作成
@@ -164,49 +181,53 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
 bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
     const auto& loaded_vertices = this->model_loader->get_vertices();
     const auto size = loaded_vertices.size();
-    std::vector<Vertex> vertices(size);
+    this->vertices->resize(size);
     for(size_t i = 0; i < size; ++i) {
+        auto& dst_vertex = this->vertices->at(i);
+        auto& src_vertex = loaded_vertices.at(i);
+
         memcpy(
-            vertices[i].position,
-            loaded_vertices[i].position,
-            sizeof(decltype(vertices[i].position))
+            dst_vertex.position,
+            src_vertex.position,
+            sizeof(decltype(dst_vertex.position))
         );
         memcpy(
-            vertices[i].normal,
-            loaded_vertices[i].normal,
-            sizeof(decltype(vertices[i].normal))
+            dst_vertex.normal,
+            src_vertex.normal,
+            sizeof(decltype(dst_vertex.normal))
         );
         memcpy(
-            vertices[i].uv,
-            loaded_vertices[i].uv,
-            sizeof(decltype(vertices[i].uv))
+            dst_vertex.uv,
+            src_vertex.uv,
+            sizeof(decltype(dst_vertex.uv))
         );
         memcpy(
-            vertices[i].bone_index,
-            loaded_vertices[i].bone_index,
-            sizeof(decltype(vertices[i].bone_index))
+            dst_vertex.bone_index,
+            src_vertex.bone_index,
+            sizeof(decltype(dst_vertex.bone_index))
         );
 
         // 正規化
-        const float weight = static_cast<float>(loaded_vertices[i].bone_weight) / 100.0f;
+        const float weight = static_cast<float>(src_vertex.bone_weight) / 100.0f;
         const float bone_weight[2] = {
             weight,
             1.0f - weight
         };
         memcpy(
-            vertices[i].bone_weight,
+            dst_vertex.bone_weight,
             bone_weight,
-            sizeof(decltype(vertices[i].bone_weight))
+            sizeof(decltype(dst_vertex.bone_weight))
         );
     }
 
     const D3D11_BUFFER_DESC desc{
-        .ByteWidth = UINT(sizeof(Vertex) * vertices.size()),
-        .Usage = D3D11_USAGE_DEFAULT,
+        .ByteWidth = static_cast<UINT>(sizeof(PMDVertexData) * this->vertices->size()),
+        .Usage = D3D11_USAGE_DYNAMIC,
         .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
     };
     const D3D11_SUBRESOURCE_DATA init_data{
-        .pSysMem = vertices.data(),
+        .pSysMem = this->vertices->data(),
     };
 
     const HRESULT hr = device->CreateBuffer(
@@ -246,17 +267,15 @@ bool PMDModel::make_index_buffer(ID3D11Device* const device) {
 
 bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
     for(const auto& material : this->model_loader->get_materials()) {
-        PMDMaterialData material_data{};
-
-        // index
-        material_data.index_count = material.index_count;
+        PMDMaterialData material_data{
+            .sphere_mode = SphereMode::None,
+            .index_count = material.index_count,
+        };
 
         // スフィアがついている場合があるので分離
         std::string	texture_path = material.texture_file;
         const auto pos = texture_path.find('*');
         if(pos == std::string::npos) {
-            material_data.sphere_mode = SphereMode::None;
-
             // スフィアがない場合はダミーを作成
             if(!material_data.sphere.make_dummy_texture(device)) {
                 return false;
@@ -293,28 +312,27 @@ bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
             .Usage = D3D11_USAGE_DEFAULT,
             .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
         };
-        Material mat{};
+        Material mat{
+            .sphere_mul = 0.0f,
+            .sphere_add = 0.0f,
+        };
         memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
         memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
 
         switch(material_data.sphere_mode) {
         case SphereMode::None:
-            mat.sphere_add = 0.0f;
-            mat.sphere_mul = 0.0f;
             break;
         case SphereMode::Multiply:
-            mat.sphere_add = 0.0f;
             mat.sphere_mul = 1.0f;
             break;
         case SphereMode::Add:
             mat.sphere_add = 1.0f;
-            mat.sphere_mul = 0.0f;
             break;
         default:
             return false;
         }
 
-        D3D11_SUBRESOURCE_DATA init_data{
+        const D3D11_SUBRESOURCE_DATA init_data{
             .pSysMem = &mat,
             .SysMemPitch = 0,
             .SysMemSlicePitch = sizeof(Material),

@@ -1,159 +1,104 @@
 #include "../../../../utility/Algorithm.h"
+#include "../../../constant_buffer/Bones.h"
+#include "../../../model/pmd/bone/BoneNode.h"
+#include "../../../model/pmd/bone/IBoneAccessor.h"
 #include "BoneKeyFrameManager.h"
-#include <algorithm>
+#include <unordered_map>
 
-BoneKeyFrameManager::BoneKeyFrameManager(const std::vector<BoneKeyFrame>& key_frame_list) : key_frame_list(key_frame_list) {
-    this->key_frame_index = 0;
-    this->current_key_frame = 0;
-}
-
-BoneKeyFrameManager BoneKeyFrameManager::make(std::vector<BoneKeyFrame>&& key_frame_list) {
-    // 昇順にソート
-    std::sort(
-        key_frame_list.begin(),
-        key_frame_list.end(),
-        [](const BoneKeyFrame& left, const BoneKeyFrame& right) {
-            return left.frame_index < right.frame_index;
+BoneKeyFrameManager::BoneKeyFrameManager(
+    const std::shared_ptr<IBoneAccessor>& bone_accessor,
+    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::vector<VMDBoneKeyFrame>& key_frame_list
+) : bone_accessor(bone_accessor) {
+    // VMDで動かすボーンを収集
+    // ボーンごとに纏める
+    std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
+    for(const auto& bone_key_frame : key_frame_list) {
+        try {
+            const auto& bone_index = bone_accessor->get_bone_index(
+                bone_key_frame.bone_name
+            );
+            temp_map[bone_index].emplace_back(BoneKeyFrame{bone_key_frame});
+        } catch(const std::exception&) {
+            // TODO: log
+            continue;
         }
-    );
-    return BoneKeyFrameManager(key_frame_list);
-}
-
-void BoneKeyFrameManager::set_frame(const uint32_t& frame) {
-    if(this->key_frame_list.empty()) {
-        return;
-    };
-
-    const auto& current_key_frame = this->key_frame_list.at(this->key_frame_index);
-    if(current_key_frame.frame_index == frame) {
-        return;
     }
 
-    this->current_key_frame = frame;
-
-    // 次のフレームへ
-    if(current_key_frame.frame_index < frame) {
-        if(this->get_next_key_frame().has_value()) {
-            this->key_frame_index += 1;
-        }
-        return;
+    // 変換
+    for(auto& [bone_index, bone_key_frames] : temp_map) {
+        this->bone_key_frame_map.emplace(
+            bone_index,
+            std::make_unique<BoneKeyFrameCursor>(
+                frame_manager,
+                std::move(bone_key_frames)
+            )
+        );
     }
+}
 
-    // 指定したキーフレームになるまで巻き戻す
-    for(auto previous = this->get_previous_key_frame(); previous.has_value(); previous = this->get_previous_key_frame()) {
-        if(frame < previous.value().frame_index) {
-            this->key_frame_index -= 1;
+void BoneKeyFrameManager::update_local_matricies(void) {
+    // ローカル行列作成
+    const auto& bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
+    for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
+        auto& matrix = bone_matricies->at(bone_index);
+
+        const auto& opt_previous_key_frame = key_frame_cursor->get_previous_key_frame();
+        const auto& opt_bone_key_frame = key_frame_cursor->get_current_key_frame();
+        const auto& bone_key_frame = opt_bone_key_frame.value();
+        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
+
+        // ローカル行列作成
+        const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
+            key_frame_cursor->get_translate()
+        );
+        const DirectX::XMMATRIX translate = bind_bone.local * anim_translate;
+        const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(
+            key_frame_cursor->get_rotate()
+        );
+
+        matrix.local = rotate * translate;
+    }
+}
+
+void BoneKeyFrameManager::update_global_matricies(void) {
+    // グローバル行列作成
+    const auto& bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
+    for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
+        auto& matrix = bone_matricies->at(bone_index);
+        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
+        const int parent_index = bind_bone.parent;
+        if(parent_index < 0) {
+            matrix.global = matrix.local;
         } else {
-            break;
+            const auto& parent_global = bone_matricies->at(parent_index).global;
+            matrix.global = matrix.local * parent_global;
         }
     }
 }
 
-std::optional<BoneKeyFrame> BoneKeyFrameManager::get_previous_key_frame(void) const {
-    if(this->key_frame_list.empty()) {
-        return std::optional<BoneKeyFrame>();
+void BoneKeyFrameManager::apply_skinning(void) {
+    // スキニング用の定数バッファ結果を格納
+    const auto bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
+    for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
+        const auto& matrix = bone_matricies->at(bone_index);
+        const auto& inverse = this->bone_accessor->get_bone(bone_index).inverse_bind;
+        auto mutable_matrix = this->bone_accessor->get_mutable_bones();
+        mutable_matrix->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
     }
-
-    if(this->key_frame_index == 0) {
-        return std::optional<BoneKeyFrame>();
-    }
-
-    return this->key_frame_list.at(this->key_frame_index - 1);
 }
 
-std::optional<BoneKeyFrame> BoneKeyFrameManager::get_next_key_frame(void) const {
-    if(this->key_frame_list.empty()) {
-        return std::optional<BoneKeyFrame>();
+KeyFrame BoneKeyFrameManager::get_last_frame(void) const noexcept {
+    KeyFrame last_frame = 0;
+
+    // 最終キーフレームを求める
+    for(const auto& [_, cursor] : this->bone_key_frame_map) {
+        const auto& opt_last = cursor->get_last_key_frame();
+        if(opt_last.has_value()) {
+            const auto& last = opt_last.value().frame;
+            last_frame = last_frame < last ? last : last_frame;
+        }
     }
 
-    // 末端と同じ場合は次はない扱い
-    const auto& opt_current = this->get_current_key_frame();
-    const auto& opt_last = this->get_last_key_frame();
-    if(!opt_current.has_value() || !opt_last.has_value()) {
-        return std::optional<BoneKeyFrame>();
-    }
-    const auto& current = opt_current.value();
-    const auto& last = opt_last.value();
-    if(current.frame_index == last.frame_index) {
-        return std::optional<BoneKeyFrame>();
-    }
-
-    return this->key_frame_list.at(static_cast<uint64_t>(this->key_frame_index) + 1);
-}
-
-std::optional<BoneKeyFrame> BoneKeyFrameManager::get_current_key_frame(void) const {
-    if(this->key_frame_list.empty()) {
-        return std::optional<BoneKeyFrame>();
-    }
-    return this->key_frame_list.at(this->key_frame_index);
-}
-
-std::optional<BoneKeyFrame> BoneKeyFrameManager::get_first_key_frame(void) const {
-    if(this->key_frame_list.empty()) {
-        return std::optional<BoneKeyFrame>();
-    }
-    return this->key_frame_list.at(0);
-}
-
-std::optional<BoneKeyFrame> BoneKeyFrameManager::get_last_key_frame(void) const {
-    if(this->key_frame_list.empty()) {
-        return std::optional<BoneKeyFrame>();
-    }
-    return this->key_frame_list.at(this->key_frame_list.size() - 1);
-}
-
-DirectX::XMVECTOR BoneKeyFrameManager::get_rotate(const uint32_t elapsed_time) const {
-    const auto& opt_previous = this->get_previous_key_frame();
-    const auto& opt_current = this->get_current_key_frame();
-
-    if(!opt_current.has_value()) {
-        // TODO: log
-        return DirectX::XMVectorZero();
-    }
-
-    const auto& current = opt_current.value();
-    const auto& has_value = opt_previous.has_value();
-    const auto& previous_index = has_value ? opt_previous.value().frame_index : 0;
-    const auto& previous_rotate = has_value ? opt_previous.value().rotation : DirectX::XMQuaternionIdentity();
-    const auto& diff = current.frame_index - previous_index;
-    if(diff == 0) {
-        return current.rotation;
-    }
-    const float current_frame = static_cast<float>((this->current_key_frame - previous_index) * FRAME_TIME);
-    const float frame_count = static_cast<float>(diff * FRAME_TIME);
-    const float frame_ratio = current_frame / frame_count;
-
-    const DirectX::XMFLOAT2 p1 = DirectX::XMFLOAT2(static_cast<float>(current.interpolation[3]) / 127.0f, static_cast<float>(current.interpolation[7]) / 127.0f);
-    const DirectX::XMFLOAT2 p2 = DirectX::XMFLOAT2(static_cast<float>(current.interpolation[11]) / 127.0f, static_cast<float>(current.interpolation[15]) / 127.0f);
-    const float t = y_bezier(frame_ratio, p1, p2, 100); // TODO: config
-
-    return slerp_quaternion(
-        previous_rotate,
-        current.rotation,
-        t
-    );
-}
-
-DirectX::XMVECTOR BoneKeyFrameManager::get_translate(const uint32_t elapsed_time) const {
-    const auto& opt_previous = this->get_previous_key_frame();
-    const auto& opt_current = this->get_current_key_frame();
-
-    if(!opt_current.has_value()) {
-        // TODO: log
-        return DirectX::XMVectorZero();
-    }
-
-    const auto& current = opt_current.value();
-    const auto& previous_index = opt_previous.has_value() ? opt_previous.value().frame_index : 0;
-    const auto& previous_rotate = opt_previous.has_value() ? opt_previous.value().rotation : DirectX::XMQuaternionIdentity();
-    const float diff = static_cast<float>(current.frame_index) - previous_index;
-    if(diff == 0) {
-        return current.translation;
-    }
-
-    return current.translation;
-}
-
-bool BoneKeyFrameManager::is_finished_motion(void) const {
-    return !this->get_last_key_frame().has_value();
+    return last_frame;
 }

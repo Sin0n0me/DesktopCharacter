@@ -5,7 +5,7 @@
 constexpr float WALL_SIZE = 20.0f;
 constexpr float HALF_WALL_SIZE = WALL_SIZE / 2.0f;
 constexpr float FRONT_DEPTH = 0.0f;
-constexpr float FLOOR_DEPTH = 2.5f; // 奥行(床面)
+constexpr float FLOOR_DEPTH = 1.5f; // 奥行(床面)
 constexpr float OFFSET_Y = 0.0f;
 
 struct ShadowReceiverVertex {
@@ -15,6 +15,7 @@ struct ShadowReceiverVertex {
 WallObject::WallObject(void) noexcept {
     this->chair_index_count = 0;
     this->wall_index_count = 0;
+    this->is_sitting = false;
 }
 
 bool WallObject::init(ID3D11Device* const device) {
@@ -39,29 +40,43 @@ void WallObject::render(
         D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
     );
 
-    context->IASetVertexBuffers(
-        0,
-        1,
-        this->chair_vertex_buffer.GetAddressOf(),
-        &stride,
-        &offset
-    );
-
-    context->IASetIndexBuffer(
-        this->chair_index_buffer.Get(),
-        DXGI_FORMAT_R32_UINT,
-        0
-    );
-
-    context->DrawIndexed(this->chair_index_count, 0, 0);
+    if(this->is_sitting) {
+        context->IASetVertexBuffers(
+            0,
+            1,
+            this->chair_vertex_buffer.GetAddressOf(),
+            &stride,
+            &offset
+        );
+        context->IASetIndexBuffer(
+            this->chair_index_buffer.Get(),
+            DXGI_FORMAT_R32_UINT,
+            0
+        );
+        context->DrawIndexed(this->chair_index_count, 0, 0);
+    } else {
+        context->IASetVertexBuffers(
+            0,
+            1,
+            this->wall_vertex_buffer.GetAddressOf(),
+            &stride,
+            &offset
+        );
+        context->IASetIndexBuffer(
+            this->wall_index_buffer.Get(),
+            DXGI_FORMAT_R32_UINT,
+            0
+        );
+        context->DrawIndexed(this->wall_index_count, 0, 0);
+    }
 }
 
 bool WallObject::make_mesh_wall(ID3D11Device* const device) {
     constexpr ShadowReceiverVertex WALL_VERTICES[] = {
-        {{-HALF_WALL_SIZE, 0.0f, FLOOR_DEPTH}},
-        {{-HALF_WALL_SIZE, WALL_SIZE, FLOOR_DEPTH}},
-        {{HALF_WALL_SIZE, WALL_SIZE, FLOOR_DEPTH}},
-        {{HALF_WALL_SIZE, 0.0f, FLOOR_DEPTH}},
+        {{-HALF_WALL_SIZE, -HALF_WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{-HALF_WALL_SIZE, WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH}},
+        {{HALF_WALL_SIZE, -HALF_WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH}},
     };
     constexpr uint32_t INDICES[] = {
         0, 1, 2,

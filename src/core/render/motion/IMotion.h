@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "../../timer/Timer.h"
 
 class IMotion {
 public:
@@ -7,5 +7,5 @@ public:
 
     //virtual void on_chaged_motion();
 
-    virtual void update_motion(const int64_t delta_time) = 0;
+    virtual void update_motion(const DeltaTime& delta_time) = 0;
 };

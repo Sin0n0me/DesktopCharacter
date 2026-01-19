@@ -20,7 +20,7 @@ struct VMDBoneKeyFrame {
     uint8_t interpolation[64];	//
 };
 
-struct VMDMorphKeyframe {
+struct VMDMorphKeyFrame {
     char morph_name[15];	//
     uint32_t frame;
     float weight;

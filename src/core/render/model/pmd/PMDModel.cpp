@@ -54,14 +54,12 @@ bool PMDModel::init(ID3D11Device* const device) {
         this->model_loader->get_morphs(),
         this->vertices
     );
-    if(!this->morph_manager->init(device)) {
-        return false;
-    }
 
     // モーション
     Maker::make_shared(
         this->motion_manager,
-        this->bone_manager
+        this->bone_manager,
+        this->morph_manager
     );
     if(!this->motion_manager->init()) {
         return false;
@@ -72,11 +70,10 @@ bool PMDModel::init(ID3D11Device* const device) {
 
 void PMDModel::render_update(ID3D11DeviceContext* const context) {
     this->bone_manager->render_update(context);
-    this->morph_manager->render_update(context);
 
     D3D11_MAPPED_SUBRESOURCE mapped;
     context->Map(this->vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-    memcpy(mapped.pData, this->vertices.get(), sizeof(decltype(this->vertices)::element_type));
+    memcpy(mapped.pData, this->vertices->data(), sizeof(PMDVertexData) * this->vertices->size());
     context->Unmap(this->vertex_buffer.Get(), 0);
 }
 
@@ -155,7 +152,7 @@ void PMDModel::compute_obb(std::unordered_map<short, OBB>& obb_map) {
 void PMDModel::update_obb(std::unordered_map<short, OBB>& obb_map) {
 }
 
-void PMDModel::update_motion(const int64_t delta_time) {
+void PMDModel::update_motion(const DeltaTime& delta_time) {
     this->motion_manager->update_motion(delta_time);
 }
 

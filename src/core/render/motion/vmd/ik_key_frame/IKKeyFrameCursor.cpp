@@ -1,0 +1,29 @@
+#include "IKKeyFrameCursor.h"
+
+IKKeyFrameCursor::IKKeyFrameCursor(
+    const std::shared_ptr<FrameManager>& frame_manager,
+    std::vector<IKKeyFrame>&& key_frame_list
+) : KeyFrameCursor<IKKeyFrame>(
+    frame_manager,
+    IKKeyFrameCursor::sort(std::move(key_frame_list)),
+    [](const IKKeyFrame& key_frame) {
+        return 0;
+    }
+) {
+}
+
+bool IKKeyFrameCursor::is_apply_ik(void) {
+    const auto& opt_previous = this->get_previous_key_frame();
+    if(opt_previous.has_value()) {
+        const auto& previous = opt_previous.value();
+        return previous.show_flag;
+    }
+
+    const auto& opt_current = this->get_current_key_frame();
+    if(opt_current.has_value()) {
+        const auto& current = opt_current.value();
+        return current.show_flag;
+    }
+
+    return false;
+}

@@ -43,6 +43,6 @@ bool VMDMotionManager::load() {
     return true;
 }
 
-void VMDMotionManager::update_motion(const int64_t delta_time) {
+void VMDMotionManager::update_motion(const DeltaTime& delta_time) {
     this->motion_map.at(this->current_motion).update_motion(delta_time);
 }

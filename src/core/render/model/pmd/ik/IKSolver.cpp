@@ -29,7 +29,10 @@ IKSolver::IKSolver(
     }
 }
 
-void IKSolver::apply_ik(const BoneIndex& bone_index, std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map) const {
+void IKSolver::apply_ik(
+    const BoneIndex& bone_index,
+    std::vector<BoneNode>& bone_matricies
+) const {
     const auto& ik = this->ik_map.at(bone_index);
     if(ik.chain.empty()) {
         return;
@@ -38,11 +41,11 @@ void IKSolver::apply_ik(const BoneIndex& bone_index, std::unordered_map<BoneInde
     bool continue_flag = true;
     for(int i = 0; i < ik.iterations && continue_flag; ++i) {
         for(const auto& bone_index : ik.chain) {
-            if(!this->solve_ik_bone(ik, bone_index, bone_matrix_map)) {
+            if(!this->solve_ik_bone(ik, bone_index, bone_matricies)) {
                 continue_flag = false;
                 break;
             }
-            this->update_children_global(bone_index, bone_matrix_map);
+            this->update_children_global(bone_index, bone_matricies);
         }
     }
 }
@@ -50,7 +53,7 @@ void IKSolver::apply_ik(const BoneIndex& bone_index, std::unordered_map<BoneInde
 // 再帰でもよかったかもしれない
 void IKSolver::update_children_global(
     const uint16_t& root,
-    std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map
+    std::vector<BoneNode>& bone_matricies
 ) const {
     // 初期ヒープサイズによっては毎回メモリ確保が起こり重くなるので修正が必要かもしれない
     std::stack<BoneIndex> stack = std::stack<BoneIndex>();
@@ -61,11 +64,11 @@ void IKSolver::update_children_global(
         stack.pop();
 
         const auto parent = this->bone_map->at(bone_index).parent;
-        auto& bone_matrix = bone_matrix_map.at(bone_index);
+        auto& bone_matrix = bone_matricies.at(bone_index);
         if(parent < 0) {
             bone_matrix.global = bone_matrix.local;
         } else {
-            const auto& parent_global = bone_matrix_map.at(parent).global;
+            const auto& parent_global = bone_matricies.at(parent).global;
             bone_matrix.global = bone_matrix.local * parent_global;
         }
 
@@ -75,10 +78,14 @@ void IKSolver::update_children_global(
     }
 }
 
-bool IKSolver::solve_ik_bone(const PMDIK& ik, const uint16_t& bone_index, std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map) const {
-    const DirectX::XMVECTOR bone_pos = bone_matrix_map.at(bone_index).global.r[3];
-    const DirectX::XMVECTOR ik_pos = bone_matrix_map.at(ik.ik_bone).global.r[3];
-    const DirectX::XMVECTOR target_pos = bone_matrix_map.at(ik.target_bone).global.r[3];
+bool IKSolver::solve_ik_bone(
+    const PMDIK& ik,
+    const uint16_t& bone_index,
+    std::vector<BoneNode>& bone_matricies
+) const {
+    const DirectX::XMVECTOR bone_pos = bone_matricies.at(bone_index).global.r[3];
+    const DirectX::XMVECTOR ik_pos = bone_matricies.at(ik.ik_bone).global.r[3];
+    const DirectX::XMVECTOR target_pos = bone_matricies.at(ik.target_bone).global.r[3];
 
     const DirectX::XMVECTOR ik_vec = DirectX::XMVector3Normalize(
         sub_float(ik_pos, bone_pos)
@@ -109,7 +116,7 @@ bool IKSolver::solve_ik_bone(const PMDIK& ik, const uint16_t& bone_index, std::u
     }
 
     //
-    auto& matrix = bone_matrix_map.at(bone_index);
+    auto& matrix = bone_matricies.at(bone_index);
     if(bone_index == 5 || bone_index == 8) {
         const DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationAxis(
             cross,

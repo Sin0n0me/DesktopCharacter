@@ -1,35 +1,29 @@
 #pragma once
-#include "BoneKeyFrame.h"
-#include <DirectXMath.h>
-#include <optional>
+
+#include "../../../model/pmd/bone/Bone.h"
+#include "BoneKeyFrameCursor.h"
+#include <map>
+#include <memory>
 #include <vector>
 
-constexpr uint32_t VMD_FPS = 30;
-constexpr uint32_t FRAME_TIME = 1'000'000 / VMD_FPS; // 1フレームの時間
+class IBoneAccessor;
 
 class BoneKeyFrameManager {
-private:
-    uint32_t key_frame_index;
-    uint32_t current_key_frame;
-    const std::vector<BoneKeyFrame> key_frame_list;
+    const std::shared_ptr<const IBoneAccessor> bone_accessor;
+    std::map<BoneIndex, std::unique_ptr<BoneKeyFrameCursor>> bone_key_frame_map;
 
 public:
+    explicit BoneKeyFrameManager(
+        const std::shared_ptr<IBoneAccessor>& bone_accessor,
+        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::vector<VMDBoneKeyFrame>& key_frame_list
+    );
 
-    BoneKeyFrameManager(const std::vector<BoneKeyFrame>& key_frame_list);
+    void update_local_matricies(void);
 
-    static BoneKeyFrameManager make(std::vector<BoneKeyFrame>&& key_frame_list);
+    void update_global_matricies(void);
 
-    void set_frame(const uint32_t& frame);
+    void apply_skinning(void);
 
-    std::optional<BoneKeyFrame> get_previous_key_frame(void) const;
-    std::optional<BoneKeyFrame> get_next_key_frame(void) const;
-    std::optional<BoneKeyFrame> get_current_key_frame(void) const;
-    std::optional<BoneKeyFrame> get_first_key_frame(void) const;
-    std::optional<BoneKeyFrame> get_last_key_frame(void) const;
-
-    // 線形補完済み
-    DirectX::XMVECTOR get_rotate(const uint32_t elapsed_time) const;
-    DirectX::XMVECTOR get_translate(const uint32_t elapsed_time) const;
-
-    bool is_finished_motion(void) const;
+    KeyFrame get_last_frame(void) const noexcept;
 };

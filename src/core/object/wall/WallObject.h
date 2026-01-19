@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "../IObjectRenderer.h"
 #include <cstdint>
 #include <wrl/client.h>
@@ -13,6 +13,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> wall_index_buffer;
     uint32_t chair_index_count;
     uint32_t wall_index_count;
+    bool is_sitting;
 
 public:
     explicit WallObject(void) noexcept;

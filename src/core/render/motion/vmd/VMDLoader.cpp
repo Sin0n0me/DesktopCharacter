@@ -164,7 +164,7 @@ const std::vector<VMDBoneKeyFrame>& VMDLoader::get_bone_key_frames(void) const n
     return this->bone_key_frames;
 }
 
-const std::vector<VMDMorphKeyframe>& VMDLoader::get_morph_key_frames(void) const noexcept {
+const std::vector<VMDMorphKeyFrame>& VMDLoader::get_morph_key_frames(void) const noexcept {
     return this->morph_key_frames;
 }
 

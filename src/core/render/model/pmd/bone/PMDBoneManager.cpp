@@ -1,3 +1,4 @@
+#include "../../../../utility/Maker.h"
 #include "../../../constant_buffer/Bones.h"
 #include "../../../constant_buffer/ConstantBufferNames.h"
 #include "../../../shader/BindingSlotKind.h"
@@ -13,8 +14,17 @@ PMDBoneManager::PMDBoneManager(
     const std::vector<PMDBone>& bones,
     const std::vector<PMDIK>& iks
 ) noexcept {
-    this->bone_map = std::make_shared<PMDBoneMap>();
-    this->bones = std::make_unique<Bones>();
+    Maker::make_shared(this->bone_map);
+    Maker::make_shared(this->bones);
+    Maker::make_shared(this->bone_matricies, 256);
+
+    for(int i = 0; i < 256; ++i) {
+        this->bone_matricies->at(i) = BoneNode{
+            .rotate = DirectX::XMQuaternionIdentity(),
+            .local = DirectX::XMMatrixIdentity(),
+            .global = DirectX::XMMatrixIdentity(),
+        };
+    }
 
     const auto bone_count = bones.size();
     for(int index = 0; index < bone_count; ++index) {
@@ -65,7 +75,8 @@ PMDBoneManager::PMDBoneManager(
         bone.inverse_bind = DirectX::XMMatrixInverse(nullptr, bone.global);
     }
 
-    this->ik_soulver = std::make_shared<IKSolver>(
+    Maker::make_shared(
+        this->ik_soulver,
         iks,
         this->bone_map
     );
@@ -134,6 +145,10 @@ void PMDBoneManager::render(
         1,
         this->bone_buffer.GetAddressOf()
     );
+}
+
+std::shared_ptr<std::vector<BoneNode>> PMDBoneManager::get_mutable_bone_nodes(void) const {
+    return this->bone_matricies;
 }
 
 std::shared_ptr<Bones> PMDBoneManager::get_mutable_bones(void) const {

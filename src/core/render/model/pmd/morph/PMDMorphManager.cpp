@@ -20,15 +20,14 @@ PMDMorphManager::PMDMorphManager(
     Maker::make_shared(this->morphs, std::move(morph_list));
 }
 
-bool PMDMorphManager::init(ID3D11Device* const device) {
-    return true;
+std::shared_ptr<std::vector<PMDVertexData>> PMDMorphManager::get_mutable_vertices(void) const noexcept {
+    return this->vertices;
 }
 
-void PMDMorphManager::render_update(ID3D11DeviceContext* const context) {
+std::shared_ptr<const std::vector<PMDMorphData>> PMDMorphManager::get_morphs(void) const noexcept {
+    return this->morphs;
 }
 
-void PMDMorphManager::render(
-    ID3D11DeviceContext* const context,
-    const ShaderBindingSlots* slots
-) const {
+uint32_t PMDMorphManager::get_morph_index(const std::string& name) const noexcept {
+    return this->morph_name_map.at(name);
 }

@@ -1,25 +1,39 @@
 #include "BoneKeyFrame.h"
 
-BoneKeyFrame BoneKeyFrame::make(const VMDBoneKeyFrame& key_frame) {
-    BoneKeyFrame frame{};
-    frame.frame_index = key_frame.frame;
-    frame.translation = DirectX::XMVectorSet(
+BoneKeyFrame::BoneKeyFrame(const VMDBoneKeyFrame& key_frame) :
+    frame(key_frame.frame),
+    translation(DirectX::XMVectorSet(
         key_frame.translation[0],
         key_frame.translation[1],
         key_frame.translation[2],
         0.0f
-    );
-    frame.rotation = DirectX::XMVectorSet(
+    )),
+    rotation(DirectX::XMVectorSet(
         key_frame.rotation[0],
         key_frame.rotation[1],
         key_frame.rotation[2],
         key_frame.rotation[3]
-    );
-
-    const float length = DirectX::XMVectorGetX(DirectX::XMVector4Length(frame.rotation));
-
-    for(int i = 0; i < 64; ++i) {
-        frame.interpolation[i] = key_frame.interpolation[i];
+    )),
+    interpolation({}) {
+    for(int i = 0; i < sizeof(decltype(this->interpolation)); ++i) {
+        *const_cast<uint8_t*>(&this->interpolation[i]) = key_frame.interpolation[i];
     }
-    return frame;
+}
+
+BoneKeyFrame::BoneKeyFrame(const BoneKeyFrame& key_frame) :
+    frame(key_frame.frame),
+    translation(key_frame.translation),
+    rotation(key_frame.rotation),
+    interpolation(key_frame.interpolation) {
+}
+
+BoneKeyFrame::BoneKeyFrame(const BoneKeyFrame&& key_frame) :
+    frame(key_frame.frame),
+    translation(key_frame.translation),
+    rotation(key_frame.rotation),
+    interpolation(key_frame.interpolation) {
+}
+
+bool BoneKeyFrame::operator<(const BoneKeyFrame& other) const {
+    return this->frame < other.frame;
 }

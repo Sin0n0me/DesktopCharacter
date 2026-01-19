@@ -24,5 +24,5 @@ public:
 
     bool load();
 
-    void update_motion(const int64_t delta_time) override;
+    void update_motion(const DeltaTime& delta_time) override;
 };

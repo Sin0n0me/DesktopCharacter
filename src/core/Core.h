@@ -5,6 +5,7 @@
 #include "render/model/ModelManager.h"
 #include "render/render_pipeline/RenderPipeline.h"
 #include "scene/Scene.h"
+#include "timer/Timer.h"
 #include <memory>
 #include <optional>
 
@@ -35,7 +36,7 @@ private:
     std::unique_ptr<Collider> collider;
 
 private:
-    void update(const int64_t delta_time);
+    void update(const DeltaTime& delta_time);
     void render_update(void);
     void render(void) const;
 

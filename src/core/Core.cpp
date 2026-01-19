@@ -3,8 +3,6 @@
 #include "D3D11.h"
 #include "render/CommonResource.h"
 #include "render/render_pipeline/RenderPipeline.h"
-#include <chrono>
-#include <iostream>
 
 decltype(Engine::instance) Engine::instance;
 
@@ -15,7 +13,7 @@ Engine::Engine(void) noexcept {
     this->collider = std::make_unique<Collider>();
 }
 
-void Engine::update(const int64_t delta_time) {
+void Engine::update(const DeltaTime& delta_time) {
     this->models->update(delta_time);
 }
 
@@ -81,21 +79,19 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 void Engine::run(void) {
     // main loop
     MSG msg{};
-    auto end = std::chrono::high_resolution_clock::now();
+    Timer timer{};
     while(msg.message != WM_QUIT) {
         if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        const auto start = std::chrono::high_resolution_clock::now();
-        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(start - end).count();
+        const auto duration = timer.get_delta_time();
+        timer.frame_reset();
 
         this->render_update();
         this->update(duration);
         this->render();
-
-        end = start;
     }
 }
 

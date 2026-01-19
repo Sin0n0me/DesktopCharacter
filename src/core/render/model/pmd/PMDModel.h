@@ -35,7 +35,7 @@ public:
     void compute_obb(std::unordered_map<short, OBB>& obb_map) override;
     void update_obb(std::unordered_map<short, OBB>& obb_map) override;
 
-    void update_motion(const int64_t delta_time) override;
+    void update_motion(const DeltaTime& delta_time) override;
 
 private:
 

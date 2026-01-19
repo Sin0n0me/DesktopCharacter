@@ -1,7 +1,7 @@
 #pragma once
-#include "../../../motion/vmd/bone_key_frame/BoneNode.h"
 #include "../../pmd/PMDFileStruct.h"
 #include "../bone/Bone.h"
+#include "../bone/BoneNode.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -14,13 +14,13 @@ private:
 
     void update_children_global(
         const uint16_t& root,
-        std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map
+        std::vector<BoneNode>& bone_matricies
     ) const;
 
     bool solve_ik_bone(
         const PMDIK& ik,
         const uint16_t& bone_index,
-        std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map
+        std::vector<BoneNode>& bone_matricies
     ) const;
 
 public:
@@ -32,6 +32,6 @@ public:
 
     void apply_ik(
         const BoneIndex& bone_index,
-        std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map
+        std::vector<BoneNode>& bone_matricies
     ) const;
 };

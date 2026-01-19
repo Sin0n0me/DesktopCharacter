@@ -223,9 +223,11 @@ bool D3D11::make_render_target_view(void) {
 
 // ラスタライザの作成
 bool D3D11::make_rasterizer(void) {
+    // MMDはポリゴンの両面を使用している
+    // なので背面カリングすると表示がおかしくなる
     constexpr D3D11_RASTERIZER_DESC desc{
         .FillMode = D3D11_FILL_SOLID,
-        .CullMode = D3D11_CULL_BACK,
+        .CullMode = D3D11_CULL_NONE,
         .FrontCounterClockwise = FALSE,
         .DepthBias = 0,
         .SlopeScaledDepthBias = 0.5f,

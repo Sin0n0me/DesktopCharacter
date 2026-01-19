@@ -1,4 +1,5 @@
 #pragma once
+#include "../../timer/Timer.h"
 
 namespace std::filesystem {
     class path;
@@ -12,5 +13,5 @@ public:
 
     virtual bool load_motion_file(const std::filesystem::path& path) = 0;
 
-    virtual void update_motion(const int64_t delta_time) = 0;
+    virtual void update_motion(const DeltaTime& delta_time) = 0;
 };

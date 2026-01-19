@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../timer/Timer.h"
 #include "Model.h"
 #include <memory>
 #include <string>
@@ -30,6 +31,6 @@ public:
     bool load_current_model(ID3D11Device* const device);
     void unload_model(const std::u8string& model_name);
 
-    void update(const int64_t delta_time);
+    void update(const DeltaTime& delta_time);
     void update_render(ID3D11DeviceContext* const context);
 };

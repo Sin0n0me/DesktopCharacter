@@ -106,7 +106,7 @@ void ModelManager::unload_model(const std::u8string& model_name) {
     this->models.at(model_name)->unload_model();
 }
 
-void ModelManager::update(const int64_t delta_time) {
+void ModelManager::update(const DeltaTime& delta_time) {
     const auto& model = this->models.at(this->current_model);
     model->update_motion(delta_time);
     model->update_obb(this->model_obb_map.at(this->current_model));

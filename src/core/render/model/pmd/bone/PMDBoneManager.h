@@ -2,6 +2,7 @@
 #include "../../../../object/IObjectRenderer.h"
 #include "../bone/Bone.h"
 #include "../PMDFileStruct.h"
+#include "BoneNode.h"
 #include "IBoneAccessor.h"
 #include <memory>
 #include <string>
@@ -14,6 +15,7 @@ class PMDModelLoader;
 class PMDBoneManager : public IObjectRenderer, public IBoneAccessor {
 private:
     std::shared_ptr<Bones> bones; // 更新用
+    std::shared_ptr<std::vector<BoneNode>> bone_matricies;// 更新用
     std::shared_ptr<PMDBoneMap> bone_map;
     std::shared_ptr<IKSolver> ik_soulver;
     std::unordered_map<std::string, BoneIndex> bone_name_map;
@@ -33,6 +35,7 @@ public:
     void render(ID3D11DeviceContext* const context, const ShaderBindingSlots* slots) const override;
 
     std::shared_ptr<Bones> get_mutable_bones(void) const override;
+    std::shared_ptr<std::vector<BoneNode>> get_mutable_bone_nodes(void) const override;
     std::shared_ptr<const IKSolver> get_ik_soulver(void) const override;
     BoneIndex get_bone_index(const std::string& name) const override;
     const PMDBoneData& get_bone(const BoneIndex& index) const override;

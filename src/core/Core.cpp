@@ -1,6 +1,7 @@
 #include "../Application.h"
 #include "Core.h"
 #include "D3D11.h"
+#include "log/Logger.h"
 #include "render/CommonResource.h"
 #include "render/render_pipeline/RenderPipeline.h"
 
@@ -40,11 +41,13 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 
     const HRESULT hr = CoInitializeEx(nullptr, tagCOINIT::COINIT_APARTMENTTHREADED);
     if(FAILED(hr)) {
+        Logger::error(u8"COMの初期化に失敗しました");
         return false;
     }
 
     // DirectX11の初期化
     if(!this->d3d11->init_d3d11(hwnd, width, height)) {
+        Logger::error(u8"D3D11の初期化に失敗しました");
         return false;
     }
 
@@ -54,11 +57,13 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 
     // パイプラインの初期化
     if(!this->render_pipeline->init()) {
+        Logger::error(u8"パイプラインの初期化に失敗しました");
         return false;
     }
 
     // モデル読み込み
     if(!this->models->init()) {
+        Logger::error(u8"モデル管理の初期化に失敗しました");
         return false;
     }
     if(!this->models->load_current_model(this->d3d11->device.Get())) {
@@ -68,10 +73,13 @@ bool Engine::init(const HWND& hwnd, const UINT& width, const UINT& height) {
 
     // シーンの作成
     if(!this->scene->init(this->d3d11->device.Get())) {
+        Logger::error(u8"シーンの初期化に失敗しました");
         return false;
     }
 
     this->instance.emplace(this);
+
+    Logger::info(u8"エンジンの初期化に成功しました");
 
     return true;
 }

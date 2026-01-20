@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "BindingSlotKey.h"
 #include "IShaderBlueprint.h"
@@ -17,6 +17,7 @@ struct ID3D11Device;
 struct ID3D11InputLayout;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+class BinaryReader;
 
 class Shader {
 protected:
@@ -47,13 +48,13 @@ private:
 
     bool compile_shader(ID3DBlob** const lob);
 
-    static bool is_compiled_shader_file(const std::filesystem::path& path);
+    static bool is_compiled_shader_file(BinaryReader& reader);
 
 public:
 
     explicit Shader(std::unique_ptr<IShaderBlueprint> blueprint);
 
-    bool read_shader(void);
+    bool read_shader(BinaryReader& reader);
 
     template<typename T>
     bool make_shader(

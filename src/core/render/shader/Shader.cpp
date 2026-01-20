@@ -1,23 +1,17 @@
+#include "../../log/Logger.h"
 #include "../../utility/BinaryReader.h"
 #include "../../utility/Hash.h"
 #include "Shader.h"
 #include "ShaderRelfection.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <iostream>
 #include <wrl/client.h>
 
 constexpr uint32_t SHADER_MAGIC_NUMBER = 0x43425844;
 
-bool Shader::is_compiled_shader_file(const std::filesystem::path& path) {
-    auto opt_br = BinaryReader::make_reader(path);
-    if(!opt_br.has_value()) {
-        return false;
-    }
-    auto& br = opt_br.value();
-
+bool Shader::is_compiled_shader_file(BinaryReader& reader) {
     uint32_t id = 0;
-    if(!br.read_to(&id)) {
+    if(!reader.read_magic_number(&id)) {
         return false;
     }
 
@@ -79,11 +73,17 @@ bool Shader::make_vertex_shader(ID3D11Device* const device, ID3D11VertexShader**
         return false;
     }
 
-    if(!Shader::is_compiled_shader_file(this->blueprint->file_path())) {
+    auto opt_br = BinaryReader::make_reader(this->blueprint->file_path());
+    if(!opt_br.has_value()) {
+        return false;
+    }
+    auto& br = opt_br.value();
+
+    if(!Shader::is_compiled_shader_file(br)) {
         return this->compile_vertex_shader(device, vertex_shader);
     }
 
-    if(!this->read_shader()) {
+    if(!this->read_shader(br)) {
         return false;
     }
 
@@ -94,6 +94,7 @@ bool Shader::make_vertex_shader(ID3D11Device* const device, ID3D11VertexShader**
         vertex_shader
     );
     if(FAILED(hr)) {
+        Logger::error(u8"頂点シェーダーの作成に失敗しました");
         return false;
     }
 
@@ -105,11 +106,17 @@ bool Shader::make_pixel_shader(ID3D11Device* const device, ID3D11PixelShader** c
         return false;
     }
 
-    if(!Shader::is_compiled_shader_file(this->blueprint->file_path())) {
+    auto opt_br = BinaryReader::make_reader(this->blueprint->file_path());
+    if(!opt_br.has_value()) {
+        return false;
+    }
+    auto& br = opt_br.value();
+
+    if(!Shader::is_compiled_shader_file(br)) {
         return this->compile_pixel_shader(device, pixel_shader);
     }
 
-    if(!this->read_shader()) {
+    if(!this->read_shader(br)) {
         return false;
     }
 
@@ -120,25 +127,21 @@ bool Shader::make_pixel_shader(ID3D11Device* const device, ID3D11PixelShader** c
         pixel_shader
     );
     if(FAILED(hr)) {
+        Logger::error(u8"ピクセルシェーダーの作成に失敗しました");
         return false;
     }
 
     return true;
 }
 
-bool Shader::read_shader(void) {
+bool Shader::read_shader(BinaryReader& reader) {
     if(!this->shader_raw_data.empty()) {
         this->shader_raw_data.clear();
     }
 
-    auto opt_br = BinaryReader::make_reader(this->blueprint->file_path());
-    if(!opt_br.has_value()) {
-        return false;
-    }
-    auto& br = opt_br.value();
-
-    this->shader_raw_data = br.read_all();
+    this->shader_raw_data = reader.read_all();
     if(this->shader_raw_data.empty()) {
+        Logger::error(u8"読み取ったデータが空です");
         return false;
     }
 
@@ -162,7 +165,7 @@ bool Shader::compile_shader(ID3DBlob** const blob) {
 
     if(FAILED(hr)) {
         if(error_blob.Get()) {
-            OutputDebugStringA((char*)error_blob->GetBufferPointer());
+            //Logger::error(error_blob->GetBufferPointer());
         }
         return false;
     }
@@ -195,6 +198,7 @@ bool Shader::make_input_layout(
         input_layout
     );
     if(FAILED(hr)) {
+        Logger::error(u8"InputLayoutの作成に失敗しました");
         return false;
     }
 
@@ -274,14 +278,6 @@ std::unordered_map<BindingSlotKey, uint32_t> Shader::get_all_slots(void) const {
                 this->blueprint->shader_type(),
                 kind
             };
-
-            /*
-            std::cout << "--------------------" << std::endl;
-            std::cout << "Name: " << desc.Name << std::endl;
-            std::cout << "NameHash: " << hash_u32(desc.Name) << std::endl;
-            std::cout << "Point: " << desc.BindPoint << std::endl;
-            std::cout << "Type: " << desc.Type << std::endl;
-            */
 
             map.emplace(key, desc.BindPoint);
         }

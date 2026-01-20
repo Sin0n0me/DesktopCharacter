@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "core/Core.h"
 #include "core/event/WindowEvent.h"
+#include "core/log/Logger.h"
 
 constexpr LPCWSTR WINDOW_NAME = IS_DEBUG_MODE ? L"ゆかりさんを自由に動かしたい(DebugMode)" : L"ゆかりさんを自由に動かしたい";
 
@@ -123,11 +124,13 @@ int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, cons
     );
 
     if(render_hwnd == NULL) {
+        Logger::error(u8"ウィンドウハンドルの生成に失敗しました");
         return -1;
     }
 
     FILE* fp;
     AllocConsole();
+    SetConsoleCP(CP_UTF8);
     freopen_s(&fp, "CONOUT$", "w", stdout);
     freopen_s(&fp, "CONOUT$", "w", stderr);
 
@@ -162,6 +165,7 @@ int WINAPI WinMain(const HINSTANCE hinstance, const HINSTANCE, const LPSTR, cons
     Engine engine = Engine();
 
     if(!engine.init(render_hwnd, WIDTH, HEIGHT)) {
+        Logger::error(u8"初期化に失敗しました");
         return -2;
     }
 

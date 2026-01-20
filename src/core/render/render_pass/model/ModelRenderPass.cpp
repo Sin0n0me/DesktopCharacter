@@ -1,4 +1,5 @@
 #include "../../../../Application.h"
+#include "../../../log/Logger.h"
 #include "../../CommonResource.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../shader/model/PMDModelPixelShader.h"
@@ -49,6 +50,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->depth_texture.GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシル用のテクスチャ作成に失敗しました");
             return false;
         }
     }
@@ -60,6 +62,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->resource->depth_stencil_view[Pattern::Model].GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシルビューの作成に失敗しました");
             return false;
         }
     }
@@ -76,6 +79,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->resource->depth_stencil_state[Pattern::Model].GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシルステートの作成に失敗しました");
             return false;
         }
     }

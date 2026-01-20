@@ -25,4 +25,17 @@ public:
     }
 
     std::vector<uint8_t> read_all(void);
+
+    template<typename T>
+    bool read_magic_number(T* data) {
+        this->file.seekg(0, std::ios::beg);
+
+        if(!this->read(data, sizeof(T))) {
+            return false;
+        }
+
+        this->file.seekg(0, std::ios::beg);
+
+        return true;
+    }
 };

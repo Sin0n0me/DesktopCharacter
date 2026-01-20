@@ -1,3 +1,4 @@
+#include "../../log/Logger.h"
 #include "../CommonResource.h"
 #include "ModelManager.h"
 #include "pmd/PMDModel.h"
@@ -10,7 +11,7 @@
 constexpr char RESOURCE_FILE_NAME[] = "model_list.txt";
 
 using model_list = std::vector<std::filesystem::path>;
-std::optional<model_list> get_model_files(const char* resouce_file_path);
+std::optional<model_list> get_model_files(const std::filesystem::path& resouce_file_path);
 
 static std::shared_ptr<Model> load_pmd(const std::filesystem::path& path) {
     return std::make_shared<PMDModel>(path);
@@ -30,6 +31,7 @@ bool ModelManager::init(void) {
 
     // モデルが1つもない
     if(model_files.value().empty()) {
+        Logger::error(u8"モデルのパスが記述されたファイルが見つかりません");
         return false;
     }
 
@@ -37,7 +39,15 @@ bool ModelManager::init(void) {
     for(const auto& model_file : model_files.value()) {
         // 拡張子なしは判断不能
         if(!model_file.has_extension()) {
-            return false;
+            Logger::warning(
+                Logger::make_message(
+                    u8"判別不可能なファイルです\n",
+                    u8"読み込みをスキップしました\n",
+                    u8"パス: ",
+                    model_file.u8string()
+                )
+            );
+            continue;
         }
 
         // 対応している拡張子に応じたモデルクラス作成
@@ -45,14 +55,41 @@ bool ModelManager::init(void) {
         const auto& file_name = model_file.filename().u8string();
         const auto& result = this->support_extensions.find(extension);
         if(result == this->support_extensions.end()) {
-            return false;
+            Logger::warning(
+                Logger::make_message(
+                    u8"対応していない拡張子です\n",
+                    u8"読み込みをスキップしました\n",
+                    u8"パス: ",
+                    model_file.u8string()
+                )
+            );
+            continue;
         }
         const auto& model_loader = result->second;
 
-        // モデルの追加
+        // モデル(モデルのパス情報のみ)の追加
         if(!this->add_model(model_loader(model_file))) {
-            return false;
+            Logger::error(
+                Logger::make_message(
+                    u8"モデルのパス情報追加に失敗しました\n",
+                    u8"パス: ",
+                    model_file.u8string()
+                )
+            );
+            continue;
         }
+
+        Logger::info(
+            Logger::make_message(
+                u8"取得したモデルのパス: ",
+                model_file.u8string()
+            )
+        );
+    }
+
+    if(this->models.empty()) {
+        Logger::error(u8"モデルのパスが1つもありません");
+        return false;
     }
 
     // 最初に見つかったモデルを使用
@@ -60,10 +97,6 @@ bool ModelManager::init(void) {
     for(const auto& i : this->models) {
         this->current_model = i.first;
         break;
-    }
-
-    if(this->models.empty()) {
-        return false;
     }
 
     return true;
@@ -94,8 +127,17 @@ bool ModelManager::load_current_model(ID3D11Device* const device) {
     const auto& model = this->models.at(model_name);
 
     if(!model->init(device)) {
+        Logger::error(u8"モデルの初期化に失敗しました");
         return false;
     }
+
+    Logger::info(
+        Logger::make_message(
+            u8"モデルの初期化に成功しました\n",
+            u8"モデル名: ",
+            model_name
+        )
+    );
 
     model->compute_obb(this->model_obb_map.at(model_name));
 
@@ -118,12 +160,18 @@ void ModelManager::update_render(ID3D11DeviceContext* const context) {
 }
 
 // 拡張子付きのファイルであればモデルファイルとみなす
-std::optional<model_list> get_model_files(const char* resouce_file_path) {
-    std::ifstream ifs(resouce_file_path); // ファイルを開く
+std::optional<model_list> get_model_files(const std::filesystem::path& resouce_file_path) {
+    std::ifstream ifs(resouce_file_path);
     std::string line;
 
     if(!ifs.is_open()) {
-        std::cerr << "can not open file: " << resouce_file_path << std::endl;
+        Logger::error(
+            Logger::make_message(
+                u8"データファイルを開けません\nファイル名: ",
+                resouce_file_path.u8string()
+            )
+        );
+
         return std::optional<model_list>();
     }
 
@@ -143,6 +191,13 @@ std::optional<model_list> get_model_files(const char* resouce_file_path) {
         if(!path.has_extension()) {
             continue;
         }
+
+        Logger::info(
+            Logger::make_message(
+                u8"found: ",
+                resouce_file_path.u8string()
+            )
+        );
 
         list.emplace_back(path);
     }

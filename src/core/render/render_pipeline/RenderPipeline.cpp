@@ -1,5 +1,6 @@
 #include "../../../Application.h"
 #include "../../D3D11.h"
+#include "../../log/Logger.h"
 #include "../model/Model.h"
 #include "../render_pass/fxaa/FXAARenderPass.h"
 #include "../render_pass/model/ModelRenderPass.h"
@@ -85,6 +86,7 @@ bool RenderPipeline::init(void) {
     // レンダーパスの初期化
     for(auto& [index, render_pass] : this->render_pass_map) {
         if(!render_pass->init(this->d3d11->device.Get())) {
+            Logger::error(u8"レンダーパスの初期化に失敗しました");
             return false;
         }
     }

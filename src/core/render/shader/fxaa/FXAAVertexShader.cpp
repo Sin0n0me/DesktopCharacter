@@ -1,7 +1,7 @@
 #include "FXAAVertexShader.h"
 
 std::filesystem::path FXAAVertexShader::file_path(void) const {
-    return L"assets/shader/vs_fxaa.cso";
+    return u8"assets/shader/vs_fxaa.cso";
 }
 
 ShaderType FXAAVertexShader::shader_type(void) const {

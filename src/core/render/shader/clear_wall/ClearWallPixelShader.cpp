@@ -1,7 +1,7 @@
 #include "ClearWallPixelShader.h"
 
 std::filesystem::path ClearWallPixelShader::file_path(void) const {
-    return L"assets/shader/ps_clear_wall.cso";
+    return u8"assets/shader/ps_clear_wall.cso";
 }
 
 ShaderType ClearWallPixelShader::shader_type(void) const {

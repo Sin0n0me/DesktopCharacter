@@ -16,9 +16,9 @@ PMDBoneManager::PMDBoneManager(
 ) noexcept {
     Maker::make_shared(this->bone_map);
     Maker::make_shared(this->bones);
-    Maker::make_shared(this->bone_matricies, 256);
+    Maker::make_shared(this->bone_matricies, MAX_MATRIX_SIZE);
 
-    for(int i = 0; i < 256; ++i) {
+    for(int i = 0; i < MAX_MATRIX_SIZE; ++i) {
         this->bone_matricies->at(i) = BoneNode{
             .rotate = DirectX::XMQuaternionIdentity(),
             .local = DirectX::XMMatrixIdentity(),
@@ -27,7 +27,7 @@ PMDBoneManager::PMDBoneManager(
     }
 
     const auto bone_count = bones.size();
-    for(int index = 0; index < bone_count; ++index) {
+    for(uint16_t index = 0; index < bone_count; ++index) {
         PMDBoneData bone_data{};
 
         const auto& bone = bones.at(index);
@@ -54,7 +54,13 @@ PMDBoneManager::PMDBoneManager(
             );
         }
 
-        this->bone_name_map.emplace(bone.name, index);
+        this->bone_name_map.emplace(
+            hash_u32(bone.name),
+            BoneNameProfile{
+                .name = bone.name,
+                .index = index,
+            }
+            );
         this->bone_map->emplace(index, bone_data);
     }
 
@@ -159,14 +165,15 @@ std::shared_ptr<const IKSolver> PMDBoneManager::get_ik_soulver(void) const {
     return this->ik_soulver;
 }
 
-BoneIndex PMDBoneManager::get_bone_index(const std::string& name) const {
-    return this->bone_name_map.at(name);
+std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name) const {
+    const auto& iter = this->bone_name_map.find(hash_u32(name.c_str()));
+    if(iter == this->bone_name_map.end()) {
+        return std::nullopt;
+    }
+
+    return iter->second.index;
 }
 
 const PMDBoneData& PMDBoneManager::get_bone(const BoneIndex& index) const {
     return this->bone_map->at(index);
-}
-
-const std::unordered_map<std::string, BoneIndex>& PMDBoneManager::get_bone_name_map(void) const {
-    return this->bone_name_map;
 }

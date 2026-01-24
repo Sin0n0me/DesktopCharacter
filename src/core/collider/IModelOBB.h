@@ -1,8 +1,5 @@
 #pragma once
 #include "OBB.h"
-#include <unordered_map>
-
-using OBBMap = std::unordered_map<short, OBB>;
 
 class IModelOBB {
 public:

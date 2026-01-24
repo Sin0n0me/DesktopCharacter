@@ -1,7 +1,7 @@
 #include "ClearWallVertexShader.h"
 
 std::filesystem::path ClearWallVertexShader::file_path(void) const {
-    return L"assets/shader/vs_clear_wall.cso";
+    return u8"assets/shader/vs_clear_wall.cso";
 }
 
 ShaderType ClearWallVertexShader::shader_type(void) const {

@@ -5,4 +5,5 @@ enum class RenderPassName {
     Model,
     ShadowMap,
     FXAA,
+    AlphaMask
 };

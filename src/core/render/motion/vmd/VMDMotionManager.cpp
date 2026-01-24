@@ -4,7 +4,8 @@
 #include "VMDMotionManager.h"
 #include <filesystem>
 
-constexpr char8_t MOTION_WAVE[] = u8"assets/motion/手を振る.vmd";
+constexpr char8_t MOTION_WAVE_YUKARI[] = u8"assets/motion/手を振る.vmd";
+constexpr char8_t MOTION_WAVE_AKARI[] = u8"assets/motion/手を振る_紲星あかり用.vmd";
 
 VMDMotionManager::VMDMotionManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
@@ -36,7 +37,7 @@ bool VMDMotionManager::load() {
         return false;
     }
 
-    if(!motion.load_motion_file(MOTION_WAVE)) {
+    if(!motion.load_motion_file(MOTION_WAVE_YUKARI)) {
         return false;
     }
 

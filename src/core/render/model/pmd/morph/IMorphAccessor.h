@@ -2,6 +2,7 @@
 #include "../vertex/PMDVertexData.h"
 #include "Morph.h"
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -13,5 +14,5 @@ public:
 
     virtual std::shared_ptr<const std::vector<PMDMorphData>> get_morphs(void) const noexcept = 0;
 
-    virtual uint32_t get_morph_index(const std::string& name) const noexcept = 0;
+    virtual std::optional<uint32_t> get_morph_index(const std::string& name) const noexcept = 0;
 };

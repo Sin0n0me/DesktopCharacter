@@ -1,7 +1,7 @@
 #include "ShadowMapVertexShader.h"
 
 std::filesystem::path ShadowMapVertexShader::file_path(void) const {
-    return L"assets/shader/vs_shadow_map.cso";
+    return u8"assets/shader/vs_shadow_map.cso";
 }
 
 ShaderType ShadowMapVertexShader::shader_type(void) const {

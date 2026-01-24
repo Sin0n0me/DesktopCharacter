@@ -1,4 +1,6 @@
+#include "../../../../log/Logger.h"
 #include "../../../../utility/Algorithm.h"
+#include "../../../../utility/Convert.h"
 #include "../../../constant_buffer/Bones.h"
 #include "../../../model/pmd/bone/BoneNode.h"
 #include "../../../model/pmd/bone/IBoneAccessor.h"
@@ -14,15 +16,31 @@ BoneKeyFrameManager::BoneKeyFrameManager(
     // ボーンごとに纏める
     std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
     for(const auto& bone_key_frame : key_frame_list) {
-        try {
-            const auto& bone_index = bone_accessor->get_bone_index(
-                bone_key_frame.bone_name
+        const auto& opt_bone_index = bone_accessor->get_bone_index(
+            bone_key_frame.bone_name
+        );
+
+        if(!opt_bone_index.has_value()) {
+            Logger::warning(
+                Logger::make_message(
+                    u8"Bone: 解決できない不明なボーン名: ",
+                    sjis_to_utf8(bone_key_frame.bone_name).value_or(
+                        Logger::make_message(
+                            u8"<UTF8に変換できない文字が含まれています\n",
+                            u8"元のボーン名: ",
+                            std::u8string(
+                                reinterpret_cast<const char8_t*>(bone_key_frame.bone_name),
+                                reinterpret_cast<const char8_t*>(bone_key_frame.bone_name + sizeof(bone_key_frame.bone_name) - 1)
+                            )
+                        )
+                    )
+                )
             );
-            temp_map[bone_index].emplace_back(BoneKeyFrame{bone_key_frame});
-        } catch(const std::exception&) {
-            // TODO: log
             continue;
         }
+
+        const auto bone_index = opt_bone_index.value();
+        temp_map[bone_index].emplace_back(BoneKeyFrame{bone_key_frame});
     }
 
     // 変換

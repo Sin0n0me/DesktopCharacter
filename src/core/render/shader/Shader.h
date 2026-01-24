@@ -17,6 +17,7 @@ struct ID3D11Device;
 struct ID3D11InputLayout;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+struct ID3D11ComputeShader;
 class BinaryReader;
 
 class Shader {
@@ -25,16 +26,6 @@ protected:
     std::vector<uint8_t> shader_raw_data;
 
 private:
-
-    bool compile_vertex_shader(
-        ID3D11Device* const device,
-        ID3D11VertexShader** const vertex_shader
-    );
-
-    bool compile_pixel_shader(
-        ID3D11Device* const device,
-        ID3D11PixelShader** const pixel_shader
-    );
 
     bool make_vertex_shader(
         ID3D11Device* const device,
@@ -46,6 +37,11 @@ private:
         ID3D11PixelShader** const pixel_shader
     );
 
+    bool make_compute_shader(
+        ID3D11Device* const device,
+        ID3D11ComputeShader** const pixel_shader
+    );
+
     bool compile_shader(ID3DBlob** const lob);
 
     static bool is_compiled_shader_file(BinaryReader& reader);
@@ -54,7 +50,7 @@ public:
 
     explicit Shader(std::unique_ptr<IShaderBlueprint> blueprint);
 
-    bool read_shader(BinaryReader& reader);
+    bool read_shader(void);
 
     template<typename T>
     bool make_shader(
@@ -72,6 +68,12 @@ public:
     bool make_shader<ID3D11PixelShader>(
         ID3D11Device* const device,
         ID3D11PixelShader** const shader
+    );
+
+    template<>
+    bool make_shader<ID3D11ComputeShader>(
+        ID3D11Device* const device,
+        ID3D11ComputeShader** const shader
     );
 
     bool make_input_layout(
@@ -113,4 +115,9 @@ inline bool Shader::make_shader(ID3D11Device* const device, ID3D11VertexShader**
 template<>
 inline bool Shader::make_shader(ID3D11Device* const device, ID3D11PixelShader** const shader) {
     return this->make_pixel_shader(device, shader);
+}
+
+template<>
+inline bool Shader::make_shader(ID3D11Device* const device, ID3D11ComputeShader** const shader) {
+    return this->make_compute_shader(device, shader);
 }

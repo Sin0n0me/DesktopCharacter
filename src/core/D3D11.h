@@ -16,12 +16,11 @@ public:
     Microsoft::WRL::ComPtr<IDCompositionDevice> dcomp_device;
     Microsoft::WRL::ComPtr<IDCompositionTarget> dcomp_target;
     Microsoft::WRL::ComPtr<IDCompositionVisual> dcomp_visual;
+    Microsoft::WRL::ComPtr<IDCompositionSurface> dcomp_surface;
     Microsoft::WRL::ComPtr<ID3D11Device> device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_back;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resouce_view; //
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer_cull_back;
+
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer_cull_none;
 
 public:
     D3D11(void) = default;
@@ -31,8 +30,8 @@ private:
 
     bool make_device(void);
     bool make_factory(void);
+    bool make_surface(void);
     bool make_swap_chain(const UINT width, const UINT height);
-    bool make_render_target_view(void);
     bool make_rasterizer(void);
     bool make_target(const HWND hwnd);
     bool make_visual(void);

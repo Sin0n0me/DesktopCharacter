@@ -16,7 +16,10 @@ WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_res
     this->wall_object = std::make_unique<WallObject>();
 }
 
-bool WallRenderPass::init(ID3D11Device* const device) {
+bool WallRenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_blend_state(device)) {
         return false;
     }
@@ -112,6 +115,10 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
         1,
         this->resource->sampler_state.at(Pattern::ShadowMap).GetAddressOf()
     );
+}
+
+bool WallRenderPass::should_reset_state(void) const {
+    return true;
 }
 
 void WallRenderPass::render(ID3D11DeviceContext* const context) const {

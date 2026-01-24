@@ -18,9 +18,14 @@ public:
 
     virtual ~RenderPass(void) = default;
 
-    virtual bool init(ID3D11Device* const device) = 0;
+    virtual bool init(
+        ID3D11Device* const device,
+        ID3D11RenderTargetView* const render_target_view
+    ) = 0;
 
     virtual void update(ID3D11DeviceContext* const context) = 0;
+
+    virtual void post_update(ID3D11DeviceContext* const context) {}
 
     virtual void render_set(
         ID3D11DeviceContext* const context,
@@ -28,6 +33,8 @@ public:
     ) const = 0;
 
     virtual void render(ID3D11DeviceContext* const context) const = 0;
+
+    virtual bool should_reset_state(void) const = 0;
 
     virtual bool is_render_model(void) const = 0;
 

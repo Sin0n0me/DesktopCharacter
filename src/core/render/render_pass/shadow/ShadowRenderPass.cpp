@@ -10,7 +10,10 @@ constexpr UINT SHADOW_MAP_SIZE = 2048;
 ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {
 }
 
-bool ShadowRenderPass::init(ID3D11Device* const device) {
+bool ShadowRenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_shaders(device)) {
         return false;
     }
@@ -91,6 +94,10 @@ void ShadowRenderPass::render_set(
 }
 
 void ShadowRenderPass::render(ID3D11DeviceContext* const context) const {
+}
+
+bool ShadowRenderPass::should_reset_state(void) const {
+    return true;
 }
 
 bool ShadowRenderPass::make_shaders(ID3D11Device* const device) {

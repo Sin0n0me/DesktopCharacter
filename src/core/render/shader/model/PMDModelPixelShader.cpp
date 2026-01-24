@@ -1,7 +1,7 @@
 #include "PMDModelPixelShader.h"
 
 std::filesystem::path PMDModelPixelShader::file_path(void) const {
-    return L"assets/shader/ps_model.cso";
+    return u8"assets/shader/ps_model.cso";
 }
 
 ShaderType PMDModelPixelShader::shader_type(void) const {

@@ -4,6 +4,7 @@
 
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+struct ID3D11ComputeShader;
 struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;
 struct ID3D11InputLayout;
@@ -17,7 +18,8 @@ enum class ConstantBuffer {
     Material,
     Bones,
     FXAA,
-    MSAA
+    SMAA,
+    AlphaParams,
 };
 
 enum class Pattern {
@@ -26,6 +28,7 @@ enum class Pattern {
     ShadowMap,
     FXAA,
     SMAA,
+    AlphaMask,
 };
 
 template <typename T, typename U>
@@ -34,6 +37,7 @@ using ResourceMap = std::unordered_map<T, Microsoft::WRL::ComPtr<U>>;
 struct CommonResource {
     ResourceMap<Pattern, ID3D11VertexShader> vertex_shaders;
     ResourceMap<Pattern, ID3D11PixelShader> pixel_shaders;
+    ResourceMap<Pattern, ID3D11ComputeShader> compute_shaders;
     ResourceMap<ConstantBuffer, ID3D11Buffer> constant_buffers;
     ResourceMap<Pattern, ID3D11InputLayout> input_layouts;
     ResourceMap<Pattern, ID3D11ShaderResourceView> shader_resouce_view;

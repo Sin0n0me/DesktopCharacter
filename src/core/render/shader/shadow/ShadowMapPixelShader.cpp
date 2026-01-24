@@ -1,7 +1,7 @@
 #include "ShadowMapPixelShader.h"
 
 std::filesystem::path ShadowMapPixelShader::file_path(void) const {
-    return L"assets/shader/ps_shadow_map.cso";
+    return u8"assets/shader/ps_shadow_map.cso";
 }
 
 ShaderType ShadowMapPixelShader::shader_type(void) const {

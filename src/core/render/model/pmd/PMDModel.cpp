@@ -102,8 +102,8 @@ void PMDModel::render(
 
     uint32_t index_offset = 0;
     for(const auto& material : this->materials) {
-        material.texture.render_set_resource(context, slots);
-        material.sphere.render_set_resource(context, slots);
+        material.texture.set_resource(context, slots);
+        material.sphere.set_resource(context, slots);
 
         // シャドウマップなどで使用しない場合もある
         const BindingSlotKey key = BindingSlotKey{

@@ -151,6 +151,45 @@ std::optional<uint32_t> ShaderRelfection::get_texture_slot(
     );
 }
 
+std::optional<uint32_t> ShaderRelfection::get_unordered_access_view_slot(void* const data, const uint32_t size, const std::string& name) {
+    const auto opt_desc = ShaderRelfection::get_desc(
+        data,
+        size,
+        [&name](const D3D11_SHADER_INPUT_BIND_DESC& desc) -> bool {
+            if(name != desc.Name) {
+                return false;
+            }
+
+            switch(desc.Type) {
+            case D3D_SIT_UAV_APPEND_STRUCTURED:
+            case D3D_SIT_UAV_CONSUME_STRUCTURED:
+            case D3D_SIT_UAV_FEEDBACKTEXTURE:
+            case D3D_SIT_UAV_RWBYTEADDRESS:
+            case D3D_SIT_UAV_RWSTRUCTURED:
+            case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+            case D3D_SIT_UAV_RWTYPED:
+                return true;
+            default:
+                return false;
+            }
+        }
+    );
+    if(!opt_desc.has_value()) {
+        return std::optional<uint32_t>();
+    }
+    const auto& desc = opt_desc.value();
+
+    return desc.BindPoint;
+}
+
+std::optional<uint32_t> ShaderRelfection::get_unordered_access_view_slot(const std::vector<uint8_t>& data, const std::string& name) {
+    return ShaderRelfection::get_unordered_access_view_slot(
+        (void*)data.data(),
+        static_cast<uint32_t>(data.size()),
+        name
+    );
+}
+
 std::optional<uint32_t> ShaderRelfection::get_constant_buffer_slot(const std::vector<uint8_t>& data, const std::string& name) {
     return ShaderRelfection::get_constant_buffer_slot(
         (void*)data.data(),

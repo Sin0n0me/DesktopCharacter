@@ -4,5 +4,6 @@
 enum class BindingSlotKind : uint16_t {
     ConstantBuffer,
     SamplerState,
-    Texture,
+    Texture, // ShaderResouceView
+    UnorderedAccessView,
 };

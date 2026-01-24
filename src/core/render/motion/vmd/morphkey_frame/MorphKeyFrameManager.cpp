@@ -1,3 +1,5 @@
+#include "../../../../log/Logger.h"
+#include "../../../../utility/Convert.h"
 #include "../../../model/pmd/morph/IMorphAccessor.h"
 #include "../key_frame/FrameManager.h"
 #include "MorphKeyFrameManager.h"
@@ -13,26 +15,34 @@ MorphKeyFrameManager::MorphKeyFrameManager(
 
     std::unordered_map<uint32_t, std::vector<MorphKeyFrame>> temp_map;
     for(const auto& key_frames : morph_key_frames) {
-        try {
-            const auto index = morph_accessor->get_morph_index(
-                key_frames.morph_name
-            );
-            // 0はすべてのベースなので除外
-            if(index == 0) {
-                continue;
-            }
+        const auto opt_index = morph_accessor->get_morph_index(
+            key_frames.morph_name
+        );
 
-            if(key_frames.weight < 0) {
-                // TODO: log
-                continue;
-            }
-
-            temp_map[index].emplace_back(
-                MorphKeyFrame{key_frames}
+        if(!opt_index.has_value()) {
+            Logger::warning(
+                Logger::make_message(
+                    u8"Morph: 解決できない不明なボーン名: ",
+                    sjis_to_utf8(key_frames.morph_name).value_or(u8"<UTF8に変換できない文字が含まれています>")
+                )
             );
-        } catch(const std::exception& e) {
-            // TODO: log
+            continue;
         }
+
+        // 0はすべてのベースなので除外
+        const auto index = opt_index.value();
+        if(index == 0) {
+            continue;
+        }
+
+        if(key_frames.weight < 0) {
+            // TODO: log
+            continue;
+        }
+
+        temp_map[index].emplace_back(
+            MorphKeyFrame{key_frames}
+        );
     }
 
     for(auto& [index, key_frames] : temp_map) {

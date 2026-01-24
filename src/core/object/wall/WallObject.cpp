@@ -2,7 +2,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 
-constexpr float WALL_SIZE = 20.0f;
+constexpr float WALL_SIZE = 30.0f;
 constexpr float HALF_WALL_SIZE = WALL_SIZE / 2.0f;
 constexpr float FRONT_DEPTH = 0.0f;
 constexpr float FLOOR_DEPTH = 1.5f; // 奥行(床面)

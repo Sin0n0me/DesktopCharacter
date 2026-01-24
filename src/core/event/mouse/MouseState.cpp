@@ -1,4 +1,4 @@
-﻿#include "MouseState.h"
+#include "MouseState.h"
 
 MouseState::MouseState(void) noexcept {
     this->is_dragging = false;
@@ -6,17 +6,22 @@ MouseState::MouseState(void) noexcept {
     this->is_middle_click = false;
     this->is_right_click = false;
     this->mouse_position = POINT{};
-    this->pre_mouse_position = POINT{};
-    this->screen_position_x = 0;
-    this->screen_position_y = 0;
 }
 
-int MouseState::get_screen_position_x(void) const {
-    return this->screen_position_x;
+bool MouseState::init(const HWND& hwnd) {
+    POINT pt;
+    if(!GetCursorPos(&pt)) {
+        return false;
+    }
+    this->mouse_position = pt;
+    this->pre_mouse_position = pt;
+
+    return true;
 }
 
-int MouseState::get_screen_position_y(void) const {
-    return this->screen_position_y;
+void MouseState::update(void) {
+    this->pre_mouse_position = this->mouse_position;
+    GetCursorPos(&this->mouse_position);
 }
 
 POINT MouseState::get_mouse_position(void) const {
@@ -41,4 +46,14 @@ bool MouseState::get_is_left_click(void) const {
 
 bool MouseState::get_is_middle_click(void) const {
     return this->is_middle_click;
+}
+
+bool MouseState::is_moved(void) const {
+    return this->pre_mouse_position.x != this->mouse_position.x
+        && this->pre_mouse_position.y != this->mouse_position.y;
+}
+
+void MouseState::add_position(const int x, const int y) {
+    this->mouse_position.x += x;
+    this->mouse_position.y += y;
 }

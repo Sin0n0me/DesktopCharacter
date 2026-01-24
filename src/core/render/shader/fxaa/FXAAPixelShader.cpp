@@ -1,7 +1,7 @@
 #include "FXAAPixelShader.h"
 
 std::filesystem::path FXAAPixelShader::file_path(void) const {
-    return L"assets/shader/ps_fxaa.cso";
+    return u8"assets/shader/ps_fxaa.cso";
 }
 
 ShaderType FXAAPixelShader::shader_type(void) const {

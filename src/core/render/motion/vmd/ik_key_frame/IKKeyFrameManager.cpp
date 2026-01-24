@@ -1,3 +1,5 @@
+#include "../../../../log/Logger.h"
+#include "../../../../utility/Convert.h"
 #include "../../../model/pmd/bone/Bone.h"
 #include "../../../model/pmd/bone/IBoneAccessor.h"
 #include "../../../model/pmd/ik/IKSolver.h"
@@ -10,23 +12,28 @@ IKKeyFrameManager::IKKeyFrameManager(
 ) :
     ik_solver(bone_accessor->get_ik_soulver()),
     bone_accessor(bone_accessor) {
-    const auto& name_map = bone_accessor->get_bone_name_map();
-
     std::unordered_map<uint32_t, std::vector<IKKeyFrame>> temp_map;
     for(const auto& ik : iks) {
         for(const auto& ik_info : ik.ik_infos) {
-            const auto& iter = name_map.find(ik_info.name);
-            if(iter == name_map.end()) {
-                // TODO: log
+            const auto& opt_index = bone_accessor->get_bone_index(ik_info.name);
+            if(!opt_index.has_value()) {
+                Logger::warning(
+                    Logger::make_message(
+                        u8"IK: 解決できない不明なボーン名: ",
+                        sjis_to_utf8(ik_info.name).value_or(u8"<UTF8に変換できない文字が含まれています>")
+                    )
+                );
                 continue;
             }
+
+            const auto& index = opt_index.value();
 
             const bool frag = ik_info.flag == 1;
             if(ik_info.flag > 1) {
                 // TODO: log
             }
 
-            temp_map[iter->second].push_back(
+            temp_map[index].push_back(
                 IKKeyFrame(ik.frame, frag)
             );
         }

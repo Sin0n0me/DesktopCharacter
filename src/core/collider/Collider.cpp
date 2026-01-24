@@ -1,5 +1,40 @@
+#include "../render/constant_buffer/Camera.h"
 #include "../utility/Utility.h"
 #include "Collider.h"
+#include "OBB.h"
+#include "Ray.h"
+
+#include "../render/model/ModelManager.h"
+
+Collider::Collider(
+    const std::shared_ptr<Camera>& camera,
+    const std::shared_ptr<IOBBMapGetter> obb_map_getter
+) :
+    camera(camera),
+    obb_map_getter(obb_map_getter) {
+    this->is_hit = false;
+    this->client_x = 0;
+    this->client_y = 0;
+    this->hit_index = -1;
+}
+
+void Collider::on_collision_check(void) {
+    const Ray ray = Ray::make_ray_from_screen(
+        this->client_x,
+        this->client_y,
+        *this->camera
+    );
+
+    this->is_hit = false;
+    this->hit_index = -1;
+    for(const auto& [index, obb] : this->obb_map_getter->get_obb_map()) {
+        if(this->hit_model(ray, obb)) {
+            this->is_hit = true;
+            this->hit_index = index;
+            break;
+        }
+    }
+}
 
 bool Collider::hit_model(const Ray& ray, const OBB& obb) {
     const DirectX::XMVECTOR ray_origin = DirectX::XMLoadFloat3(&ray.origin);
@@ -47,4 +82,19 @@ bool Collider::hit_model(const Ray& ray, const OBB& obb) {
     }
 
     return true;
+}
+
+int16_t Collider::get_hit_index(void) const noexcept {
+    return this->hit_index;
+}
+
+bool Collider::is_hit_model(void) const noexcept {
+    return this->is_hit;
+}
+
+void Collider::set_client_position(const float x, const float y) {
+    this->client_x = x;
+    this->client_y = y;
+
+    this->on_collision_check();
 }

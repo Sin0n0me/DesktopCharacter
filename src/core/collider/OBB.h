@@ -1,5 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
+#include <unordered_map>
 #include <vector>
 
 constexpr float EXTENT_MARGIN = 1.1f;
@@ -18,3 +19,5 @@ struct OBB {
         const DirectX::XMMATRIX& eigen_vectors
     );
 };
+
+using OBBMap = std::unordered_map<short, OBB>;

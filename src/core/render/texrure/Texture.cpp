@@ -1,3 +1,4 @@
+#include "../../log/Logger.h"
 #include "../shader/ShaderBindingSlots.h"
 #include "Texture.h"
 #include <d3d11.h>
@@ -23,6 +24,7 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
             IID_PPV_ARGS(factory.GetAddressOf())
         );
         if(FAILED(hr)) {
+            Logger::error(u8"インスタンスの作成に失敗しました");
             return false;
         }
     }
@@ -122,6 +124,11 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
             return false;
         }
     }
+
+    Logger::debug(Logger::make_message(
+        u8"テクスチャの読み込みに成功しました: ",
+        path.u8string()
+    ));
 
     return true;
 }
@@ -250,7 +257,7 @@ bool Texture::make_sampler(ID3D11Device* const device) {
     return true;
 }
 
-void Texture::render_set_resource(
+void Texture::set_resource(
     ID3D11DeviceContext* const context,
     const ShaderBindingSlots* slots
 ) const {

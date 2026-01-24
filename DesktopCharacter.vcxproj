@@ -164,6 +164,15 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\render\shader\alpha_mask\AlphaMaskComputeShader.h" />
+    <ClInclude Include="src\core\render\constant_buffer\AlphaMaskParams.h" />
+    <ClInclude Include="src\core\render\render_pass\alpha_mask\AlphaMaskRenderPass.h" />
+    <ClInclude Include="src\core\render\render_target_view\RenderTargetView.h" />
+    <ClInclude Include="src\core\utility\Convert.h" />
+    <ClInclude Include="src\core\collider\IOBBMapGetter.h" />
+    <ClInclude Include="src\core\log\LogEntry.h" />
+    <ClInclude Include="src\core\log\Logger.h" />
+    <ClInclude Include="src\core\log\LogLevel.h" />
     <ClInclude Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrame.h" />
     <ClInclude Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameCursor.h" />
     <ClInclude Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrameCursor.h" />
@@ -223,7 +232,6 @@
     <ClInclude Include="src\core\render\motion\IMotion.h" />
     <ClInclude Include="src\core\render\model\Model.h" />
     <ClInclude Include="src\core\collider\IModelOBB.h" />
-    <ClInclude Include="src\core\IEngineStarter.h" />
     <ClInclude Include="src\core\event\mouse\IMouseStateGetter.h" />
     <ClInclude Include="src\core\event\mouse\MouseState.h" />
     <ClInclude Include="src\core\collider\Ray.h" />
@@ -234,7 +242,6 @@
     <ClInclude Include="src\core\render\motion\vmd\VMDFileStruct.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\scene\light\Light.h" />
-    <ClInclude Include="src\core\scene\camera\SceneCamera.h" />
     <ClInclude Include="src\core\render\model\pmd\PMDFileStruct.h" />
     <ClInclude Include="src\core\render\CommonResource.h" />
     <ClInclude Include="src\core\render\render_pass\shadow\ShadowRenderPass.h" />
@@ -261,8 +268,18 @@
     <ClInclude Include="src\core\render\texrure\TextureNames.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDMotionManager.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDLoader.h" />
+    <ClInclude Include="src\core\render\unordered_access_view\UnorderedAccessViewNames.h" />
+    <ClInclude Include="src\core\window\WindowManager.h" />
+    <ClInclude Include="src\core\window\WindowStatus.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\render\shader\alpha_mask\AlphaMaskComputeShader.cpp" />
+    <ClCompile Include="src\core\render\render_pass\alpha_mask\AlphaMaskRenderPass.cpp" />
+    <ClCompile Include="src\core\utility\Convert.cpp" />
+    <ClCompile Include="src\core\log\LogEntry.cpp" />
+    <ClCompile Include="src\core\log\Logger.cpp" />
+    <ClCompile Include="src\core\log\LogLevel.cpp" />
+    <ClCompile Include="src\core\render\constant_buffer\Camera.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrame.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameCursor.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrameCursor.cpp" />
@@ -305,7 +322,6 @@
     <ClCompile Include="src\core\event\WindowEvent.cpp" />
     <ClCompile Include="src\core\scene\Scene.cpp" />
     <ClCompile Include="src\core\scene\light\Light.cpp" />
-    <ClCompile Include="src\core\scene\camera\SceneCamera.cpp" />
     <ClCompile Include="src\core\render\render_pass\shadow\ShadowRenderPass.cpp" />
     <ClCompile Include="src\core\render\render_pass\model\ModelRenderPass.cpp" />
     <ClCompile Include="src\core\collider\Collider.cpp" />
@@ -322,6 +338,8 @@
     <ClCompile Include="src\core\render\motion\vmd\VMDMotion.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDMotionManager.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDLoader.cpp" />
+    <ClCompile Include="src\core\window\WindowManager.cpp" />
+    <ClCompile Include="src\core\window\WindowStatus.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

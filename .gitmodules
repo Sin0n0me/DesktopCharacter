@@ -1,0 +1,3 @@
+[submodule "lib/bullet"]
+	path = lib/bullet
+	url = git@github.com:bulletphysics/bullet3.git

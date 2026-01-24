@@ -14,11 +14,17 @@ class PMDModelLoader;
 
 class PMDBoneManager : public IObjectRenderer, public IBoneAccessor {
 private:
+    struct BoneNameProfile {
+        std::string name;
+        BoneIndex index;
+    };
+
+private:
     std::shared_ptr<Bones> bones; // 更新用
     std::shared_ptr<std::vector<BoneNode>> bone_matricies;// 更新用
     std::shared_ptr<PMDBoneMap> bone_map;
     std::shared_ptr<IKSolver> ik_soulver;
-    std::unordered_map<std::string, BoneIndex> bone_name_map;
+    std::unordered_map<uint32_t, BoneNameProfile> bone_name_map;
     Microsoft::WRL::ComPtr<ID3D11Buffer> bone_buffer;
 
     bool make_constant_buffer(ID3D11Device* const device);
@@ -37,7 +43,6 @@ public:
     std::shared_ptr<Bones> get_mutable_bones(void) const override;
     std::shared_ptr<std::vector<BoneNode>> get_mutable_bone_nodes(void) const override;
     std::shared_ptr<const IKSolver> get_ik_soulver(void) const override;
-    BoneIndex get_bone_index(const std::string& name) const override;
+    std::optional<BoneIndex> get_bone_index(const std::string& name) const override;
     const PMDBoneData& get_bone(const BoneIndex& index) const override;
-    const std::unordered_map<std::string, BoneIndex>& get_bone_name_map(void) const override;
 };

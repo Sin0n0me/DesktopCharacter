@@ -21,7 +21,7 @@ void Logger::logging(void) {
         this->condition.wait(
             lock,
             [this] {
-                return !this->queue.empty();
+                return !this->is_running || !this->queue.empty();
             }
         );
 

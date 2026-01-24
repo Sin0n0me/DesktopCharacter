@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../collider/IOBBMapGetter.h"
 #include "../../timer/Timer.h"
 #include "Model.h"
 #include <memory>
@@ -9,7 +10,7 @@
 struct CommonResource;
 using ModelLoaderFunc = std::shared_ptr<Model>(*)(const std::filesystem::path&);
 
-class ModelManager {
+class ModelManager : public IOBBMapGetter {
 private:
     std::unordered_map<std::u8string, std::shared_ptr<Model>> models; // firlst: name second: model
     std::u8string current_model;
@@ -26,11 +27,12 @@ public:
 
     void set_model(const std::u8string& model_name);
     const std::shared_ptr<Model> get_current_model(void) const;
-    const OBBMap& get_obb_map(void) const;
 
     bool load_current_model(ID3D11Device* const device);
     void unload_model(const std::u8string& model_name);
 
     void update(const DeltaTime& delta_time);
     void update_render(ID3D11DeviceContext* const context);
+
+    const OBBMap& get_obb_map(void) const override;
 };

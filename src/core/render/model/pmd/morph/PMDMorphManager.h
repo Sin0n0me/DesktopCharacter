@@ -22,5 +22,5 @@ public:
 
     std::shared_ptr<std::vector<PMDVertexData>> get_mutable_vertices(void) const noexcept override;
     std::shared_ptr<const std::vector<PMDMorphData>> get_morphs(void) const noexcept override;
-    uint32_t get_morph_index(const std::string& name) const noexcept override;
+    std::optional<uint32_t> get_morph_index(const std::string& name) const noexcept override;
 };

@@ -10,7 +10,10 @@
 
 ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {}
 
-bool ModelRenderPass::init(ID3D11Device* const device) {
+bool ModelRenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_depth_stencil(device)) {
         return false;
     }
@@ -169,6 +172,10 @@ void ModelRenderPass::render_set(
         1,
         this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
     );
+}
+
+bool ModelRenderPass::should_reset_state(void) const {
+    return true;
 }
 
 bool ModelRenderPass::is_render_model(void) const {

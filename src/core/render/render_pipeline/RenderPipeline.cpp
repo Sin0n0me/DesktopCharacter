@@ -2,18 +2,20 @@
 #include "../../D3D11.h"
 #include "../../log/Logger.h"
 #include "../model/Model.h"
+#include "../render_pass/alpha_mask/AlphaMaskRenderPass.h"
 #include "../render_pass/fxaa/FXAARenderPass.h"
 #include "../render_pass/model/ModelRenderPass.h"
 #include "../render_pass/shadow/ShadowRenderPass.h"
 #include "../render_pass/wall/WallRenderPass.h"
 #include "RenderPipeline.h"
-#include <iostream>
+
+constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 RenderPipeline::RenderPipeline(
     const std::shared_ptr<D3D11>& d3d11,
     const std::shared_ptr<CommonResource>& resouce
 ) noexcept : d3d11(d3d11) {
-    // レンダーパスの追加
+    // レンダーパスの追加(ここではあくまで追加だけ後続のinit内で任意の順序にする)
     this->render_pass_map.emplace(
         RenderPassName::ShadowMap,
         std::make_unique<ShadowRenderPass>(resouce)
@@ -29,6 +31,10 @@ RenderPipeline::RenderPipeline(
     this->render_pass_map.emplace(
         RenderPassName::FXAA,
         std::make_unique<FXAARenderPass>(resouce)
+    );
+    this->render_pass_map.emplace(
+        RenderPassName::AlphaMask,
+        std::make_unique<AlphaMaskRenderPass>(resouce)
     );
 }
 
@@ -82,15 +88,156 @@ void RenderPipeline::set(const std::vector<RenderPassName>& names) {
     }
 }
 
+// RenderTargetView作成
+bool RenderPipeline::make_render_target_views(void) {
+    if(!this->make_offscreen_render_target_view()) {
+        return false;
+    }
+
+    if(!this->make_back_buffer_render_target_view()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool RenderPipeline::make_offscreen_render_target_view(void) {
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
+    {
+        constexpr DXGI_SAMPLE_DESC sample{
+            .Count = 1
+        };
+        constexpr D3D11_TEXTURE2D_DESC desc{
+            .Width = WIDTH,
+            .Height = HEIGHT,
+            .MipLevels = 1,
+            .ArraySize = 1,
+            .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+            .SampleDesc = sample,
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
+        };
+
+        const HRESULT hr = this->d3d11->device->CreateTexture2D(
+            &desc,
+            nullptr,
+            texture.GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"レンダーターゲット用のテクスチャ作成に失敗しました");
+            return false;
+        }
+    }
+
+    {
+        const HRESULT hr = this->d3d11->device->CreateRenderTargetView(
+            texture.Get(),
+            nullptr,
+            this->render_target_view[RenderTargetView::Offscreen].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"レンダーターゲット(オフスクリーン)の作成に失敗しました");
+            return false;
+        }
+    }
+
+    {
+        const HRESULT hr = this->d3d11->device->CreateShaderResourceView(
+            texture.Get(),
+            nullptr,
+            this->shader_resouce_view.GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"シェーダーリソースビューの作成に失敗しました");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool RenderPipeline::make_back_buffer_render_target_view(void) {
+    // バックバッファ取得
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
+    {
+        const HRESULT hr = this->d3d11->dxgi_swap_chain->GetBuffer(
+            0,
+            IID_PPV_ARGS(back_buffer.GetAddressOf())
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"バックバッファの取得に失敗しました");
+            return false;
+        }
+    }
+
+    {
+        const HRESULT hr = this->d3d11->device->CreateRenderTargetView(
+            back_buffer.Get(),
+            nullptr,
+            this->render_target_view[RenderTargetView::BackBuffer].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"レンダーターゲット(バックバッファ)の作成に失敗しました");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void RenderPipeline::reset_state(void) const {
+    static ID3D11RenderTargetView* const null_rtv[8] = {};
+    static ID3D11ShaderResourceView* const null_srv[8] = {};
+    static ID3D11SamplerState* const null_sampler[8] = {};
+    constexpr D3D11_VIEWPORT view_port{
+        .TopLeftX = 0.0f,
+        .TopLeftY = 0.0f,
+        .Width = static_cast<FLOAT>(WIDTH),
+        .Height = static_cast<FLOAT>(HEIGHT),
+        .MinDepth = 0.0f,
+        .MaxDepth = 1.0f,
+    };
+
+    const auto& context = this->d3d11->context;
+
+    context->OMSetRenderTargets(8, null_rtv, nullptr);
+    context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+    context->OMSetDepthStencilState(nullptr, 0);
+    context->IASetInputLayout(nullptr);
+    context->VSSetShader(nullptr, nullptr, 0);
+    context->PSSetShader(nullptr, nullptr, 0);
+    context->CSSetShader(nullptr, nullptr, 0);
+    context->PSSetShaderResources(0, 8, null_srv);
+    context->VSSetShaderResources(0, 8, null_srv);
+    context->CSSetShaderResources(0, 8, null_srv);
+    context->VSSetSamplers(0, 8, null_sampler);
+    context->PSSetSamplers(0, 8, null_sampler);
+    context->CSSetSamplers(0, 8, null_sampler);
+    context->RSSetViewports(1, &view_port);
+}
+
 bool RenderPipeline::init(void) {
+    if(!this->make_render_target_views()) {
+        return false;
+    }
+
     // レンダーパスの初期化
     for(auto& [index, render_pass] : this->render_pass_map) {
-        if(!render_pass->init(this->d3d11->device.Get())) {
+        const auto render_target = [&]() {
+            if(render_pass->is_post_render()) {
+                return this->render_target_view.at(RenderTargetView::BackBuffer);
+            }
+
+            return this->render_target_view.at(RenderTargetView::Offscreen);
+            }();
+
+        if(!render_pass->init(this->d3d11->device.Get(), render_target.Get())) {
             Logger::error(u8"レンダーパスの初期化に失敗しました");
             return false;
         }
     }
 
+    // 描画順序
     this->set({
         RenderPassName::ShadowMap,
         RenderPassName::Wall,
@@ -108,57 +255,35 @@ void RenderPipeline::render_update(void) {
 }
 
 void RenderPipeline::render(void) const {
-    constexpr D3D11_VIEWPORT view_port{
-        .TopLeftX = 0.0f,
-        .TopLeftY = 0.0f,
-        .Width = static_cast<FLOAT>(WIDTH),
-        .Height = static_cast<FLOAT>(HEIGHT),
-        .MinDepth = 0.0f,
-        .MaxDepth = 1.0f,
-    };
-
-    ID3D11RenderTargetView* const null_rtv[8] = {};
-    ID3D11ShaderResourceView* const null_srv[8] = {};
-    ID3D11SamplerState* const null_sampler[8] = {};
-
     const auto& context = this->d3d11->context;
 
-    context->ClearRenderTargetView(
-        this->d3d11->render_target_view.Get(),
-        CLEAR_COLOR
-    );
-    context->ClearRenderTargetView(
-        this->d3d11->render_target_view_back.Get(),
-        CLEAR_COLOR
-    );
+    for(const auto& [_, render_target_view] : this->render_target_view) {
+        context->ClearRenderTargetView(
+            render_target_view.Get(),
+            CLEAR_COLOR
+        );
+    }
 
     for(const auto& render_pass : this->pipe_line) {
-        context->OMSetRenderTargets(8, null_rtv, nullptr);
-        context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
-        context->OMSetDepthStencilState(nullptr, 0);
-        context->IASetInputLayout(nullptr);
-        context->VSSetShader(nullptr, nullptr, 0);
-        context->PSSetShader(nullptr, nullptr, 0);
-        context->PSSetShaderResources(0, 8, null_srv);
-        context->VSSetShaderResources(0, 8, null_srv);
-        context->PSSetSamplers(0, 8, null_sampler);
+        if(render_pass->should_reset_state()) {
+            this->reset_state();
+        }
 
-        context->RSSetViewports(1, &view_port);
-        context->RSSetState(this->d3d11->rasterizer_cull_back.Get());
+        context->RSSetState(this->d3d11->rasterizer_cull_none.Get());
 
         if(render_pass->is_post_render()) {
             render_pass->render_set(
                 context.Get(),
-                this->d3d11->render_target_view_back.Get()
+                this->render_target_view.at(RenderTargetView::BackBuffer).Get()
             );
             render_pass->back_buffer_resouce(
                 context.Get(),
-                this->d3d11->shader_resouce_view.Get()
+                this->shader_resouce_view.Get()
             );
         } else {
             render_pass->render_set(
                 context.Get(),
-                this->d3d11->render_target_view.Get()
+                this->render_target_view.at(RenderTargetView::Offscreen).Get()
             );
         }
 

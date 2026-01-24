@@ -37,7 +37,7 @@ public:
 
     bool make_dummy_texture(ID3D11Device* const device);
 
-    void render_set_resource(
+    void set_resource(
         ID3D11DeviceContext* const context,
         const ShaderBindingSlots* slots
     ) const;

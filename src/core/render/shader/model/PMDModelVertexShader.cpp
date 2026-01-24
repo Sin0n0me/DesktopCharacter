@@ -1,7 +1,7 @@
 #include "PMDModelVertexShader.h"
 
 std::filesystem::path PMDModelVertexShader::file_path(void) const {
-    return L"assets/shader/vs_model.cso";
+    return u8"assets/shader/vs_model.cso";
 }
 
 ShaderType PMDModelVertexShader::shader_type(void) const {

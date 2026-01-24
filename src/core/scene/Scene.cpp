@@ -1,9 +1,11 @@
 #include "../../Application.h"
 #include "../render/CommonResource.h"
+#include "../render/constant_buffer/Camera.h"
+#include "../utility/Maker.h"
 #include "Scene.h"
 #include <d3d11.h>
 
-const SceneCamera& Scene::get_camera(void) const {
+const std::shared_ptr<Camera> Scene::get_camera(void) const {
     return this->camera;
 }
 
@@ -11,15 +13,54 @@ const Light& Scene::get_lignt(void) const {
     return this->light;
 }
 
-Scene::Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resource) {
-    this->resource = resource;
-    this->camera = SceneCamera::make_camera(device, resource);
-    this->light = Light::make_light(device, resource);
+Scene::Scene(const std::shared_ptr<CommonResource>& resource) {
+    const float eye_position = 11.0f;
+    const float distance = 25.0f;
+    const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0, eye_position + 7.5f, -distance, 1.0f);
+    const DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, eye_position, 0.0f, 1.0f);
+    const DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    Maker::make_shared(
+        this->camera,
+        eye,
+        target,
+        up
+    );
 
-    //this->camera.camera.view = this->light.shadow.light_view_proj;
+    this->resource = resource;
+}
+
+bool Scene::make_camera(ID3D11Device* const device) {
+    constexpr D3D11_BUFFER_DESC bd{
+        .ByteWidth = sizeof(Camera),
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+    };
+    const D3D11_SUBRESOURCE_DATA init_data{
+        .pSysMem = this->camera.get(),
+        .SysMemPitch = 0,
+        .SysMemSlicePitch = sizeof(Camera),
+    };
+
+    const HRESULT hr = device->CreateBuffer(
+        &bd,
+        &init_data,
+        resource->constant_buffers[ConstantBuffer::Camera].GetAddressOf()
+    );
+    if FAILED(hr) {
+        return false;
+    }
+
+    return true;
 }
 
 bool Scene::init(ID3D11Device* const device) {
+    if(!this->make_camera(device)) {
+        return false;
+    }
+
+    this->light = Light::make_light(device, this->resource);
+
+    //this->camera.camera.view = this->light.shadow.light_view_proj;
     return true;
 }
 

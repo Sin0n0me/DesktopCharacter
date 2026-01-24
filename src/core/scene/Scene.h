@@ -1,5 +1,4 @@
 #pragma once
-#include "camera/SceneCamera.h"
 #include "light/Light.h"
 
 struct ID3D11DeviceContext;
@@ -7,17 +6,19 @@ struct ID3D11Device;
 
 class Scene {
 private:
-    SceneCamera camera;
+    std::shared_ptr<Camera> camera;
     Light light;
 
     std::shared_ptr<CommonResource> resource;
 
+    bool make_camera(ID3D11Device* const device);
+
 public:
 
-    const SceneCamera& get_camera(void) const;
+    const std::shared_ptr<Camera> get_camera(void) const;
     const Light& get_lignt(void) const;
 
-    Scene(ID3D11Device* const device, const std::shared_ptr<CommonResource>& resouce);
+    explicit Scene(const std::shared_ptr<CommonResource>& resouce);
 
     bool init(ID3D11Device* const device);
 

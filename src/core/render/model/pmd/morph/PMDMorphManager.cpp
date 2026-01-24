@@ -28,6 +28,11 @@ std::shared_ptr<const std::vector<PMDMorphData>> PMDMorphManager::get_morphs(voi
     return this->morphs;
 }
 
-uint32_t PMDMorphManager::get_morph_index(const std::string& name) const noexcept {
-    return this->morph_name_map.at(name);
+std::optional<uint32_t> PMDMorphManager::get_morph_index(const std::string& name) const noexcept {
+    const auto& iter = this->morph_name_map.find(name);
+    if(iter == this->morph_name_map.end()) {
+        return std::nullopt;
+    }
+
+    return iter->second;
 }

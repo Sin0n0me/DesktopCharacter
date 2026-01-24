@@ -3,6 +3,7 @@
 #include "../bone/Bone.h"
 #include "BoneNode.h"
 #include <memory>
+#include <optional>
 #include <string>
 
 struct Bones;
@@ -20,7 +21,5 @@ public:
 
     virtual std::shared_ptr<const IKSolver> get_ik_soulver(void) const = 0;
 
-    virtual BoneIndex get_bone_index(const std::string& name) const = 0;
-
-    virtual const std::unordered_map<std::string, BoneIndex>& get_bone_name_map(void) const = 0;
+    virtual std::optional<BoneIndex> get_bone_index(const std::string& name) const = 0;
 };

@@ -31,10 +31,6 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
         return false;
     }
 
-    if(!this->make_render_target_view()) {
-        return false;
-    }
-
     if(!this->make_target(hwnd)) {
         return false;
     }
@@ -109,6 +105,22 @@ bool D3D11::make_factory(void) {
     return true;
 }
 
+bool D3D11::make_surface(void) {
+    const HRESULT result = this->dcomp_device->CreateSurface(
+        WIDTH,
+        HEIGHT,
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        DXGI_ALPHA_MODE_PREMULTIPLIED,
+        this->dcomp_surface.GetAddressOf()
+    );
+    if(FAILED(result)) {
+        Logger::error(u8"Surface(Composition)の作成に失敗しました");
+        return false;
+    }
+
+    return true;
+}
+
 // スワップチェーンの作成
 bool D3D11::make_swap_chain(const UINT width, const UINT height) {
     constexpr DXGI_SAMPLE_DESC sample{
@@ -139,91 +151,6 @@ bool D3D11::make_swap_chain(const UINT width, const UINT height) {
     return true;
 }
 
-// RenderTargetView作成
-bool D3D11::make_render_target_view(void) {
-    {
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
-        {
-            constexpr DXGI_SAMPLE_DESC sample{
-                .Count = 1
-            };
-            constexpr D3D11_TEXTURE2D_DESC desc{
-                .Width = WIDTH,
-                .Height = HEIGHT,
-                .MipLevels = 1,
-                .ArraySize = 1,
-                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-                .SampleDesc = sample,
-                .Usage = D3D11_USAGE_DEFAULT,
-                .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
-            };
-
-            const HRESULT hr = this->device->CreateTexture2D(
-                &desc,
-                nullptr,
-                texture.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                Logger::error(u8"レンダーターゲット用のテクスチャ作成に失敗しました");
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateRenderTargetView(
-                texture.Get(),
-                nullptr,
-                this->render_target_view.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                Logger::error(u8"レンダーターゲット(オフスクリーン)の作成に失敗しました");
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateShaderResourceView(
-                texture.Get(),
-                nullptr,
-                this->shader_resouce_view.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                Logger::error(u8"シェーダーリソースビューの作成に失敗しました");
-                return false;
-            }
-        }
-    }
-
-    {
-        // バックバッファ取得
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
-        {
-            const HRESULT hr = this->dxgi_swap_chain->GetBuffer(
-                0,
-                IID_PPV_ARGS(back_buffer.GetAddressOf())
-            );
-            if(FAILED(hr)) {
-                Logger::error(u8"バックバッファの取得に失敗しました");
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateRenderTargetView(
-                back_buffer.Get(),
-                nullptr,
-                this->render_target_view_back.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                Logger::error(u8"レンダーターゲット(バックバッファ)の作成に失敗しました");
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
 // ラスタライザの作成
 bool D3D11::make_rasterizer(void) {
     // MMDはポリゴンの両面を使用している
@@ -232,12 +159,12 @@ bool D3D11::make_rasterizer(void) {
         .FillMode = D3D11_FILL_SOLID,
         .CullMode = D3D11_CULL_NONE,
         .FrontCounterClockwise = FALSE,
-        .DepthBias = 0,
+        .DepthBias = 1,
         .SlopeScaledDepthBias = 0.5f,
         .DepthClipEnable = TRUE,
     };
 
-    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_back.GetAddressOf()))) {
+    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_none.GetAddressOf()))) {
         Logger::error(u8"ラスタライザの作成に失敗しました");
         return false;
     }

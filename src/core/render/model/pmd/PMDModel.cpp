@@ -1,17 +1,18 @@
+#include "../../../log/Logger.h"
 #include "../../../utility/Algorithm.h"
-#include "../../../utility/BinaryReader.h"
 #include "../../../utility/Maker.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
-#include "../../constant_buffer/Material.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../shader/Shader.h"
 #include "../../shader/ShaderBindingSlots.h"
+#include "../../texrure/TextureNames.h"
 #include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
+constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
 PMDModel::PMDModel(const std::filesystem::path& path) : Model(path) {
     Maker::make_shared(this->model_loader, path);
@@ -65,6 +66,10 @@ bool PMDModel::init(ID3D11Device* const device) {
         return false;
     }
 
+    if(!this->make_blend_state(device)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -72,8 +77,18 @@ void PMDModel::render_update(ID3D11DeviceContext* const context) {
     this->bone_manager->render_update(context);
 
     D3D11_MAPPED_SUBRESOURCE mapped;
-    context->Map(this->vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-    memcpy(mapped.pData, this->vertices->data(), sizeof(PMDVertexData) * this->vertices->size());
+    context->Map(
+        this->vertex_buffer.Get(),
+        0,
+        D3D11_MAP_WRITE_DISCARD,
+        0,
+        &mapped
+    );
+    memcpy(
+        mapped.pData,
+        this->vertices->data(),
+        sizeof(PMDVertexData) * this->vertices->size()
+    );
     context->Unmap(this->vertex_buffer.Get(), 0);
 }
 
@@ -98,12 +113,31 @@ void PMDModel::render(
         0
     );
 
+    context->OMSetBlendState(
+        this->blend_state.Get(),
+        BLEND_COLOR,
+        0xFFFFFFFF
+    );
+
     this->bone_manager->render(context, slots);
 
     uint32_t index_offset = 0;
     for(const auto& material : this->materials) {
         material.texture.set_resource(context, slots);
         material.sphere.set_resource(context, slots);
+
+        if(material.toon_index < this->toon_textures.size()) {
+            this->toon_textures
+                .at(material.toon_index)
+                .set_resource(context, slots);
+        } else {
+            Texture::set_dummy_resouce(
+                context,
+                slots,
+                static_cast<uint32_t>(TextureName::Toon),
+                static_cast<uint32_t>(SamplerStateName::Toon)
+            );
+        }
 
         // シャドウマップなどで使用しない場合もある
         const BindingSlotKey key = BindingSlotKey{
@@ -137,7 +171,7 @@ bool PMDModel::is_loaded_model() {
 void PMDModel::compute_obb(std::unordered_map<short, OBB>& obb_map) {
     // ボーンが影響する頂点のみを収集
     std::unordered_map<short, std::vector<DirectX::XMFLOAT3>> points_map;
-    for(const auto& vertex : this->model_loader->get_vertices()) {
+    for(const auto& vertex : this->model_loader->get_vertices()->vertices) {
         if(vertex.bone_weight > WEIGHT_THRESHOLD) {
             points_map[vertex.bone_index[0]].emplace_back(vertex.position);
         }
@@ -168,7 +202,7 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
     }
 
     // 定数バッファ作成
-    if(!this->make_constant_buffer(device)) {
+    if(!this->make_material_buffer(device)) {
         return false;
     }
 
@@ -177,11 +211,11 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
 
 bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
     const auto& loaded_vertices = this->model_loader->get_vertices();
-    const auto size = loaded_vertices.size();
+    const auto size = loaded_vertices->size;
     this->vertices->resize(size);
     for(size_t i = 0; i < size; ++i) {
         auto& dst_vertex = this->vertices->at(i);
-        auto& src_vertex = loaded_vertices.at(i);
+        auto& src_vertex = loaded_vertices->vertices.at(i);
 
         memcpy(
             dst_vertex.position,
@@ -242,12 +276,12 @@ bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
 bool PMDModel::make_index_buffer(ID3D11Device* const device) {
     const auto& indices = this->model_loader->get_indices();
     const D3D11_BUFFER_DESC desc{
-        .ByteWidth = UINT(sizeof(uint16_t) * indices.size()),
+        .ByteWidth = UINT(sizeof(uint16_t) * indices->size),
         .Usage = D3D11_USAGE_DEFAULT,
         .BindFlags = D3D11_BIND_INDEX_BUFFER,
     };
     const D3D11_SUBRESOURCE_DATA init_data = {
-        .pSysMem = indices.data()
+        .pSysMem = indices->indices.data()
     };
 
     const HRESULT hr = device->CreateBuffer(
@@ -262,89 +296,65 @@ bool PMDModel::make_index_buffer(ID3D11Device* const device) {
     return true;
 }
 
-bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
-    for(const auto& material : this->model_loader->get_materials()) {
-        PMDMaterialData material_data{
-            .sphere_mode = SphereMode::None,
-            .index_count = material.index_count,
-        };
-
-        // スフィアがついている場合があるので分離
-        std::string	texture_path = material.texture_file;
-        const auto pos = texture_path.find('*');
-        if(pos == std::string::npos) {
-            // スフィアがない場合はダミーを作成
-            if(!material_data.sphere.make_dummy_texture(device)) {
-                return false;
-            }
-        } else {
-            std::string sphere = texture_path.substr(pos + 1);
-            texture_path = texture_path.substr(0, pos);
-
-            if(sphere.ends_with(".sph")) {
-                material_data.sphere_mode = SphereMode::Multiply;
-            } else if(sphere.ends_with(".spa")) {
-                material_data.sphere_mode = SphereMode::Add;
-            } else {
-                return false;
-            }
-
-            if(!material_data.sphere.load_texure(
-                device,
-                this->path.parent_path().append(sphere)
-            )) {
-                return false;
-            }
-        }
-
-        if(!material_data.texture.load_texure(
+bool PMDModel::make_material_buffer(ID3D11Device* const device) {
+    for(const auto& material : this->model_loader->get_materials()->materials) {
+        const auto opt_material_data = PMDMaterialData::make(
+            material,
             device,
-            this->path.parent_path().append(texture_path)
-        )) {
-            return false;
-        }
-
-        const D3D11_BUFFER_DESC desc{
-            .ByteWidth = sizeof(Material),
-            .Usage = D3D11_USAGE_DEFAULT,
-            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-        };
-        Material mat{
-            .sphere_mul = 0.0f,
-            .sphere_add = 0.0f,
-        };
-        memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
-        memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
-
-        switch(material_data.sphere_mode) {
-        case SphereMode::None:
-            break;
-        case SphereMode::Multiply:
-            mat.sphere_mul = 1.0f;
-            break;
-        case SphereMode::Add:
-            mat.sphere_add = 1.0f;
-            break;
-        default:
-            return false;
-        }
-
-        const D3D11_SUBRESOURCE_DATA init_data{
-            .pSysMem = &mat,
-            .SysMemPitch = 0,
-            .SysMemSlicePitch = sizeof(Material),
-        };
-
-        const HRESULT hr = device->CreateBuffer(
-            &desc,
-            &init_data,
-            material_data.buffer.GetAddressOf()
+            this->path
         );
-        if FAILED(hr) {
+        if(!opt_material_data.has_value()) {
             return false;
         }
 
-        this->materials.emplace_back(material_data);
+        this->materials.emplace_back(opt_material_data.value());
+    }
+
+    for(const std::string& file_name : this->model_loader->get_toon_textures()->file_names) {
+        const auto& path = this->path.parent_path() / file_name;
+        Texture texture = Texture{
+            static_cast<uint32_t>(TextureName::Toon),
+            static_cast<uint32_t>(SamplerStateName::Toon)
+        };
+
+        if(!texture.load_texure(device, path)) {
+            Logger::error(
+                Logger::make_message(
+                    u8"トゥーンテクスチャを読み込めませんでした\n",
+                    u8"ファイル名: ",
+                    path.u8string()
+                )
+            );
+        }
+
+        this->toon_textures.emplace_back(texture);
+    }
+
+    return true;
+}
+
+bool PMDModel::make_blend_state(ID3D11Device* const device) {
+    constexpr D3D11_BLEND_DESC desc{
+        .RenderTarget = {
+            {
+                .BlendEnable = TRUE,
+                .SrcBlend = D3D11_BLEND_SRC_ALPHA,
+                .DestBlend = D3D11_BLEND_INV_SRC_ALPHA,
+                .BlendOp = D3D11_BLEND_OP_ADD,
+                .SrcBlendAlpha = D3D11_BLEND_ONE,
+                .DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA,
+                .BlendOpAlpha = D3D11_BLEND_OP_ADD,
+                .RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL,
+            }
+    }
+    };
+
+    const HRESULT hr = device->CreateBlendState(
+        &desc,
+        this->blend_state.GetAddressOf()
+    );
+    if(FAILED(hr)) {
+        return false;
     }
 
     return true;

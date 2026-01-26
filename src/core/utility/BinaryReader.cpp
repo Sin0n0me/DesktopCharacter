@@ -45,6 +45,10 @@ std::vector<uint8_t> BinaryReader::read_all(void) {
     return vec;
 }
 
+bool BinaryReader::is_eof(void) const {
+    return this->file.eof();
+}
+
 std::optional<BinaryReader> BinaryReader::make_reader(const std::filesystem::path& path) {
     BinaryReader reader{};
 

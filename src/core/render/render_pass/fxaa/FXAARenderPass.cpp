@@ -230,3 +230,7 @@ void FXAARenderPass::back_buffer_resouce(
         this->resource->sampler_state.at(Pattern::FXAA).GetAddressOf()
     );
 }
+
+RasterizerKind FXAARenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullBack;
+}

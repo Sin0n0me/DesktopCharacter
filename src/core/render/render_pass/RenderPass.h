@@ -1,4 +1,5 @@
 #pragma once
+#include "../rasterizer/RasterizerKind.h"
 #include "../shader/ShaderBindingSlots.h"
 #include <memory>
 
@@ -46,4 +47,6 @@ public:
         ID3D11DeviceContext* const context,
         ID3D11ShaderResourceView* const shader_resouce_view
     ) const = 0;
+
+    virtual RasterizerKind rasterizer_kind(void) const = 0;
 };

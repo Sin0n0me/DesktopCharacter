@@ -326,3 +326,7 @@ uint64_t AlphaMaskRenderPass::get_next_buffer_index(void) const noexcept {
     }
     return next_index;
 }
+
+RasterizerKind AlphaMaskRenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullBack;
+}

@@ -122,6 +122,12 @@ bool ModelRenderPass::make_shader(ID3D11Device* const device) {
     return true;
 }
 
+RasterizerKind ModelRenderPass::rasterizer_kind(void) const {
+    // MMDはポリゴンの両面を使用している
+    // なので背面カリングすると表示がおかしくなる
+    return RasterizerKind::CullNone;
+}
+
 void ModelRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {
 }
 

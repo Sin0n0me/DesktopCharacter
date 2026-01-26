@@ -32,8 +32,8 @@ private:
 public:
 
     explicit PMDBoneManager(
-        const std::vector<PMDBone>& bones,
-        const std::vector<PMDIK>& iks
+        const std::shared_ptr<const PMDBones>& bones,
+        const std::shared_ptr<const PMDIKs>& iks
     ) noexcept;
 
     bool init(ID3D11Device* const device) override;

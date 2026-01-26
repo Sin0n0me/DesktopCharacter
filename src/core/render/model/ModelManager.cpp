@@ -191,10 +191,10 @@ std::optional<model_list> get_model_files(const std::filesystem::path& resouce_f
             continue;
         }
 
-        Logger::info(
+        Logger::debug(
             Logger::make_message(
                 u8"found: ",
-                resouce_file_path.u8string()
+                full_path
             )
         );
 

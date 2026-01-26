@@ -205,6 +205,10 @@ bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
     return true;
 }
 
+RasterizerKind WallRenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullBack;
+}
+
 void WallRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {
 }
 

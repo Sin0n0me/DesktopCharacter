@@ -2,13 +2,13 @@
 #include "PMDMorphManager.h"
 
 PMDMorphManager::PMDMorphManager(
-    const std::vector<PMDMorph>& morphs,
+    const std::shared_ptr<const PMDMorphs>& morphs,
     std::shared_ptr<std::vector<PMDVertexData>> vertices
 ) {
     this->vertices = vertices;
 
     std::vector<PMDMorphData> morph_list;
-    for(const auto& morph : morphs) {
+    for(const auto& morph : morphs->morphs) {
         this->morph_name_map[morph.name] = morph_list.size();
 
         morph_list.emplace_back(PMDMorphData{

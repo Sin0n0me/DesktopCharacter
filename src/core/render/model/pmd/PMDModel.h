@@ -20,6 +20,8 @@ private:
     std::shared_ptr<PMDModelLoader> model_loader;
     std::shared_ptr<VMDMotionManager> motion_manager;
     std::vector<PMDMaterialData> materials;
+    std::vector<Texture> toon_textures;
+    Microsoft::WRL::ComPtr<ID3D11BlendState> blend_state;
 
 public:
     explicit PMDModel(const std::filesystem::path& path);
@@ -43,5 +45,6 @@ private:
     bool make_buffers(ID3D11Device* const device);
     bool make_vertex_buffer(ID3D11Device* const device);
     bool make_index_buffer(ID3D11Device* const device);
-    bool make_constant_buffer(ID3D11Device* const device);
+    bool make_material_buffer(ID3D11Device* const device);
+    bool make_blend_state(ID3D11Device* const device);
 };

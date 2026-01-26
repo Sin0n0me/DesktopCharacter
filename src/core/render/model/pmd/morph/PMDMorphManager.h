@@ -16,7 +16,7 @@ private:
 public:
 
     explicit PMDMorphManager(
-        const std::vector<PMDMorph>& morphs,
+        const std::shared_ptr<const PMDMorphs>& morphs,
         std::shared_ptr<std::vector<PMDVertexData>> vertices
     );
 

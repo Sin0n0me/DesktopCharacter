@@ -25,6 +25,7 @@ public:
     bool is_render_model(void) const override;
     bool is_post_render(void) const override;
     void back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const override;
+    RasterizerKind rasterizer_kind(void) const override;
 
 private:
 

@@ -26,7 +26,7 @@ private:
 public:
 
     explicit IKSolver(
-        const std::vector<PMDIK>& iks,
+        const std::shared_ptr<const PMDIKs>& iks,
         const std::shared_ptr<const PMDBoneMap>& bone_map
     ) noexcept;
 

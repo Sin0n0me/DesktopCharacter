@@ -227,6 +227,10 @@ bool ShadowRenderPass::make_shadow_map(ID3D11Device* const device) {
     return true;
 }
 
+RasterizerKind ShadowRenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullNone;
+}
+
 void ShadowRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {
 }
 

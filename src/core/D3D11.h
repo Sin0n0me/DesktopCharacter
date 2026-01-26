@@ -20,8 +20,6 @@ public:
     Microsoft::WRL::ComPtr<ID3D11Device> device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
 
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer_cull_none;
-
 public:
     D3D11(void) = default;
     bool init_d3d11(const HWND hwnd, const UINT width, const  UINT height);
@@ -32,7 +30,6 @@ private:
     bool make_factory(void);
     bool make_surface(void);
     bool make_swap_chain(const UINT width, const UINT height);
-    bool make_rasterizer(void);
     bool make_target(const HWND hwnd);
     bool make_visual(void);
     bool commit(void);

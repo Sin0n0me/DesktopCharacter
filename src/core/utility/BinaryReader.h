@@ -38,4 +38,6 @@ public:
 
         return true;
     }
+
+    bool is_eof(void) const;
 };

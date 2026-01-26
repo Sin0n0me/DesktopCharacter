@@ -20,6 +20,8 @@ enum class ConstantBuffer {
     FXAA,
     SMAA,
     AlphaParams,
+    ModelEdge,
+    Light,
 };
 
 enum class Pattern {
@@ -29,6 +31,7 @@ enum class Pattern {
     FXAA,
     SMAA,
     AlphaMask,
+    ModelEdge,
 };
 
 template <typename T, typename U>

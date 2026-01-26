@@ -7,11 +7,10 @@
 #include <stack>
 
 IKSolver::IKSolver(
-    const std::vector<PMDIK>& iks,
+    const std::shared_ptr<const PMDIKs>& iks,
     const std::shared_ptr<const PMDBoneMap>& bone_map
 ) noexcept : bone_map(bone_map) {
-    for(int i = 0; i < iks.size(); ++i) {
-        const auto& ik = iks[i];
+    for(const auto& ik : iks->iks) {
         this->ik_map[ik.ik_bone] = ik;
     }
 

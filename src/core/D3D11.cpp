@@ -35,10 +35,6 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
         return false;
     }
 
-    if(!this->make_rasterizer()) {
-        return false;
-    }
-
     if(!this->make_visual()) {
         return false;
     }
@@ -145,27 +141,6 @@ bool D3D11::make_swap_chain(const UINT width, const UINT height) {
 
     if(FAILED(result_swap_chain)) {
         Logger::error(u8"SwapChain(Composition)の作成に失敗しました");
-        return false;
-    }
-
-    return true;
-}
-
-// ラスタライザの作成
-bool D3D11::make_rasterizer(void) {
-    // MMDはポリゴンの両面を使用している
-    // なので背面カリングすると表示がおかしくなる
-    constexpr D3D11_RASTERIZER_DESC desc{
-        .FillMode = D3D11_FILL_SOLID,
-        .CullMode = D3D11_CULL_NONE,
-        .FrontCounterClockwise = FALSE,
-        .DepthBias = 1,
-        .SlopeScaledDepthBias = 0.5f,
-        .DepthClipEnable = TRUE,
-    };
-
-    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_none.GetAddressOf()))) {
-        Logger::error(u8"ラスタライザの作成に失敗しました");
         return false;
     }
 

@@ -2,24 +2,24 @@
 #include "../event/WindowEvent.h"
 #include "../log/Logger.h"
 #include "WindowManager.h"
+#include "WindowStatus.h"
 
+constexpr LONG HIT_WINDOW_SIZE = 8;
 constexpr LPCWSTR WINDOW_NAME = IS_DEBUG_MODE ? L"ゆかりさんを自由に動かしたい(DebugMode)" : L"ゆかりさんを自由に動かしたい";
 
-void set_layered_window(const HWND hwnd) {
-    constexpr BITMAPINFO bitmap_info = [] {
-        constexpr BITMAPINFOHEADER bmi_haeader{
+bool set_layered_window(const WindowStatus& window, const uint32_t color) {
+    const auto width = window.window_size.x;
+    const auto height = window.window_size.y;
+    const BITMAPINFO bitmap_info{
+        .bmiHeader = {
             .biSize = sizeof(BITMAPINFOHEADER),
-            .biWidth = WIDTH,
-            .biHeight = -(long)HEIGHT, // top-down
+            .biWidth = width,
+            .biHeight = -height, // top-down
             .biPlanes = 1,
             .biBitCount = 32,
             .biCompression = BI_RGB,
-        };
-        constexpr BITMAPINFO bmi{
-            .bmiHeader = bmi_haeader,
-        };
-        return bmi;
-        }();
+    }
+    };
 
     // DIB 作成
     void* dib_bits = nullptr;
@@ -32,21 +32,16 @@ void set_layered_window(const HWND hwnd) {
         0
     );
     if(!dib_bitmap || !dib_bits) {
-        return;
+        return false;
     }
 
     // ビットマップの初期化
     {
-        uint8_t* const pixels = static_cast<uint8_t*>(dib_bits);
-        constexpr size_t pixel_stride = 4;
-
-        for(int y = 0; y < HEIGHT; ++y) {
-            for(int x = 0; x < WIDTH; ++x) {
-                const size_t offset = (static_cast<size_t>(y) * WIDTH + x) * pixel_stride;
-                pixels[offset + 0] = 0x0;
-                pixels[offset + 1] = 0x0;
-                pixels[offset + 2] = 0x0;
-                pixels[offset + 3] = 0x0;
+        uint32_t* const pixels = static_cast<uint32_t*>(dib_bits);
+        for(int y = 0; y < height; ++y) {
+            for(int x = 0; x < width; ++x) {
+                const int offset = y * width + x;
+                pixels[offset] = color;
             }
         }
     }
@@ -57,7 +52,7 @@ void set_layered_window(const HWND hwnd) {
         SelectObject(memory_dc, dib_bitmap)
         );
 
-    SIZE window_size{WIDTH, HEIGHT};
+    SIZE window_size{width, height};
     POINT src_pos{0, 0};
     POINT dst_pos{0, 0};
 
@@ -68,8 +63,8 @@ void set_layered_window(const HWND hwnd) {
         AC_SRC_ALPHA
     };
 
-    UpdateLayeredWindow(
-        hwnd,
+    const BOOL result = UpdateLayeredWindow(
+        window.hwnd,
         screen_dc,
         &dst_pos,
         &window_size,
@@ -85,6 +80,8 @@ void set_layered_window(const HWND hwnd) {
     DeleteDC(memory_dc);
     ReleaseDC(nullptr, screen_dc);
     DeleteObject(dib_bitmap);
+
+    return result == TRUE;
 }
 
 WindowManager::WindowManager(
@@ -114,8 +111,8 @@ WindowManager::WindowManager(
             .y = 0,
     },
     .window_size{
-            .x = 4,
-            .y = 4,
+            .x = HIT_WINDOW_SIZE,
+            .y = HIT_WINDOW_SIZE,
     },
     };
 }
@@ -169,7 +166,9 @@ bool WindowManager::make_root_window(void) {
         return false;
     }
 
-    set_layered_window(this->root_window.hwnd);
+    if(!set_layered_window(this->root_window, 0)) {
+        return false;
+    }
 
     return true;
 }
@@ -187,7 +186,7 @@ bool WindowManager::make_hit_window(void) {
     RegisterClassEx(&wc);
 
     this->hit_window.hwnd = CreateWindowEx(
-        WS_EX_NOREDIRECTIONBITMAP,
+        WS_EX_NOREDIRECTIONBITMAP | WS_EX_LAYERED,
         wc.lpszClassName,
         nullptr,
         WS_POPUPWINDOW | WS_VISIBLE,
@@ -203,6 +202,10 @@ bool WindowManager::make_hit_window(void) {
     if(this->hit_window.hwnd == NULL) {
         Logger::error(u8"入力用ウィンドウハンドルの生成に失敗しました");
         return -1;
+    }
+
+    if(!set_layered_window(this->hit_window, 0x01000000)) {
+        return false;
     }
 
     return true;
@@ -280,13 +283,9 @@ void WindowManager::update(const Collider* collider) {
         return;
     }
 
-    if(!this->mouse_state->is_moved()) {
-        return;
-    }
-
     // モデル描画ウィンドウの移動
     // ドラッグしていればウィンドウごと移動
-    if(this->mouse_state->get_is_dragging()) {
+    if(this->mouse_state->get_is_dragging() && this->mouse_state->is_moved()) {
         this->update_root_window();
 
         SetWindowPos(

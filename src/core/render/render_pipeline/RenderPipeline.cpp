@@ -3,6 +3,7 @@
 #include "../../log/Logger.h"
 #include "../model/Model.h"
 #include "../render_pass/alpha_mask/AlphaMaskRenderPass.h"
+#include "../render_pass/edge/EdgeRenderPass.h"
 #include "../render_pass/fxaa/FXAARenderPass.h"
 #include "../render_pass/model/ModelRenderPass.h"
 #include "../render_pass/shadow/ShadowRenderPass.h"
@@ -35,6 +36,10 @@ RenderPipeline::RenderPipeline(
     this->render_pass_map.emplace(
         RenderPassName::AlphaMask,
         std::make_unique<AlphaMaskRenderPass>(resouce)
+    );
+    this->render_pass_map.emplace(
+        RenderPassName::Edge,
+        std::make_unique<EdgeRenderPass>(resouce)
     );
 }
 
@@ -86,6 +91,75 @@ void RenderPipeline::set(const std::vector<RenderPassName>& names) {
     for(const auto& name : names) {
         this->push_back(name);
     }
+}
+
+// ラスタライザの作成
+bool RenderPipeline::make_rasterizer(void) {
+    constexpr INT DEPTH_BIAS = 1;
+    constexpr FLOAT SLOPE_SCALED_DEPTH_BIAS = 0.5f;
+    constexpr BOOL DEPTH_CLIP_EBABLE = TRUE;
+
+    {
+        constexpr D3D11_RASTERIZER_DESC desc{
+            .FillMode = D3D11_FILL_SOLID,
+            .CullMode = D3D11_CULL_NONE,
+            .FrontCounterClockwise = FALSE,
+            .DepthBias = DEPTH_BIAS,
+            .SlopeScaledDepthBias = SLOPE_SCALED_DEPTH_BIAS,
+            .DepthClipEnable = DEPTH_CLIP_EBABLE,
+        };
+
+        const HRESULT hr = this->d3d11->device->CreateRasterizerState(
+            &desc,
+            this->rasterizer[RasterizerKind::CullNone].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"ラスタライザの作成に失敗しました");
+            return false;
+        }
+    }
+
+    {
+        constexpr D3D11_RASTERIZER_DESC desc{
+            .FillMode = D3D11_FILL_SOLID,
+            .CullMode = D3D11_CULL_BACK,
+            .FrontCounterClockwise = FALSE,
+            .DepthBias = DEPTH_BIAS,
+            .SlopeScaledDepthBias = SLOPE_SCALED_DEPTH_BIAS,
+            .DepthClipEnable = DEPTH_CLIP_EBABLE,
+        };
+
+        const HRESULT hr = this->d3d11->device->CreateRasterizerState(
+            &desc,
+            this->rasterizer[RasterizerKind::CullBack].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"ラスタライザの作成に失敗しました");
+            return false;
+        }
+    }
+
+    {
+        constexpr D3D11_RASTERIZER_DESC desc{
+            .FillMode = D3D11_FILL_SOLID,
+            .CullMode = D3D11_CULL_FRONT,
+            .FrontCounterClockwise = FALSE,
+            .DepthBias = DEPTH_BIAS,
+            .SlopeScaledDepthBias = SLOPE_SCALED_DEPTH_BIAS,
+            .DepthClipEnable = DEPTH_CLIP_EBABLE,
+        };
+
+        const HRESULT hr = this->d3d11->device->CreateRasterizerState(
+            &desc,
+            this->rasterizer[RasterizerKind::CullFront].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"ラスタライザの作成に失敗しました");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // RenderTargetView作成
@@ -221,6 +295,10 @@ bool RenderPipeline::init(void) {
         return false;
     }
 
+    if(!this->make_rasterizer()) {
+        return false;
+    }
+
     // レンダーパスの初期化
     for(auto& [index, render_pass] : this->render_pass_map) {
         const auto render_target = [&]() {
@@ -241,6 +319,7 @@ bool RenderPipeline::init(void) {
     this->set({
         RenderPassName::ShadowMap,
         RenderPassName::Wall,
+        RenderPassName::Edge,
         RenderPassName::Model,
         RenderPassName::FXAA,
         });
@@ -269,7 +348,9 @@ void RenderPipeline::render(void) const {
             this->reset_state();
         }
 
-        context->RSSetState(this->d3d11->rasterizer_cull_none.Get());
+        context->RSSetState(
+            this->rasterizer.at(render_pass->rasterizer_kind()).Get()
+        );
 
         if(render_pass->is_post_render()) {
             render_pass->render_set(

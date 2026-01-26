@@ -1,4 +1,5 @@
 #include "../../log/Logger.h"
+#include "../../utility/Hash.h"
 #include "../shader/ShaderBindingSlots.h"
 #include "Texture.h"
 #include <d3d11.h>
@@ -6,15 +7,33 @@
 #include <vector>
 #include <wincodec.h>
 
+decltype(Texture::texture_map) Texture::texture_map;
+decltype(Texture::dummy_texture) Texture::dummy_texture;
+
 Texture::Texture(
     const uint32_t texture_name_hash,
     const uint32_t sampler_name_hash
 ) noexcept :
     texture_name_hash(texture_name_hash),
     sampler_name_hash(sampler_name_hash) {
+    this->file_path_hash = 0;
+    this->use_dummy_texture = false;
 }
 
 bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::path path) {
+    this->use_dummy_texture = false;
+
+    // 同じテクスチャを何度も読み込んで保持するのはもったいないので再利用
+    this->file_path_hash = hash_u32(path.string().c_str());
+    if(Texture::texture_map.contains(this->file_path_hash)) {
+        Logger::debug(Logger::make_message(
+            u8"テクスチャの読み込みに成功しました(読み込み済み): ",
+            path.u8string()
+        ));
+
+        return true;
+    }
+
     Microsoft::WRL::ComPtr<IWICImagingFactory> factory;
     {
         const HRESULT hr = CoCreateInstance(
@@ -118,7 +137,7 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
         const HRESULT hr = device->CreateShaderResourceView(
             texture.Get(),
             nullptr,
-            this->shader_resouce_view.GetAddressOf()
+            Texture::texture_map[this->file_path_hash].shader_resouce_view.GetAddressOf()
         );
         if(FAILED(hr)) {
             return false;
@@ -134,6 +153,11 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
 }
 
 bool Texture::make_dummy_texture(ID3D11Device* const device) {
+    this->use_dummy_texture = true;
+    if(Texture::dummy_texture.sampler.Get() != nullptr) {
+        return true;
+    }
+
     const std::uint32_t white_pixel = 0xFFFFFFFF; // RGBA = 1,1,1,1
     const D3D11_TEXTURE2D_DESC texture_desc{
         .Width = 1,
@@ -170,7 +194,7 @@ bool Texture::make_dummy_texture(ID3D11Device* const device) {
         const HRESULT hr = device->CreateShaderResourceView(
             texture.Get(),
             nullptr,
-            this->shader_resouce_view.GetAddressOf()
+            Texture::dummy_texture.shader_resouce_view.GetAddressOf()
         );
         if(FAILED(hr)) {
             return false;
@@ -193,7 +217,7 @@ bool Texture::make_dummy_texture(ID3D11Device* const device) {
 
         const HRESULT hr = device->CreateSamplerState(
             &sampler_desc,
-            this->sampler.GetAddressOf()
+            Texture::dummy_texture.sampler.GetAddressOf()
         );
         if(FAILED(hr)) {
             return false;
@@ -248,7 +272,7 @@ bool Texture::make_sampler(ID3D11Device* const device) {
 
     const HRESULT hr = device->CreateSamplerState(
         &desc,
-        this->sampler.ReleaseAndGetAddressOf()
+        Texture::texture_map[this->file_path_hash].sampler.GetAddressOf()
     );
     if(FAILED(hr)) {
         return false;
@@ -261,6 +285,10 @@ void Texture::set_resource(
     ID3D11DeviceContext* const context,
     const ShaderBindingSlots* slots
 ) const {
+    const auto& resouce = this->use_dummy_texture ?
+        Texture::dummy_texture :
+        Texture::texture_map.at(this->file_path_hash);
+
     const BindingSlotKey texture_key = BindingSlotKey{
         this->texture_name_hash,
         ShaderType::Pixel,
@@ -270,7 +298,7 @@ void Texture::set_resource(
         context->PSSetShaderResources(
             slots->get(texture_key),
             1,
-            this->shader_resouce_view.GetAddressOf()
+            resouce.shader_resouce_view.GetAddressOf()
         );
     }
 
@@ -283,7 +311,42 @@ void Texture::set_resource(
         context->PSSetSamplers(
             slots->get(sampler_key),
             1,
-            this->sampler.GetAddressOf()
+            resouce.sampler.GetAddressOf()
+        );
+    }
+}
+
+void Texture::set_dummy_resouce(
+    ID3D11DeviceContext* const context,
+    const ShaderBindingSlots* slots,
+    const uint32_t texture_name_hash,
+    const uint32_t sampler_name_hash
+) {
+    const auto& resouce = Texture::dummy_texture;
+
+    const BindingSlotKey texture_key = BindingSlotKey{
+        texture_name_hash,
+        ShaderType::Pixel,
+        BindingSlotKind::Texture
+    };
+    if(slots->contains(texture_key)) {
+        context->PSSetShaderResources(
+            slots->get(texture_key),
+            1,
+            resouce.shader_resouce_view.GetAddressOf()
+        );
+    }
+
+    const BindingSlotKey sampler_key = BindingSlotKey{
+        sampler_name_hash,
+        ShaderType::Pixel,
+        BindingSlotKind::SamplerState
+    };
+    if(slots->contains(sampler_key)) {
+        context->PSSetSamplers(
+            slots->get(sampler_key),
+            1,
+            resouce.sampler.GetAddressOf()
         );
     }
 }

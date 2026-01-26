@@ -1,4 +1,5 @@
 #pragma once
+#include "../rasterizer/RasterizerKind.h"
 #include "../render_pass/RenderPass.h"
 #include "../render_target_view/RenderTargetView.h"
 #include "RenderPassName.h"
@@ -18,6 +19,8 @@ private:
     std::deque<std::shared_ptr<RenderPass>> pipe_line;
     std::unordered_map<RenderPassName, std::shared_ptr<RenderPass>> render_pass_map;
     std::unordered_map<RenderTargetView, Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> render_target_view;
+    std::unordered_map<RasterizerKind, Microsoft::WRL::ComPtr<ID3D11RasterizerState>> rasterizer;
+
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resouce_view; // バックバッファ用
 
     bool contains(const RenderPassName& name);
@@ -27,6 +30,7 @@ private:
     void remove(const RenderPassName& name);
     void set(const std::vector<RenderPassName>& names);
 
+    bool make_rasterizer(void);
     bool make_render_target_views(void);
     bool make_offscreen_render_target_view(void);
     bool make_back_buffer_render_target_view(void);

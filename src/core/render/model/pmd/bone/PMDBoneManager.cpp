@@ -11,8 +11,8 @@
 #include <ranges>
 
 PMDBoneManager::PMDBoneManager(
-    const std::vector<PMDBone>& bones,
-    const std::vector<PMDIK>& iks
+    const std::shared_ptr<const PMDBones>& bones,
+    const std::shared_ptr<const PMDIKs>& iks
 ) noexcept {
     Maker::make_shared(this->bone_map);
     Maker::make_shared(this->bones);
@@ -26,11 +26,11 @@ PMDBoneManager::PMDBoneManager(
         };
     }
 
-    const auto bone_count = bones.size();
+    const auto bone_count = bones->size;
     for(uint16_t index = 0; index < bone_count; ++index) {
         PMDBoneData bone_data{};
 
-        const auto& bone = bones.at(index);
+        const auto& bone = bones->bones.at(index);
         const auto parent_index = bone.parent_index;
         bone_data.parent = (parent_index == 0xFFFF) ? -1 : parent_index;
         bone_data.position = {

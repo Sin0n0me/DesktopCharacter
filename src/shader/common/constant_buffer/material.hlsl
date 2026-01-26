@@ -8,34 +8,45 @@ cbuffer Material {
 };
 
 float4 apply_lighting(
-    const float4 base_color,
-    const float3 position,
+    const float4 color,
+    const float3 light_color,
     const float3 light_direction,
     const float3 normal
 ){    
     const float3 normalized_normal = normalize(normal);
     const float3 normalized_light = normalize(light_direction);
-    const float3 view_direction = normalize(-position);
-
-    // Diffuse
+  
     const float dot_nl = saturate(dot(normalized_normal, normalized_light));
     const float4 fixed_diffuse = diffuse * dot_nl;
+   
+    const float3 lighting_color = light_color.rgb * fixed_diffuse.rgb + ambient;
 
+    return float4(color.rgb * saturate(lighting_color), color.a);
+}
+
+float4 apply_specular(
+    const float4 color,
+    const float3 position,
+    const float3 light_direction,
+    const float3 normal
+) {
+    const float3 normalized_normal = normalize(normal);
+    const float3 normalized_light = normalize(light_direction);
+    const float3 view_direction = normalize(-position);
+    
     // Specular(Phong)
     /*
     const float3 ref = reflect(-normalized_light, normalized_normal);
     const float spec_factor = pow(saturate(dot(ref, view_direction)), shininess);
     const float3 fixed_specular = specular * spec_factor;
     */
-  // Specular(Blinn-Phong)
-    const float3 half_vec = normalize(normalized_light + view_direction);
-    const float spec_factor = pow(saturate(dot(normalized_normal, half_vec)), shininess * 4);
-    const float3 fixed_specular = specular * spec_factor;
     
-    return float4(
-        base_color.rgb * (ambient + fixed_diffuse.rgb) + fixed_specular,
-        base_color.a
-    );
+    // Specular(Blinn-Phong)
+    const float3 half_vec = normalize(normalized_light + view_direction);
+    const float spec_factor = pow(saturate(dot(normalized_normal, half_vec)), shininess);
+    const float3 fixed_specular = specular * spec_factor;    
+    
+    return float4(color.rgb + fixed_specular, color.a);
 }
 
 
@@ -57,7 +68,7 @@ float2 calc_sphere_uv(
 }
 
 // IFによる分岐を減らすために以下のような回りくどい計算をしている
-float4 apply_sphere_map_branchless(
+float4 apply_sphere_map(
     const float4 base_color,
     const float4 sphere_color
 ) {

@@ -15,12 +15,9 @@ float4 apply_sphere(
     const float3 normal
 ) {
     const float2 sphere_uv = calc_sphere_uv(position, normal);
-    const float4 sphere_color = apply_sphere_map(
-        color,
-        sphere_texture.Sample(sphere_sampler, sphere_uv)
-    );
+    const float3 sphere_color = sphere_texture.Sample(sphere_sampler, sphere_uv).rgb;
     
-    return sphere_color;
+    return apply_sphere_map(color, sphere_color);
 }
 
 float4 apply_toon(

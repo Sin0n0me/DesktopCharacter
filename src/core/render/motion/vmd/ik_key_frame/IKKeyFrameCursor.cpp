@@ -27,3 +27,19 @@ bool IKKeyFrameCursor::is_apply_ik(void) {
 
     return false;
 }
+
+float IKKeyFrameCursor::progress(void) const {
+    const auto& opt_pre_key_frame = this->get_previous_key_frame();
+    const auto& opt_cur_key_frame = this->get_current_key_frame();
+
+    if(!opt_cur_key_frame.has_value()) {
+        return 1.0f;
+    }
+    const auto start_frame = opt_pre_key_frame.has_value() ? opt_pre_key_frame.value().index : 0;
+    const auto end_frame = opt_cur_key_frame.value().index;
+
+    return this->frame_manager->progress(
+        start_frame,
+        end_frame
+    );
+}

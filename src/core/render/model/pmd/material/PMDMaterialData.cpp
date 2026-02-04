@@ -1,5 +1,4 @@
 #include "../../../CommonResource.h"
-#include "../../../constant_buffer/ConstantBufferNames.h"
 #include "../../../constant_buffer/Material.h"
 #include "../../../texrure/TextureNames.h"
 #include "../PMDFileStruct.h"

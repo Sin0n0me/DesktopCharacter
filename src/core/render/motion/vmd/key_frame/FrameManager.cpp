@@ -31,21 +31,30 @@ void FrameManager::set_frame(const KeyFrame& frame) {
 }
 
 void FrameManager::update(const DeltaTime& delta_time) {
+    // 大きく時間が飛んだ場合は時間を進めない
+    if(Timer::BASE_SECOND < delta_time) {
+        return;
+    }
+
     this->elapsed_time += delta_time;
+    const auto flame_time = this->frame_time;
+
+    // 1フレーム経過していなければ何もしない
+    if(this->elapsed_time < flame_time) {
+        return;
+    }
 
     // 経過時間のリセット
-    if(this->frame_time < this->elapsed_time) {
-        this->elapsed_time = 0;
-        this->current_frame += 1;
+    this->elapsed_time %= flame_time;
+    this->current_frame += 1;
 
-        // フレームのリセット
-        if(this->is_loop && this->max_frame < this->current_frame) {
-            this->current_frame = 0;
-        }
+    // フレームのリセット
+    if(this->is_loop && this->max_frame < this->current_frame) {
+        this->current_frame = 0;
+    }
 
-        for(auto target : this->update_list) {
-            target->on_update_key_frame();
-        }
+    for(auto target : this->update_list) {
+        target->on_update_key_frame();
     }
 }
 

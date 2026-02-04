@@ -141,9 +141,10 @@ bool EdgeRenderPass::make_shader(ID3D11Device* const device) {
 }
 
 bool EdgeRenderPass::make_buffer(ID3D11Device* const device) {
+    // TODO: GUIから変更可能に
     constexpr ModelEdge edge{
         .edge_color = {0.0f, 0.0f, 0.0f},
-        .edge_width = 0.05f,
+        .edge_width = 0.025f,
     };
 
     constexpr D3D11_BUFFER_DESC desc = {

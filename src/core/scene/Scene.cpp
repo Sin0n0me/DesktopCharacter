@@ -16,7 +16,8 @@ const Light& Scene::get_lignt(void) const {
 Scene::Scene(const std::shared_ptr<CommonResource>& resource) {
     const float eye_position = 11.0f;
     const float distance = 25.0f;
-    const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0, eye_position + 7.5f, -distance, 1.0f);
+    const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0, eye_position + 7.5f, -distance, 1.0f);
+    // const DirectX::XMVECTOR eye = DirectX::XMVectorSet(0.0, eye_position + 7.5f, -distance, 1.0f);
     const DirectX::XMVECTOR target = DirectX::XMVectorSet(0.0f, eye_position, 0.0f, 1.0f);
     const DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     Maker::make_shared(

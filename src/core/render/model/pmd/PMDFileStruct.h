@@ -100,8 +100,8 @@ struct PMDRigidBody {
     uint16_t group_target;      // 対象剛体グループマスク
     uint8_t  shape_type;        // 衝突形状( 0:球  1:箱  2:カプセル )
     float shape_size[3];        // 衝突形状の 幅 高さ 奥行( 0:球[0]  1:箱[0][1][2]  2:カプセル[0][1] )
-    float position[3];          // 位置  ( 相対座標 オフセット from Bone to RigidBody ) bone*--->*rigid  (pmx はモデル座標の数値  0------>*rigid)
-    float rotation[3];          // 回転( ラジアン )
+    float position[3];          // 位置(相対座標のオフセット)
+    float rotation[3];          // 回転(Radian)
     float mass;                 // 質量
     float linear_damping;       // 移動減
     float angular_damping;      // 回転減
@@ -115,7 +115,7 @@ struct PMDPhysicsJoint {
     uint32_t rigid_body_a;           // 接続先剛体Ａ
     uint32_t rigid_body_b;           // 接続先剛体Ｂ
     float position[3];               // 位置
-    float rotation[3];               // 回転( ラジアン )
+    float rotation[3];               // 回転(Radian)
     float constrain_position_min[3]; // 移動制限-下限
     float constrain_position_max[3]; // 移動制限-上限
     float constrain_rotation_min[3]; // 回転制限-下限

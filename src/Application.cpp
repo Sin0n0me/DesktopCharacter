@@ -8,6 +8,7 @@ int WINAPI wWinMain(
     const LPWSTR cmd_line,
     const int
 ) {
+    Logger::info(u8"起動");
     Engine engine = Engine(hinstance, cmd_line);
 
     if(!engine.init(WIDTH, HEIGHT)) {

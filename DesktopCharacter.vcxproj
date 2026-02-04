@@ -279,6 +279,7 @@
     <ClInclude Include="src\core\window\WindowStatus.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\render\model\pmd\bone\BoneNode.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgePixelShader.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgeVertexShader.cpp" />
     <ClCompile Include="src\core\render\model\pmd\material\PMDMaterialData.cpp" />

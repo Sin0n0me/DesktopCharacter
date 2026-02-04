@@ -10,4 +10,6 @@ public:
     );
 
     bool is_apply_ik(void);
+
+    float progress(void) const;
 };

@@ -10,7 +10,8 @@
 #include "../render_pass/wall/WallRenderPass.h"
 #include "RenderPipeline.h"
 
-constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+//constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 1.0f}; //アルファマスク使用時はこっち
 
 RenderPipeline::RenderPipeline(
     const std::shared_ptr<D3D11>& d3d11,

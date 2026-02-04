@@ -19,11 +19,7 @@ PMDBoneManager::PMDBoneManager(
     Maker::make_shared(this->bone_matricies, MAX_MATRIX_SIZE);
 
     for(int i = 0; i < MAX_MATRIX_SIZE; ++i) {
-        this->bone_matricies->at(i) = BoneNode{
-            .rotate = DirectX::XMQuaternionIdentity(),
-            .local = DirectX::XMMatrixIdentity(),
-            .global = DirectX::XMMatrixIdentity(),
-        };
+        this->bone_matricies->at(i) = BoneNode{};
     }
 
     const auto bone_count = bones->size;

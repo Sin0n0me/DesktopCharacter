@@ -120,31 +120,31 @@ void IKSolver::solve_ik_bone(
     auto& matrix = bone_matricies.at(bone_index);
 
     // 制限なしCCD IK
-    // 回転軸
-    const DirectX::XMVECTOR cross = DirectX::XMVector3Normalize(
-        DirectX::XMVector3Cross(target_vec, ik_vec)
-    );
-    if(DirectX::XMVector3Equal(cross, DirectX::XMVectorZero())) {
-        return;
+    {
+        // 回転軸
+        const DirectX::XMVECTOR cross = DirectX::XMVector3Normalize(
+            DirectX::XMVector3Cross(target_vec, ik_vec)
+        );
+        if(DirectX::XMVector3Equal(cross, DirectX::XMVectorZero())) {
+            return;
+        }
+
+        const DirectX::XMVECTOR quaternion = DirectX::XMQuaternionRotationNormal(
+            cross,
+            angle_radian
+        );
+
+        matrix.rotate = DirectX::XMQuaternionNormalize(
+            DirectX::XMQuaternionMultiply(
+                quaternion,
+                matrix.rotate
+            )
+        );
     }
 
-    const DirectX::XMVECTOR quaternion = DirectX::XMQuaternionRotationNormal(
-        cross,
-        angle_radian
-    );
-
-    matrix.rotate = DirectX::XMQuaternionNormalize(
-        DirectX::XMQuaternionMultiply(
-            quaternion,
-            matrix.rotate
-        )
-    );
-
+    // 制限ありCCD IK(通常のCCD IK適用後に行う)
+    // スイング・ツイスト分解によるクオータニオンを分解し制限をかける
     if(this->hinge_set.contains(bone_index)) {
-        // 制限ありCCD IK
-        // スイング・ツイスト分解によるクオータニオンを分解し
-        // 制限をかける
-
         // TODO: 任意の軸制限
         const DirectX::XMVECTOR twist_axis = DirectX::XMVector3Normalize(
             DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f) // X軸固定
@@ -256,7 +256,7 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
 
     // 制限外は円錐表面へ射影
 
-    // d を d0 に分解
+    // 分解
     const DirectX::XMVECTOR parallel = DirectX::XMVectorScale(
         twist_axis,
         cos_theta
@@ -291,7 +291,7 @@ DirectX::XMVECTOR IKSolver::quaternion_from_to(const DirectX::XMVECTOR& from, co
 
     // ほぼ反対方向
     if(dot < -0.999999f) {
-        return DirectX::XMQuaternionRotationAxis(
+        return DirectX::XMQuaternionRotationNormal(
             DirectX::XMVector3Normalize(
                 DirectX::XMVector3Orthogonal(from)
             ),
@@ -299,8 +299,8 @@ DirectX::XMVECTOR IKSolver::quaternion_from_to(const DirectX::XMVECTOR& from, co
         );
     }
 
-    const float angle = acosf(dot);
-    return DirectX::XMQuaternionRotationAxis(
+    const float angle = std::acos(dot);
+    return DirectX::XMQuaternionRotationNormal(
         DirectX::XMVector3Normalize(
             DirectX::XMVector3Cross(from, to)
         ),

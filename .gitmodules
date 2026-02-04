@@ -1,3 +1,6 @@
 [submodule "lib/bullet"]
 	path = lib/bullet
 	url = git@github.com:bulletphysics/bullet3.git
+[submodule "lib/imgui"]
+	path = lib/imgui
+	url = git@github.com:ocornut/imgui.git

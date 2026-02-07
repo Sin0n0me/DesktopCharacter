@@ -67,7 +67,7 @@ std::optional<std::u8string> to_utf8(const std::string& str, const std::uint32_t
 
     return std::u8string(
         reinterpret_cast<const char8_t*>(utf_8_buffer.get()),
-        reinterpret_cast<const char8_t*>(utf_8_buffer.get() + utf16_size - 1)
+        reinterpret_cast<const char8_t*>(utf_8_buffer.get() + utf16_size)
     );
 }
 

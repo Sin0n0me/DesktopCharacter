@@ -1,10 +1,9 @@
 #include "../render/constant_buffer/Camera.h"
-#include "../utility/Utility.h"
 #include "Collider.h"
+#include "IOBBMapGetter.h"
 #include "OBB.h"
 #include "Ray.h"
-
-#include "../render/model/ModelManager.h"
+#include <DirectXMath.h>
 
 Collider::Collider(
     const std::shared_ptr<Camera>& camera,
@@ -40,7 +39,7 @@ bool Collider::hit_model(const Ray& ray, const OBB& obb) {
     const DirectX::XMVECTOR ray_origin = DirectX::XMLoadFloat3(&ray.origin);
     const DirectX::XMVECTOR ray_dir = DirectX::XMLoadFloat3(&ray.direction);
     const DirectX::XMVECTOR obb_center = DirectX::XMLoadFloat3(&obb.center);
-    const DirectX::XMVECTOR delta = sub_float(obb_center, ray_origin);
+    const DirectX::XMVECTOR delta = DirectX::XMVectorSubtract(obb_center, ray_origin);
 
     float t_min = 0.0f;
     float t_max = FLT_MAX;

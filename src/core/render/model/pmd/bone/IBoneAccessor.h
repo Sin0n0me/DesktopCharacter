@@ -8,10 +8,6 @@
 class BoneNode;
 class IKSolver;
 
-namespace DirectX {
-    struct XMMATRIX;
-}
-
 class IBoneAccessor {
 public:
     virtual ~IBoneAccessor(void) noexcept = default;

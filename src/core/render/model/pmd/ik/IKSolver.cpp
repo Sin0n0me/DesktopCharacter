@@ -1,32 +1,23 @@
 #include "../../../../utility/Utility.h"
-#include "..//PMDFileStruct.h"
+#include "../bone/BoneNode.h"
+#include "../bone/IBoneAccessor.h"
+#include "../PMDFileStruct.h"
 #include "IKSolver.h"
 #include <algorithm>
 #include <cmath>
 #include <DirectXMath.h>
-#include <stack>
 
 constexpr float EPSILON = 1e-5f;
 
 IKSolver::IKSolver(
-    const std::shared_ptr<const PMDIKs>& iks,
-    const std::shared_ptr<const PMDBoneMap>& bone_map
-) noexcept : bone_map(bone_map) {
+    const std::shared_ptr<IBoneAccessor>& bone_accessor,
+    const std::shared_ptr<const PMDIKs>& iks
+) noexcept :
+    bone_accessor(bone_accessor),
+    ik_map(),
+    hinge_set() {
     for(const auto& ik : iks->iks) {
         this->ik_map[ik.ik_bone] = ik;
-    }
-
-    this->childern_tree.resize(this->bone_map->size());
-    for(const auto& [index, data] : *this->bone_map) {
-        if(data.parent < 0) {
-            continue;
-        }
-
-        this->childern_tree[data.parent].emplace_back(index);
-    }
-
-    for(auto& iter : this->childern_tree) {
-        std::sort(iter.begin(), iter.end(), std::greater<>());
     }
 
     // TODO: 削除
@@ -34,59 +25,43 @@ IKSolver::IKSolver(
     this->hinge_set.insert(8);
 }
 
-void IKSolver::apply_ik(
-    const BoneIndex& bone_index,
-    std::vector<BoneNode>& bone_matricies
-) const {
-    const auto& ik = this->ik_map.at(bone_index);
+void IKSolver::apply_ik(const BoneIndex& bone_index) const {
+    const auto iter = this->ik_map.find(bone_index);
+    if(iter == this->ik_map.end()) {
+        return;
+    }
+
+    const auto& ik = iter->second;
     if(ik.chain.empty()) {
         return;
     }
 
+    const auto ik_node = this->bone_accessor->get_bone_node(ik.ik_bone).get();
+    const auto target_node = this->bone_accessor->get_bone_node(ik.target_bone).get();
     for(int i = 0; i < ik.iterations; ++i) {
-        for(const auto& bone_index : ik.chain) {
-            this->solve_ik_bone(ik, bone_index, bone_matricies, i);
-        }
-    }
-}
-
-// 再帰でもよかったかもしれない
-void IKSolver::update_children_global(
-    const uint16_t& root,
-    std::vector<BoneNode>& bone_matricies
-) const {
-    // 初期ヒープサイズによっては毎回メモリ確保が起こり重くなるので修正が必要かもしれない
-    std::stack<BoneIndex> stack = std::stack<BoneIndex>();
-    stack.push(root);
-
-    while(!stack.empty()) {
-        const auto bone_index = stack.top();
-        stack.pop();
-
-        const auto parent = this->bone_map->at(bone_index).parent;
-        auto& bone_matrix = bone_matricies.at(bone_index);
-        if(parent < 0) {
-            bone_matrix.global = bone_matrix.local;
-        } else {
-            const auto& parent_global = bone_matricies.at(parent).global;
-            bone_matrix.global = bone_matrix.local * parent_global;
-        }
-
-        for(const auto& child : this->childern_tree.at(bone_index)) {
-            stack.push(child);
+        for(const auto& index : ik.chain) {
+            const auto bone_node = this->bone_accessor->get_bone_node(index).get();
+            this->solve_ik_bone(
+                bone_node,
+                ik_node,
+                target_node,
+                ik.limit,
+                this->hinge_set.contains(index)
+            );
         }
     }
 }
 
 void IKSolver::solve_ik_bone(
-    const PMDIK& ik,
-    const uint16_t& bone_index,
-    std::vector<BoneNode>& bone_matricies,
-    const int iteration
+    BoneNode* const bone_node,
+    const BoneNode* ik_bone_node,
+    const BoneNode* target_bone_node,
+    const float ik_limit,
+    const bool use_hinge
 ) const {
-    const DirectX::XMVECTOR bone_pos = bone_matricies.at(bone_index).global.r[3]; // invers用
-    const DirectX::XMVECTOR ik_pos = bone_matricies.at(ik.ik_bone).global.r[3];
-    const DirectX::XMVECTOR target_pos = bone_matricies.at(ik.target_bone).global.r[3];
+    const DirectX::XMVECTOR bone_pos = bone_node->get_global_position(); // inverse用
+    const DirectX::XMVECTOR ik_pos = ik_bone_node->get_global_position();
+    const DirectX::XMVECTOR target_pos = target_bone_node->get_global_position();
 
     const DirectX::XMVECTOR ik_vec = DirectX::XMVector3Normalize(
         DirectX::XMVectorSubtract(ik_pos, bone_pos)
@@ -111,13 +86,10 @@ void IKSolver::solve_ik_bone(
         1.0f
     );
 
-    const float angle_radian = std::min(std::acos(dot), ik.limit);
+    const float angle_radian = std::min(std::acos(dot), ik_limit);
     if(angle_radian < EPSILON) {
         return;
     }
-
-    //
-    auto& matrix = bone_matricies.at(bone_index);
 
     // 制限なしCCD IK
     {
@@ -134,37 +106,36 @@ void IKSolver::solve_ik_bone(
             angle_radian
         );
 
-        matrix.rotate = DirectX::XMQuaternionNormalize(
+        bone_node->set_rotate(
             DirectX::XMQuaternionMultiply(
                 quaternion,
-                matrix.rotate
+                bone_node->get_rotate()
             )
         );
     }
 
     // 制限ありCCD IK(通常のCCD IK適用後に行う)
     // スイング・ツイスト分解によるクオータニオンを分解し制限をかける
-    if(this->hinge_set.contains(bone_index)) {
+    if(use_hinge) {
         // TODO: 任意の軸制限
         const DirectX::XMVECTOR twist_axis = DirectX::XMVector3Normalize(
             DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f) // X軸固定
         );
 
-        //
-        matrix.rotate = IKSolver::decompose_swing_twist(
-            matrix.rotate,
-            twist_axis,
-            0,
-            ik.limit,
-            0 // スイングは禁止
+        // 回転の適用
+        bone_node->set_rotate(
+            IKSolver::decompose_swing_twist(
+                bone_node->get_rotate(),
+                twist_axis,
+                0,
+                ik_limit,
+                0 // スイングは禁止
+            )
         );
     }
 
-    const auto& rotate = DirectX::XMMatrixRotationQuaternion(matrix.rotate);
-    const auto& bind_local = this->bone_map->at(bone_index).local;
-    matrix.local = rotate * bind_local;
-
-    this->update_children_global(bone_index, bone_matricies);
+    bone_node->update_local();
+    bone_node->update_global();
 }
 
 DirectX::XMVECTOR IKSolver::decompose_swing_twist(
@@ -190,7 +161,8 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
             DirectX::XMVectorGetY(projection),
             DirectX::XMVectorGetZ(projection),
             decomp_w
-        ));
+        )
+    );
 
     // Twistの角度の取得
     const DirectX::XMVECTOR twist_vec = DirectX::XMVectorSetW(twist, 0.0f);
@@ -225,11 +197,9 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     );
 
     // 再合成
-    return DirectX::XMQuaternionNormalize(
-        DirectX::XMQuaternionMultiply(
-            IKSolver::clamp_swing_cone(swing, twist_axis, swing_max),
-            limited_twist
-        )
+    return DirectX::XMQuaternionMultiply(
+        IKSolver::clamp_swing_cone(swing, twist_axis, swing_max),
+        limited_twist
     );
 }
 

@@ -8,6 +8,7 @@ public:
         const std::shared_ptr<FrameManager>& frame_manager,
         std::vector<IKKeyFrame>&& key_frame_list
     );
+    virtual ~IKKeyFrameCursor(void) noexcept = default;
 
     bool is_apply_ik(void);
 

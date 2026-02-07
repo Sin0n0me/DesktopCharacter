@@ -1,27 +1,30 @@
 #include "../../../log/Logger.h"
-#include "../../../utility/Algorithm.h"
-#include "../../../utility/Maker.h"
+#include "../../../physics/mmd/MMDPhysics.h"
+#include "../../../physics/mmd/MMDRigidBody.h"
+#include "../../../physics/mmd/motion_state/MMDMotionState.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../motion/vmd/VMDMotion.h"
+#include "../../motion/vmd/VMDMotionManager.h"
 #include "../../shader/Shader.h"
 #include "../../shader/ShaderBindingSlots.h"
 #include "../../texrure/TextureNames.h"
+#include "bone/PMDBoneManager.h"
+#include "ik/IKSolver.h"
 #include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
 constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-PMDModel::PMDModel(const std::filesystem::path& path) : Model(path) {
-    Maker::make_shared(this->model_loader, path);
-    Maker::make_shared(this->vertices);
-}
-
-Model::Model(const std::filesystem::path& path) : path(path) {}
-
-void PMDModel::on_clicked(const short obb_index) {
+PMDModel::PMDModel(const std::filesystem::path& path) :
+    Model(path),
+    model_loader(new PMDModelLoader(path)),
+    vertices(new std::vector<PMDVertexData>()),
+    physics(new MMDPhysics()) {
 }
 
 bool PMDModel::init(ID3D11Device* const device) {
@@ -40,27 +43,38 @@ bool PMDModel::init(ID3D11Device* const device) {
     }
 
     // ボーン名の解決
-    Maker::make_shared(
-        this->bone_manager,
-        this->model_loader->get_bones(),
-        this->model_loader->get_iks()
+    this->bone_manager.reset(
+        new PMDBoneManager(
+            this->model_loader->get_bones()
+        )
     );
     if(!this->bone_manager->init(device)) {
         return false;
     }
 
+    // IK
+    this->ik_soulver.reset(
+        new IKSolver(
+            this->bone_manager,
+            this->model_loader->get_iks()
+        )
+    );
+
     // モーフ
-    Maker::make_shared(
-        this->morph_manager,
-        this->model_loader->get_morphs(),
-        this->vertices
+    this->morph_manager.reset(
+        new PMDMorphManager(
+            this->model_loader->get_morphs(),
+            this->vertices
+        )
     );
 
     // モーション
-    Maker::make_shared(
-        this->motion_manager,
-        this->bone_manager,
-        this->morph_manager
+    this->motion_manager.reset(
+        new VMDMotionManager(
+            this->bone_manager,
+            this->morph_manager,
+            this->ik_soulver
+        )
     );
     if(!this->motion_manager->init()) {
         return false;
@@ -184,6 +198,9 @@ void PMDModel::compute_obb(std::unordered_map<short, OBB>& obb_map) {
 }
 
 void PMDModel::update_obb(std::unordered_map<short, OBB>& obb_map) {
+}
+
+void PMDModel::on_clicked(const short obb_index) {
 }
 
 void PMDModel::update_motion(const DeltaTime& delta_time) {
@@ -311,18 +328,18 @@ bool PMDModel::make_material_buffer(ID3D11Device* const device) {
     }
 
     for(const std::string& file_name : this->model_loader->get_toon_textures()->file_names) {
-        const auto& path = this->path.parent_path() / file_name;
+        const auto& file_path = this->path.parent_path() / file_name;
         Texture texture = Texture{
             static_cast<uint32_t>(TextureName::Toon),
             static_cast<uint32_t>(SamplerStateName::Toon)
         };
 
-        if(!texture.load_texure(device, path)) {
+        if(!texture.load_texure(device, file_path)) {
             Logger::error(
                 Logger::make_message(
                     u8"トゥーンテクスチャを読み込めませんでした\n",
                     u8"ファイル名: ",
-                    path.u8string()
+                    file_path.u8string()
                 )
             );
         }
@@ -355,6 +372,24 @@ bool PMDModel::make_blend_state(ID3D11Device* const device) {
     );
     if(FAILED(hr)) {
         return false;
+    }
+
+    return true;
+}
+
+bool PMDModel::make_rigid_body(void) {
+    if(!this->physics->init()) {
+        return false;
+    }
+
+    for(const auto& rigid_body : this->model_loader->get_rigid_bodies()->rigid_bodies) {
+        const auto opt_rigid_body = MMDRigidBody::make(rigid_body);
+        if(!opt_rigid_body.has_value()) {
+            return false;
+        }
+        const auto& rigid_body = opt_rigid_body.value();
+
+        //this->physics->add_rigid_body(rigid_body);
     }
 
     return true;

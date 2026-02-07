@@ -8,4 +8,6 @@ public:
     virtual void compute_obb(OBBMap& obb_map) = 0;
 
     virtual void update_obb(OBBMap& obb_map) = 0;
+
+    virtual void on_clicked(const short obb_index) = 0;
 };

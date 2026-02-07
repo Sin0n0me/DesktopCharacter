@@ -1,9 +1,7 @@
 #pragma once
-#include "../pmd/bone/Bone.h"
 #include "PMDFileStruct.h"
 #include <filesystem>
 #include <memory>
-#include <vector>
 
 class BinaryReader;
 

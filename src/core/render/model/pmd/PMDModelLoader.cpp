@@ -1,23 +1,23 @@
 #include "../../../log/Logger.h"
 #include "../../../utility/BinaryReader.h"
-#include "../../../utility/Maker.h"
 #include "PMDModelLoader.h"
 #include <optional>
 
-PMDModelLoader::PMDModelLoader(const std::filesystem::path& path) noexcept : path(path) {
-    Maker::make_shared(this->vertices);
-    Maker::make_shared(this->indices);
-    Maker::make_shared(this->materials);
-    Maker::make_shared(this->bones);
-    Maker::make_shared(this->iks);
-    Maker::make_shared(this->morphs);
-    Maker::make_shared(this->display_morphs);
-    Maker::make_shared(this->bone_frame_name);
-    Maker::make_shared(this->display_bones);
-    Maker::make_shared(this->english_dictionary);
-    Maker::make_shared(this->toon_textures);
-    Maker::make_shared(this->rigid_bodies);
-    Maker::make_shared(this->physics_joints);
+PMDModelLoader::PMDModelLoader(const std::filesystem::path& path) noexcept :
+    path(path),
+    vertices(new PMDVertices),
+    indices(new PMDIndices),
+    materials(new PMDMaterials),
+    bones(new PMDBones),
+    iks(new PMDIKs),
+    morphs(new PMDMorphs),
+    display_morphs(new PMDDisplayMorphs),
+    bone_frame_name(new PMDBoneFrameNames),
+    display_bones(new PMDDisplayBones),
+    english_dictionary(new PMDEnglishDictionary),
+    toon_textures(new PMDToonTexture),
+    rigid_bodies(new PMDRigidBodies),
+    physics_joints(new PMDPhysicsJoints) {
 }
 
 // 先頭から順に

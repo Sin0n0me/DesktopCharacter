@@ -1,11 +1,5 @@
 #pragma once
-#include "collider/Collider.h"
-#include "event/mouse/MouseState.h"
-#include "render/model/ModelManager.h"
-#include "render/render_pipeline/RenderPipeline.h"
-#include "scene/Scene.h"
 #include "timer/Timer.h"
-#include "window/WindowManager.h"
 #include <memory>
 #include <optional>
 
@@ -17,6 +11,13 @@ constexpr bool IS_DEBUG_MODE = false;
 
 struct D3D11;
 struct CommonResource;
+struct MouseState;
+class RenderPipeline;
+class WindowManager;
+class ModelManager;
+class Scene;
+class Collider;
+class IMouseStateGetter;
 
 class Engine {
 private:

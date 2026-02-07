@@ -1,31 +1,21 @@
 #pragma once
 #include "../../pmd/PMDFileStruct.h"
 #include "../bone/Bone.h"
-#include "../bone/BoneNode.h"
-#include <cstdint>
+#include <DirectXMath.h>
 #include <memory>
 #include <set>
-#include <vector>
+#include <unordered_map>
+
+class BoneNode;
+class IBoneAccessor;
 
 class IKSolver {
 private:
-    const std::shared_ptr<const PMDBoneMap> bone_map;
-    std::vector<std::vector<BoneIndex>> childern_tree;
+    const std::shared_ptr<const IBoneAccessor> bone_accessor;
     std::unordered_map<BoneIndex, PMDIK> ik_map; // first: index, second: ik
     std::set<BoneIndex> hinge_set; //膝などヒンジ関節である場合
 
-    void update_children_global(
-        const uint16_t& root,
-        std::vector<BoneNode>& bone_matricies
-    ) const;
-
-    void solve_ik_bone(
-        const PMDIK& ik,
-        const uint16_t& bone_index,
-        std::vector<BoneNode>& bone_matricies,
-        const int iteration
-    ) const;
-
+protected:
     static DirectX::XMVECTOR decompose_swing_twist(
         const DirectX::XMVECTOR& q,
         const DirectX::XMVECTOR& twist_axis,
@@ -45,15 +35,21 @@ private:
         const DirectX::XMVECTOR& to
     );
 
+protected:
+    void solve_ik_bone(
+        BoneNode* const bone_node,
+        const BoneNode* ik_bone_node,
+        const BoneNode* target_bone_node,
+        const float ik_limit,
+        const bool use_hinge
+    ) const;
+
 public:
 
     explicit IKSolver(
-        const std::shared_ptr<const PMDIKs>& iks,
-        const std::shared_ptr<const PMDBoneMap>& bone_map
+        const std::shared_ptr<IBoneAccessor>& bone_accessor,
+        const std::shared_ptr<const PMDIKs>& iks
     ) noexcept;
 
-    void apply_ik(
-        const BoneIndex& bone_index,
-        std::vector<BoneNode>& bone_matricies
-    ) const;
+    void apply_ik(const BoneIndex& index) const;
 };

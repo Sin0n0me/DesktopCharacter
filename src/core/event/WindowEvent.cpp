@@ -1,4 +1,6 @@
 #include "../../Application.h"
+#include "../collider/Collider.h"
+#include "../event/mouse/MouseState.h"
 #include "../log/Logger.h"
 #include "WindowEvent.h"
 #include <windowsx.h>

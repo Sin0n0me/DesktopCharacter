@@ -1,7 +1,6 @@
 #pragma once
 #include "../../../model/pmd/bone/Bone.h"
 #include "../VMDFileStruct.h"
-#include "IKKeyFrameCursor.h"
 #include <map>
 #include <memory>
 #include <vector>
@@ -9,6 +8,7 @@
 class IKSolver;
 class FrameManager;
 class IBoneAccessor;
+class IKKeyFrameCursor;
 
 class IKKeyFrameManager {
 private:
@@ -21,6 +21,7 @@ public:
     explicit IKKeyFrameManager(
         const std::shared_ptr<IBoneAccessor>& bone_accessor,
         const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<IKSolver>& ik_solver,
         const std::vector<VMDIK>& iks
     );
 

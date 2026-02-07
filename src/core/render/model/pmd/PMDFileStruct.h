@@ -84,9 +84,9 @@ struct PMDEnglishDictionary {
     uint8_t is_support;
     char model_name[20];                            // モデル名
     char comment[256];                              // コメント
-    std::vector<std::array<char, 20>> bone_name;    //
-    std::vector<std::array<char, 20>> skin_name;    //
-    std::vector<std::array<char, 50>> display_name; //
+    std::vector<std::array<char, 20>> bone_name;    // ボーン名
+    std::vector<std::array<char, 20>> skin_name;    // スキン名
+    std::vector<std::array<char, 50>> display_name; // 表示名
 };
 
 struct PMDToonTexture {
@@ -94,7 +94,7 @@ struct PMDToonTexture {
 };
 
 struct PMDRigidBody {
-    int8_t name[20];            // 剛体の名前
+    char name[20];              // 剛体の名前
     uint16_t relate_bone_index; // 関連ボーン番号
     uint8_t group_index;        // 剛体グループ番号
     uint16_t group_target;      // 対象剛体グループマスク

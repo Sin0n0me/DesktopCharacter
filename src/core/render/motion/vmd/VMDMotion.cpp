@@ -1,7 +1,10 @@
 #include "../../../utility/BinaryReader.h"
-#include "../../../utility/Maker.h"
 #include "../../model/pmd/bone/IBoneAccessor.h"
 #include "../../model/pmd/morph/IMorphAccessor.h"
+#include "../../motion/vmd/ik_key_frame/IKKeyFrameCursor.h"
+#include "bone_key_frame/BoneKeyFrameManager.h"
+#include "ik_key_frame/IKKeyFrameManager.h"
+#include "morphkey_frame/MorphKeyFrameManager.h"
 #include "VMDLoader.h"
 #include "VMDMotion.h"
 #include <algorithm>
@@ -10,16 +13,18 @@ constexpr float VMD_FPS = 30.0f;
 
 VMDMotion::VMDMotion(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
-    const std::shared_ptr<IMorphAccessor>& morph_accessor
-) {
-    this->bone_accessor = bone_accessor;
-    this->morph_accessor = morph_accessor;
-
-    Maker::make_shared(
-        this->frame_manager,
-        VMD_FPS,
-        0xFFFFFFFF
-    );
+    const std::shared_ptr<IMorphAccessor>& morph_accessor,
+    const std::shared_ptr<IKSolver>& ik_solver
+) :
+    bone_accessor(bone_accessor),
+    morph_accessor(morph_accessor),
+    frame_manager(
+        new FrameManager(
+            VMD_FPS,
+            0xFFFFFFFF
+        )
+    ),
+    ik_solver(ik_solver) {
 }
 
 bool VMDMotion::init_motion(void) {
@@ -32,25 +37,29 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
         return false;
     }
 
-    Maker::make_unique(
-        this->bone_key_frame_manager,
-        this->bone_accessor,
-        this->frame_manager,
-        loader.get_bone_key_frames()
+    this->bone_key_frame_manager.reset(
+        new BoneKeyFrameManager(
+            this->bone_accessor,
+            this->frame_manager,
+            loader.get_bone_key_frames()
+        )
     );
 
-    Maker::make_unique(
-        this->morph_key_frame_manager,
-        this->morph_accessor,
-        this->frame_manager,
-        loader.get_morph_key_frames()
+    this->morph_key_frame_manager.reset(
+        new MorphKeyFrameManager(
+            this->morph_accessor,
+            this->frame_manager,
+            loader.get_morph_key_frames()
+        )
     );
 
-    Maker::make_unique(
-        this->ik,
-        this->bone_accessor,
-        this->frame_manager,
-        loader.get_iks()
+    this->ik.reset(
+        new IKKeyFrameManager(
+            this->bone_accessor,
+            this->frame_manager,
+            this->ik_solver,
+            loader.get_iks()
+        )
     );
 
     // 最終フレームを求める

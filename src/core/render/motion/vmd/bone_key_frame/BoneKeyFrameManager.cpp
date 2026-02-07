@@ -57,14 +57,12 @@ BoneKeyFrameManager::BoneKeyFrameManager(
 
 void BoneKeyFrameManager::update_local_matricies(void) {
     // ローカル行列作成
-    const auto& bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
     for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
-        auto& matrix = bone_matricies->at(bone_index);
-
+        const auto& bone_node = this->bone_accessor->get_bone_node(bone_index);
         const auto& opt_previous_key_frame = key_frame_cursor->get_previous_key_frame();
         const auto& opt_bone_key_frame = key_frame_cursor->get_current_key_frame();
         const auto& bone_key_frame = opt_bone_key_frame.value();
-        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
+        const auto& bind_bone = bone_node->bind_bone;
 
         // ローカル行列作成
         const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
@@ -75,34 +73,36 @@ void BoneKeyFrameManager::update_local_matricies(void) {
             key_frame_cursor->get_rotate()
         );
 
-        matrix.local = rotate * translate;
+        bone_node->set_local(rotate * translate);
     }
 }
 
 void BoneKeyFrameManager::update_global_matricies(void) {
     // グローバル行列作成
-    const auto& bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
     for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
-        auto& matrix = bone_matricies->at(bone_index);
-        const auto& bind_bone = this->bone_accessor->get_bone(bone_index);
-        const int parent_index = bind_bone.parent;
-        if(parent_index < 0) {
-            matrix.global = matrix.local;
+        const auto& bone_node = this->bone_accessor->get_bone_node(bone_index);
+        const auto& bind_bone = bone_node->bind_bone;
+        if(const auto parent = bone_node->parent.lock()) {
+            bone_node->set_global(bone_node->get_local() * parent->get_global());
         } else {
-            const auto& parent_global = bone_matricies->at(parent_index).global;
-            matrix.global = matrix.local * parent_global;
+            bone_node->set_global(bone_node->get_local());
         }
     }
 }
 
 void BoneKeyFrameManager::apply_skinning(void) {
     // スキニング用の定数バッファ結果を格納
-    const auto bone_matricies = this->bone_accessor->get_mutable_bone_nodes();
     for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
-        const auto& matrix = bone_matricies->at(bone_index);
-        const auto& inverse = this->bone_accessor->get_bone(bone_index).inverse_bind;
-        auto mutable_matrix = this->bone_accessor->get_mutable_bones();
-        mutable_matrix->bone_matrices[bone_index] = DirectX::XMMatrixTranspose(inverse * matrix.global);
+        const auto bone_node = this->bone_accessor->get_bone_node(bone_index);
+        const auto& inverse = bone_node->bind_bone.inverse;
+        bone_node->set_global(inverse * bone_node->get_global());
+
+        /*
+        const auto& mutable_matrix = this->bone_accessor->set(bone_index);
+        mutable_matrix = DirectX::XMMatrixTranspose(
+            inverse * bone_node->get_global()
+        );
+        */
     }
 }
 

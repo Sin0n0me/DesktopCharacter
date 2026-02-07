@@ -68,7 +68,7 @@ bool D3D11::make_device(void) {
     }
 
     const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
-    if(FAILED(result_device)) {
+    if(FAILED(result_dxgi_device)) {
         Logger::error(u8"DXGIデバイスの作成に失敗しました");
         return false;
     }
@@ -78,7 +78,7 @@ bool D3D11::make_device(void) {
         __uuidof(this->dcomp_device),
         reinterpret_cast<void**>(this->dcomp_device.GetAddressOf())
     );
-    if(FAILED(result_device)) {
+    if(FAILED(result_dcom_device)) {
         Logger::error(u8"DCompositionデバイスの作成に失敗しました");
         return false;
     }

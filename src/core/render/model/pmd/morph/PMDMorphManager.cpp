@@ -1,23 +1,19 @@
-#include "../../../../utility/Maker.h"
 #include "PMDMorphManager.h"
 
 PMDMorphManager::PMDMorphManager(
     const std::shared_ptr<const PMDMorphs>& morphs,
     std::shared_ptr<std::vector<PMDVertexData>> vertices
-) {
-    this->vertices = vertices;
+) :
+    vertices(vertices),
+    morphs(new std::vector<PMDMorphData>(morphs->size)) {
+    for(auto i = 0; i < morphs->size; ++i) {
+        const auto& morph = morphs->morphs.at(i);
+        this->morph_name_map[morph.name] = i;
 
-    std::vector<PMDMorphData> morph_list;
-    for(const auto& morph : morphs->morphs) {
-        this->morph_name_map[morph.name] = morph_list.size();
-
-        morph_list.emplace_back(PMDMorphData{
-            .skin_type = morph.skin_type,
-            .vertices = morph.vertices,
-            });
+        auto& data = this->morphs->at(i);
+        data.skin_type = morph.skin_type;
+        data.vertices = morph.vertices;
     }
-
-    Maker::make_shared(this->morphs, std::move(morph_list));
 }
 
 std::shared_ptr<std::vector<PMDVertexData>> PMDMorphManager::get_mutable_vertices(void) const noexcept {

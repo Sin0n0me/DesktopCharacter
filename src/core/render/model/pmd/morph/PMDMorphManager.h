@@ -10,7 +10,7 @@
 class PMDMorphManager : public IMorphAccessor {
 private:
     std::shared_ptr<std::vector<PMDVertexData>> vertices;    // 更新用
-    std::shared_ptr<const std::vector<PMDMorphData>> morphs; // 参照用
+    std::shared_ptr<std::vector<PMDMorphData>> morphs; // 参照用
     std::unordered_map<std::string, uint32_t> morph_name_map;
 
 public:

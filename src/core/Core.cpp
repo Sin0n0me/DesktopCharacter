@@ -1,40 +1,40 @@
 #include "../Application.h"
+#include "collider/Collider.h"
 #include "Core.h"
 #include "D3D11.h"
+#include "event/mouse/MouseState.h"
 #include "log/Logger.h"
 #include "render/CommonResource.h"
+#include "render/model/ModelManager.h"
 #include "render/render_pipeline/RenderPipeline.h"
-#include "utility/Maker.h"
+#include "scene/Scene.h"
+#include "window/WindowManager.h"
 
 decltype(Engine::instance) Engine::instance;
 
-Engine::Engine(const HINSTANCE& hinstance, const LPWSTR& cmd_line) noexcept {
-    Maker::make_shared(this->common_resouce);
-    Maker::make_shared(this->d3d11);
-    Maker::make_shared(
-        this->models,
-        this->common_resouce
+Engine::Engine(const HINSTANCE& hinstance, const LPWSTR& cmd_line) noexcept :
+    common_resouce(new CommonResource()),
+    d3d11(new D3D11()),
+    mouse_state(new MouseState()) {
+    this->models.reset(new ModelManager(this->common_resouce));
+    this->scene.reset(new Scene(this->common_resouce));
+    this->render_pipeline.reset(
+        new RenderPipeline(
+            this->d3d11,
+            this->common_resouce)
     );
-    Maker::make_shared(this->mouse_state);
-    Maker::make_unique(
-        this->scene,
-        this->common_resouce
+    this->collider.reset(
+        new Collider(
+            this->scene->get_camera(),
+            this->models
+        )
     );
-    Maker::make_unique(
-        this->render_pipeline,
-        this->d3d11,
-        this->common_resouce
-    );
-    Maker::make_unique(
-        this->collider,
-        this->scene->get_camera(),
-        this->models
-    );
-    Maker::make_unique(
-        this->window_manager,
-        hinstance,
-        cmd_line,
-        this->mouse_state
+    this->window_manager.reset(
+        new WindowManager(
+            hinstance,
+            cmd_line,
+            this->mouse_state
+        )
     );
 }
 

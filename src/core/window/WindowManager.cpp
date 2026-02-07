@@ -1,4 +1,6 @@
 #include "../../Application.h"
+#include "../collider/Collider.h"
+#include "../event/mouse/IMouseStateGetter.h"
 #include "../event/WindowEvent.h"
 #include "../log/Logger.h"
 #include "WindowManager.h"
@@ -201,7 +203,7 @@ bool WindowManager::make_hit_window(void) {
     );
     if(this->hit_window.hwnd == NULL) {
         Logger::error(u8"入力用ウィンドウハンドルの生成に失敗しました");
-        return -1;
+        return false;
     }
 
     if(!set_layered_window(this->hit_window, 0x01000000)) {

@@ -1,54 +1,52 @@
-#include "../../../../utility/Maker.h"
 #include "../../../constant_buffer/Bones.h"
 #include "../../../constant_buffer/ConstantBufferNames.h"
 #include "../../../shader/BindingSlotKind.h"
 #include "../../../shader/ShaderBindingSlots.h"
 #include "../../../shader/ShaderType.h"
-#include "../ik/IKSolver.h"
 #include "../PMDModelLoader.h"
+#include "BoneNode.h"
 #include "PMDBoneManager.h"
 #include <d3d11.h>
-#include <ranges>
+#include <DirectXMath.h>
+#include <map>
 
 PMDBoneManager::PMDBoneManager(
-    const std::shared_ptr<const PMDBones>& bones,
-    const std::shared_ptr<const PMDIKs>& iks
-) noexcept {
-    Maker::make_shared(this->bone_map);
-    Maker::make_shared(this->bones);
-    Maker::make_shared(this->bone_matricies, MAX_MATRIX_SIZE);
-
-    for(int i = 0; i < MAX_MATRIX_SIZE; ++i) {
-        this->bone_matricies->at(i) = BoneNode{};
-    }
-
+    const std::shared_ptr<const PMDBones>& bones
+) noexcept :
+    bones(new Bones()),
+    bone_nodes() {
     const auto bone_count = bones->size;
+    std::map<BoneIndex, BindBone> bind_bone_map;
     for(uint16_t index = 0; index < bone_count; ++index) {
-        PMDBoneData bone_data{};
-
         const auto& bone = bones->bones.at(index);
-        const auto parent_index = bone.parent_index;
-        bone_data.parent = (parent_index == 0xFFFF) ? -1 : parent_index;
-        bone_data.position = {
+        auto bind_bone = BindBone{};
+
+        bind_bone.position = {
             bone.position[0],
             bone.position[1],
             bone.position[2]
         };
 
-        if(bone_data.parent < 0) {
-            bone_data.local = DirectX::XMMatrixTranslation(
-                bone_data.position.x,
-                bone_data.position.y,
-                bone_data.position.z
+        const auto parent_index = bone.parent_index;
+        if(parent_index == 0xFFFF) {
+            bind_bone.local = DirectX::XMMatrixTranslation(
+                bind_bone.position.x,
+                bind_bone.position.y,
+                bind_bone.position.z
             );
         } else {
-            const auto& parent = this->bone_map->at(bone_data.parent);
-            bone_data.local = DirectX::XMMatrixTranslation(
-                bone_data.position.x - parent.position.x,
-                bone_data.position.y - parent.position.y,
-                bone_data.position.z - parent.position.z
+            const auto& parent = bind_bone_map.at(parent_index);
+            bind_bone.local = DirectX::XMMatrixTranslation(
+                bind_bone.position.x - parent.position.x,
+                bind_bone.position.y - parent.position.y,
+                bind_bone.position.z - parent.position.z
             );
         }
+
+        bind_bone_map.emplace(
+            index,
+            bind_bone
+        );
 
         this->bone_name_map.emplace(
             hash_u32(bone.name),
@@ -57,44 +55,43 @@ PMDBoneManager::PMDBoneManager(
                 .index = index,
             }
             );
-        this->bone_map->emplace(index, bone_data);
     }
 
-    // sort
-    const auto& keys_view = std::views::keys(*this->bone_map);
-    auto sorted_vec = std::vector<BoneIndex>(keys_view.begin(), keys_view.end());
-    std::sort(sorted_vec.begin(), sorted_vec.end());
-
-    for(auto& key : sorted_vec) {
-        auto& bone = this->bone_map->at(key);
-        if(bone.parent < 0) {
-            bone.global = bone.local;
+    this->bone_nodes.resize(bind_bone_map.size());
+    for(auto& [index, bind_bone] : bind_bone_map) {
+        const auto& bone = bones->bones.at(index);
+        const auto parent_index = bone.parent_index;
+        if(parent_index == 0xFFFF) {
+            bind_bone.global = bind_bone.local;
         } else {
-            bone.global = bone.local * this->bone_map->at(bone.parent).global;
+            const auto& parent = bind_bone_map.at(parent_index);
+            bind_bone.global = bind_bone.local * parent.global;
         }
 
         // 逆変換
-        bone.inverse_bind = DirectX::XMMatrixInverse(nullptr, bone.global);
-    }
+        bind_bone.inverse = DirectX::XMMatrixInverse(nullptr, bind_bone.global);
+        this->bones->bone_matrices[index] = DirectX::XMMatrixTranspose(
+            bind_bone.global * bind_bone.inverse
+        );
 
-    Maker::make_shared(
-        this->ik_soulver,
-        iks,
-        this->bone_map
-    );
+        // ボーンノードの作成
+        if(parent_index == 0xFFFF) {
+            auto node = BoneNode::make(bind_bone);
+            this->bone_nodes[index] = node;
+        } else {
+            const auto& parent_node = this->bone_nodes.at(parent_index);
+            auto node = BoneNode::make(bind_bone, parent_node);
+
+            this->bone_nodes[index] = node;
+        }
+
+        const auto& node = this->bone_nodes.at(index);
+        node->update_local();
+        node->update_global();
+    }
 }
 
 bool PMDBoneManager::make_constant_buffer(ID3D11Device* const device) {
-    for(const auto& [index, bone] : *this->bone_map) {
-        if(index > MAX_MATRIX_SIZE - 1) {
-            throw;
-        }
-
-        this->bones->bone_matrices[index] = DirectX::XMMatrixTranspose(
-            bone.global * bone.inverse_bind
-        );
-    }
-
     constexpr D3D11_BUFFER_DESC desc{
         .ByteWidth = sizeof(Bones),
         .Usage = D3D11_USAGE_DYNAMIC,
@@ -128,6 +125,13 @@ bool PMDBoneManager::init(ID3D11Device* const device) {
 }
 
 void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
+    const auto size = this->bone_nodes.size();
+    for(size_t i = 0; i < size; ++i) {
+        this->bones->bone_matrices[i] = DirectX::XMMatrixTranspose(
+            this->bone_nodes.at(i)->get_global()
+        );
+    }
+
     D3D11_MAPPED_SUBRESOURCE mapped;
     context->Map(this->bone_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
     memcpy(mapped.pData, this->bones.get(), sizeof(decltype(this->bones)::element_type));
@@ -149,16 +153,8 @@ void PMDBoneManager::render(
     );
 }
 
-std::shared_ptr<std::vector<BoneNode>> PMDBoneManager::get_mutable_bone_nodes(void) const {
-    return this->bone_matricies;
-}
-
-std::shared_ptr<Bones> PMDBoneManager::get_mutable_bones(void) const {
-    return this->bones;
-}
-
-std::shared_ptr<const IKSolver> PMDBoneManager::get_ik_soulver(void) const {
-    return this->ik_soulver;
+std::shared_ptr<BoneNode> PMDBoneManager::get_bone_node(const BoneIndex& index) const {
+    return this->bone_nodes.at(index);
 }
 
 std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name) const {
@@ -168,8 +164,4 @@ std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name)
     }
 
     return iter->second.index;
-}
-
-const PMDBoneData& PMDBoneManager::get_bone(const BoneIndex& index) const {
-    return this->bone_map->at(index);
 }

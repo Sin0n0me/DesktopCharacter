@@ -188,6 +188,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\timer\FrameTimer.h" />
+    <ClInclude Include="src\core\timer\DeltaTime.h" />
+    <ClInclude Include="src\core\physics\PhysicsSettings.h" />
     <ClInclude Include="src\core\render\model\pmd\bone\BindBone.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDDynamicAndBoneMergeMotionState.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDDynamicMotionState.h" />
@@ -220,7 +223,7 @@
     <ClInclude Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrameCursor.h" />
     <ClInclude Include="src\core\render\motion\vmd\key_frame\IKeyframeLifecycleListener.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\BoneKeyFrameCursor.h" />
-    <ClInclude Include="src\core\render\motion\vmd\key_frame\FrameManager.h" />
+    <ClInclude Include="src\core\render\motion\vmd\key_frame\KeyFrameTimer.h" />
     <ClInclude Include="src\core\render\motion\vmd\key_frame\KeyFrameCursor.h" />
     <ClInclude Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrame.h" />
     <ClInclude Include="src\core\render\motion\vmd\key_frame\KeyFrame.h" />
@@ -314,6 +317,8 @@
     <ClInclude Include="src\core\window\WindowStatus.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\timer\FrameTimer.cpp" />
+    <ClCompile Include="src\core\timer\DeltaTime.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDRigidBodyType.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicAndBoneMergeMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicMotionState.cpp" />
@@ -322,6 +327,7 @@
     <ClCompile Include="src\core\physics\mmd\MMDPhysics.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDJoint.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDRigidBody.cpp" />
+    <ClCompile Include="src\core\physics\Physics.cpp" />
     <ClCompile Include="src\core\render\model\pmd\bone\BoneNode.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgePixelShader.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgeVertexShader.cpp" />
@@ -338,7 +344,7 @@
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameCursor.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrameCursor.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\BoneKeyFrameCursor.cpp" />
-    <ClCompile Include="src\core\render\motion\vmd\key_frame\FrameManager.cpp" />
+    <ClCompile Include="src\core\render\motion\vmd\key_frame\KeyFrameTimer.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrame.cpp" />
     <ClCompile Include="src\core\render\model\pmd\morph\PMDMorphManager.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\morphkey_frame\MorphKeyFrameManager.cpp" />

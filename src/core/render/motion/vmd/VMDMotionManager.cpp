@@ -10,11 +10,13 @@ constexpr char8_t MOTION_WAVE_AKARI[] = u8"assets/motion/手を振る_紲星あ�
 VMDMotionManager::VMDMotionManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
     const std::shared_ptr<IMorphAccessor>& morph_accessor,
-    const std::shared_ptr<IKSolver>& ik_solver
+    const std::shared_ptr<IKSolver>& ik_solver,
+    const std::shared_ptr<MMDPhysics>& physics
 ) :
     morph_accessor(morph_accessor),
     bone_accessor(bone_accessor),
     ik_solver(ik_solver),
+    physics(physics),
     current_motion(MotionState::WaveHand) {
 }
 
@@ -24,7 +26,8 @@ bool VMDMotionManager::init(void) {
         new VMDMotion(
             this->bone_accessor,
             this->morph_accessor,
-            this->ik_solver
+            this->ik_solver,
+            this->physics
         )
     );
 

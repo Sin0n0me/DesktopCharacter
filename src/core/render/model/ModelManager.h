@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../../collider/IOBBMapGetter.h"
-#include "../../timer/Timer.h"
-#include "Model.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 struct CommonResource;
+class DeltaTime;
+class Model;
+
 using ModelLoaderFunc = std::shared_ptr<Model>(*)(const std::filesystem::path&);
 
 class ModelManager : public IOBBMapGetter {
@@ -20,7 +21,7 @@ private:
     std::shared_ptr<CommonResource> resource;
 
 public:
-    ModelManager(const std::shared_ptr<CommonResource>& common_resource);
+    explicit ModelManager(const std::shared_ptr<CommonResource>& common_resource);
 
     bool init(void);
     bool add_model(std::shared_ptr<Model> model);

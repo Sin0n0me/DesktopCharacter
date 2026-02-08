@@ -9,7 +9,7 @@
 
 BoneKeyFrameManager::BoneKeyFrameManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     const std::vector<VMDBoneKeyFrame>& key_frame_list
 ) : bone_accessor(bone_accessor) {
     // VMDで動かすボーンを収集
@@ -96,13 +96,6 @@ void BoneKeyFrameManager::apply_skinning(void) {
         const auto bone_node = this->bone_accessor->get_bone_node(bone_index);
         const auto& inverse = bone_node->bind_bone.inverse;
         bone_node->set_global(inverse * bone_node->get_global());
-
-        /*
-        const auto& mutable_matrix = this->bone_accessor->set(bone_index);
-        mutable_matrix = DirectX::XMMatrixTranspose(
-            inverse * bone_node->get_global()
-        );
-        */
     }
 }
 

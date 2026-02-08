@@ -3,7 +3,7 @@
 #include <cmath>
 
 MorphKeyFrameCursor::MorphKeyFrameCursor(
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     std::vector<MorphKeyFrame>&& key_frame_list
 ) : KeyFrameCursor<MorphKeyFrame>(
     frame_manager,

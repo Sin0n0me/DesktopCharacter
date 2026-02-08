@@ -2,7 +2,7 @@
 #include "BoneKeyFrameCursor.h"
 
 BoneKeyFrameCursor::BoneKeyFrameCursor(
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     std::vector<BoneKeyFrame>&& key_frame_list
 ) : KeyFrameCursor<BoneKeyFrame>(
     frame_manager,

@@ -1,13 +1,13 @@
 #include "../../../../log/Logger.h"
 #include "../../../../utility/Convert.h"
 #include "../../../model/pmd/morph/IMorphAccessor.h"
-#include "../key_frame/FrameManager.h"
+#include "../key_frame/KeyFrameTimer.h"
 #include "MorphKeyFrameManager.h"
 #include <unordered_map>
 
 MorphKeyFrameManager::MorphKeyFrameManager(
     const std::shared_ptr<IMorphAccessor>& morph_accessor,
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     const std::vector<VMDMorphKeyFrame>& morph_key_frames
 ) {
     this->morph_accessor = morph_accessor;

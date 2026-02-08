@@ -8,6 +8,8 @@
 #include "render/model/ModelManager.h"
 #include "render/render_pipeline/RenderPipeline.h"
 #include "scene/Scene.h"
+#include "timer/DeltaTime.h"
+#include "timer/Timer.h"
 #include "window/WindowManager.h"
 
 decltype(Engine::instance) Engine::instance;

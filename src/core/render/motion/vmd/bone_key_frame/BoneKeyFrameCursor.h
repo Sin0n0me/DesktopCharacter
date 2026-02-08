@@ -8,7 +8,7 @@ class BoneKeyFrameCursor : public KeyFrameCursor<BoneKeyFrame> {
 public:
 
     explicit BoneKeyFrameCursor(
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         std::vector<BoneKeyFrame>&& key_frame_list
     );
 

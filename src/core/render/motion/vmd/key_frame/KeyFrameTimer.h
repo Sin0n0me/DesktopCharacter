@@ -1,24 +1,23 @@
 #pragma once
-#include "../../../../timer/Timer.h"
+#include "../../../../timer/FrameTimer.h"
 #include "KeyFrame.h"
 #include <list>
+#include <memory>
 
 class IKeyframeLifecycleListener;
+class DeltaTime;
 
-class FrameManager {
+class KeyFrameTimer {
 private:
     std::list<IKeyframeLifecycleListener*> update_list;
-    DeltaTime elapsed_time;
-    DeltaTime frame_time;
-    KeyFrame current_frame;
+    std::unique_ptr<FrameTimer> frame_timer;
     KeyFrame max_frame;
-    float fps;
     bool is_loop;
     bool is_no_limit;
 
 public:
 
-    explicit FrameManager(
+    explicit KeyFrameTimer(
         const float fps,
         const KeyFrame& max_frame
     );
@@ -34,7 +33,7 @@ public:
     void update(const DeltaTime& delta_time);
 
     // 0-1
-    float progress(
+    double progress(
         const KeyFrame& start_frame,
         const KeyFrame& end_frame
     ) const;

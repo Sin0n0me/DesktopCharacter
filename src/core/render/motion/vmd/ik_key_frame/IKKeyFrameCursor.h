@@ -5,7 +5,7 @@
 class IKKeyFrameCursor : public KeyFrameCursor<IKKeyFrame> {
 public:
     explicit IKKeyFrameCursor(
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         std::vector<IKKeyFrame>&& key_frame_list
     );
     virtual ~IKKeyFrameCursor(void) noexcept = default;

@@ -7,7 +7,7 @@
 
 IKKeyFrameManager::IKKeyFrameManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     const std::shared_ptr<IKSolver>& ik_solver,
     const std::vector<VMDIK>& iks
 ) :

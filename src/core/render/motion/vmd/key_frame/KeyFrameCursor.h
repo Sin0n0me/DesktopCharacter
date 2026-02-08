@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FrameManager.h"
 #include "IKeyframeLifecycleListener.h"
+#include "KeyFrameTimer.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -11,7 +11,7 @@ template <typename T>
 class KeyFrameCursor : public IKeyframeLifecycleListener {
 protected:
     const std::vector<T> key_frame_list;
-    const std::shared_ptr<FrameManager> frame_manager;
+    const std::shared_ptr<KeyFrameTimer> frame_manager;
 
 private:
     const std::function<KeyFrame(const T&)> get_key_frame; // データが多いとvtable分余分にデータが増えるので継承の代わり
@@ -26,7 +26,7 @@ protected:
 
 public:
     explicit KeyFrameCursor(
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         const std::vector<T>& key_frame_list,
         const std::function<KeyFrame(const T&)> function
     );
@@ -52,7 +52,7 @@ inline std::vector<T> KeyFrameCursor<T>::sort(
 
 template<typename T>
 inline KeyFrameCursor<T>::KeyFrameCursor(
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     const std::vector<T>& key_frame_list,
     const std::function<KeyFrame(const T&)> function
 ) :

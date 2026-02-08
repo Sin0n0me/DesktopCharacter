@@ -15,7 +15,7 @@ class BoneKeyFrameManager {
 public:
     explicit BoneKeyFrameManager(
         const std::shared_ptr<IBoneAccessor>& bone_accessor,
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         const std::vector<VMDBoneKeyFrame>& key_frame_list
     );
 

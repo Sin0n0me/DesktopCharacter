@@ -1,6 +1,6 @@
 #pragma once
-#include "../../timer/Timer.h"
 
+class DeltaTime;
 namespace std::filesystem {
     class path;
 }

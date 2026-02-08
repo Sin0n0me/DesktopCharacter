@@ -18,7 +18,7 @@ public:
 
     explicit MorphKeyFrameManager(
         const std::shared_ptr<IMorphAccessor>& morph_accessor,
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         const std::vector<VMDMorphKeyFrame>& morph_key_frames
     );
 

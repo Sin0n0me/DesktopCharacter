@@ -1,5 +1,8 @@
+#include "../../collider/OBB.h"
 #include "../../log/Logger.h"
+#include "../../timer/DeltaTime.h"
 #include "../CommonResource.h"
+#include "Model.h"
 #include "ModelManager.h"
 #include "pmd/PMDModel.h"
 #include <filesystem>

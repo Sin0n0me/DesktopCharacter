@@ -1,5 +1,4 @@
 #pragma once
-#include "timer/Timer.h"
 #include <memory>
 #include <optional>
 
@@ -18,6 +17,7 @@ class ModelManager;
 class Scene;
 class Collider;
 class IMouseStateGetter;
+class DeltaTime;
 
 class Engine {
 private:

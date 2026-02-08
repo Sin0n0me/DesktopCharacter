@@ -1,9 +1,12 @@
-#include "../../../utility/BinaryReader.h"
+#include "../../../physics/mmd/MMDPhysics.h"
+#include "../../../timer/DeltaTime.h"
 #include "../../model/pmd/bone/IBoneAccessor.h"
+#include "../../model/pmd/ik/IKSolver.h"
 #include "../../model/pmd/morph/IMorphAccessor.h"
 #include "../../motion/vmd/ik_key_frame/IKKeyFrameCursor.h"
 #include "bone_key_frame/BoneKeyFrameManager.h"
 #include "ik_key_frame/IKKeyFrameManager.h"
+#include "key_frame/KeyFrameTimer.h"
 #include "morphkey_frame/MorphKeyFrameManager.h"
 #include "VMDLoader.h"
 #include "VMDMotion.h"
@@ -14,17 +17,19 @@ constexpr float VMD_FPS = 30.0f;
 VMDMotion::VMDMotion(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
     const std::shared_ptr<IMorphAccessor>& morph_accessor,
-    const std::shared_ptr<IKSolver>& ik_solver
+    const std::shared_ptr<IKSolver>& ik_solver,
+    const std::shared_ptr<MMDPhysics>& physics
 ) :
     bone_accessor(bone_accessor),
     morph_accessor(morph_accessor),
     frame_manager(
-        new FrameManager(
+        new KeyFrameTimer(
             VMD_FPS,
             0xFFFFFFFF
         )
     ),
-    ik_solver(ik_solver) {
+    ik_solver(ik_solver),
+    physics(physics) {
 }
 
 bool VMDMotion::init_motion(void) {
@@ -37,29 +42,23 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
         return false;
     }
 
-    this->bone_key_frame_manager.reset(
-        new BoneKeyFrameManager(
-            this->bone_accessor,
-            this->frame_manager,
-            loader.get_bone_key_frames()
-        )
+    this->bone_key_frame_manager = std::make_unique<BoneKeyFrameManager>(
+        this->bone_accessor,
+        this->frame_manager,
+        loader.get_bone_key_frames()
     );
 
-    this->morph_key_frame_manager.reset(
-        new MorphKeyFrameManager(
-            this->morph_accessor,
-            this->frame_manager,
-            loader.get_morph_key_frames()
-        )
+    this->morph_key_frame_manager = std::make_unique<MorphKeyFrameManager>(
+        this->morph_accessor,
+        this->frame_manager,
+        loader.get_morph_key_frames()
     );
 
-    this->ik.reset(
-        new IKKeyFrameManager(
-            this->bone_accessor,
-            this->frame_manager,
-            this->ik_solver,
-            loader.get_iks()
-        )
+    this->ik = std::make_unique<IKKeyFrameManager>(
+        this->bone_accessor,
+        this->frame_manager,
+        this->ik_solver,
+        loader.get_iks()
     );
 
     // 最終フレームを求める
@@ -92,4 +91,7 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
 
     // スキニング用の定数バッファ結果を格納
     this->bone_key_frame_manager->apply_skinning();
+
+    // 物理演算適用
+    this->physics->update(delta_time);
 }

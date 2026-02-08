@@ -1,7 +1,6 @@
 #include "../../../log/Logger.h"
 #include "../../../physics/mmd/MMDPhysics.h"
 #include "../../../physics/mmd/MMDRigidBody.h"
-#include "../../../physics/mmd/motion_state/MMDMotionState.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../motion/vmd/VMDMotionManager.h"
@@ -13,8 +12,6 @@
 #include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
@@ -43,44 +40,42 @@ bool PMDModel::init(ID3D11Device* const device) {
     }
 
     // ボーン名の解決
-    this->bone_manager.reset(
-        new PMDBoneManager(
-            this->model_loader->get_bones()
-        )
+    this->bone_manager = std::make_unique<PMDBoneManager>(
+        this->model_loader->get_bones()
     );
     if(!this->bone_manager->init(device)) {
         return false;
     }
 
     // IK
-    this->ik_soulver.reset(
-        new IKSolver(
-            this->bone_manager,
-            this->model_loader->get_iks()
-        )
+    this->ik_soulver = std::make_unique<IKSolver>(
+        this->bone_manager,
+        this->model_loader->get_iks()
     );
 
     // モーフ
-    this->morph_manager.reset(
-        new PMDMorphManager(
-            this->model_loader->get_morphs(),
-            this->vertices
-        )
+    this->morph_manager = std::make_unique<PMDMorphManager>(
+        this->model_loader->get_morphs(),
+        this->vertices
     );
 
     // モーション
-    this->motion_manager.reset(
-        new VMDMotionManager(
-            this->bone_manager,
-            this->morph_manager,
-            this->ik_soulver
-        )
+    this->motion_manager = std::make_unique<VMDMotionManager>(
+        this->bone_manager,
+        this->morph_manager,
+        this->ik_soulver,
+        this->physics
     );
     if(!this->motion_manager->init()) {
         return false;
     }
 
     if(!this->make_blend_state(device)) {
+        return false;
+    }
+
+    // 剛体
+    if(!this->make_rigid_body()) {
         return false;
     }
 
@@ -178,7 +173,8 @@ void PMDModel::unload_model() {
 bool PMDModel::is_loaded_model() {
     return bool(this->bone_manager)
         && bool(this->motion_manager)
-        && bool(this->morph_manager);
+        && bool(this->morph_manager)
+        && bool(this->ik_soulver);
 }
 
 // 主成分分析による最小体積のOBBを作成
@@ -383,13 +379,16 @@ bool PMDModel::make_rigid_body(void) {
     }
 
     for(const auto& rigid_body : this->model_loader->get_rigid_bodies()->rigid_bodies) {
-        const auto opt_rigid_body = MMDRigidBody::make(rigid_body);
-        if(!opt_rigid_body.has_value()) {
+        const auto node = this->bone_manager->get_bone_node(
+            rigid_body.relate_bone_index
+        );
+
+        if(!this->physics->add_rigid_body(
+            rigid_body,
+            node
+        )) {
             return false;
         }
-        const auto& rigid_body = opt_rigid_body.value();
-
-        //this->physics->add_rigid_body(rigid_body);
     }
 
     return true;

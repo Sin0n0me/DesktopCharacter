@@ -1,7 +1,7 @@
 #include "IKKeyFrameCursor.h"
 
 IKKeyFrameCursor::IKKeyFrameCursor(
-    const std::shared_ptr<FrameManager>& frame_manager,
+    const std::shared_ptr<KeyFrameTimer>& frame_manager,
     std::vector<IKKeyFrame>&& key_frame_list
 ) : KeyFrameCursor<IKKeyFrame>(
     frame_manager,

@@ -15,5 +15,5 @@ void Timer::frame_reset(void) noexcept {
 
 DeltaTime Timer::get_delta_time(void) const {
     const auto now = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(now - this->frame_start).count();
+    return DeltaTime(now - this->frame_start);
 }

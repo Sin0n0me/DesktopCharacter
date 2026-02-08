@@ -7,7 +7,7 @@ class IMorphAccessor;
 class MorphKeyFrameCursor : public KeyFrameCursor<MorphKeyFrame> {
 public:
     explicit MorphKeyFrameCursor(
-        const std::shared_ptr<FrameManager>& frame_manager,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
         std::vector<MorphKeyFrame>&& key_frame_list
     );
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "../../../../math/Angle.h"
 #include "../../pmd/PMDFileStruct.h"
 #include "../bone/Bone.h"
 #include <DirectXMath.h>
@@ -19,15 +20,15 @@ protected:
     static DirectX::XMVECTOR decompose_swing_twist(
         const DirectX::XMVECTOR& q,
         const DirectX::XMVECTOR& twist_axis,
-        const float twist_min,
-        const float twist_max,
-        const float swing_max
+        const Radian<float>& twist_min,
+        const Radian<float>& twist_max,
+        const Radian<float>& swing_max
     );
 
     static DirectX::XMVECTOR clamp_swing_cone(
         const DirectX::XMVECTOR& swing,
         const DirectX::XMVECTOR& twist_axis,
-        const float max
+        const Radian<float>& max
     );
 
     static DirectX::XMVECTOR quaternion_from_to(
@@ -40,7 +41,7 @@ protected:
         BoneNode* const bone_node,
         const BoneNode* ik_bone_node,
         const BoneNode* target_bone_node,
-        const float ik_limit,
+        const Radian<float>& ik_limit,
         const bool use_hinge
     ) const;
 

@@ -1,4 +1,4 @@
-#include "../../../../utility/Utility.h"
+#include "../../../../math/Angle.h"
 #include "../bone/BoneNode.h"
 #include "../bone/IBoneAccessor.h"
 #include "../PMDFileStruct.h"
@@ -45,7 +45,7 @@ void IKSolver::apply_ik(const BoneIndex& bone_index) const {
                 bone_node,
                 ik_node,
                 target_node,
-                ik.limit,
+                Radian(ik.limit),
                 this->hinge_set.contains(index)
             );
         }
@@ -56,7 +56,7 @@ void IKSolver::solve_ik_bone(
     BoneNode* const bone_node,
     const BoneNode* ik_bone_node,
     const BoneNode* target_bone_node,
-    const float ik_limit,
+    const Radian<float>& ik_limit,
     const bool use_hinge
 ) const {
     const DirectX::XMVECTOR bone_pos = bone_node->get_global_position(); // inverse用
@@ -86,8 +86,8 @@ void IKSolver::solve_ik_bone(
         1.0f
     );
 
-    const float angle_radian = std::min(std::acos(dot), ik_limit);
-    if(angle_radian < EPSILON) {
+    const auto angle = Radian(std::min(std::acos(dot), ik_limit.get()));
+    if(angle < Radian(EPSILON)) {
         return;
     }
 
@@ -103,7 +103,7 @@ void IKSolver::solve_ik_bone(
 
         const DirectX::XMVECTOR quaternion = DirectX::XMQuaternionRotationNormal(
             cross,
-            angle_radian
+            angle.get()
         );
 
         bone_node->set_rotate(
@@ -127,9 +127,9 @@ void IKSolver::solve_ik_bone(
             IKSolver::decompose_swing_twist(
                 bone_node->get_rotate(),
                 twist_axis,
-                0,
+                Radian(0.0f),
                 ik_limit,
-                0 // スイングは禁止
+                Radian(0.0f) // スイングは禁止
             )
         );
     }
@@ -141,9 +141,9 @@ void IKSolver::solve_ik_bone(
 DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     const DirectX::XMVECTOR& q,
     const DirectX::XMVECTOR& twist_axis,
-    const float twist_min,
-    const float twist_max,
-    const float swing_max
+    const Radian<float>& twist_min,
+    const Radian<float>& twist_max,
+    const Radian<float>& swing_max
 ) {
     const DirectX::XMVECTOR decomp_vec = DirectX::XMVectorSetW(q, 0.0f);
     const auto decomp_w = DirectX::XMVectorGetW(q);
@@ -166,16 +166,18 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
 
     // Twistの角度の取得
     const DirectX::XMVECTOR twist_vec = DirectX::XMVectorSetW(twist, 0.0f);
-    float twist_angle = 2.0f * std::atan2(
-        DirectX::XMVectorGetX(DirectX::XMVector3Length(twist_vec)),
-        DirectX::XMVectorGetW(twist)
+    auto twist_angle = Radian(
+        2.0f * std::atan2(
+            DirectX::XMVectorGetX(DirectX::XMVector3Length(twist_vec)),
+            DirectX::XMVectorGetW(twist)
+        )
     );
 
     // 符号補正(軸方向)
     if(DirectX::XMVectorGetX(DirectX::XMVector3Dot(twist_axis, twist_vec)) < 0.0f) {
         twist_angle *= -1.0;
     }
-    const float limited_angle = std::clamp(twist_angle, twist_min, twist_max);
+    twist_angle.clamp(twist_min, twist_max);
 
     // 事前にAxisが正規化済みであればXMQuaternionRotationAxisより
     // XMQuaternionRotationNormalのほうが高速
@@ -184,7 +186,7 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmquaternionrotationaxis
     const DirectX::XMVECTOR limited_twist = DirectX::XMQuaternionRotationNormal(
         twist_axis,
-        limited_angle
+        twist_angle.get()
     );
 
     // Swing 成分
@@ -206,7 +208,7 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
 DirectX::XMVECTOR IKSolver::clamp_swing_cone(
     const DirectX::XMVECTOR& swing,
     const DirectX::XMVECTOR& twist_axis,
-    const float max
+    const Radian<float>& max
 ) {
     // スイング後の軸方向
     const DirectX::XMVECTOR d = DirectX::XMVector3Rotate(
@@ -214,10 +216,12 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
         swing
     );
 
-    const float cos_theta = DirectX::XMVectorGetX(
-        DirectX::XMVector3Dot(twist_axis, d)
+    const auto cos_theta = Radian(
+        DirectX::XMVectorGetX(
+            DirectX::XMVector3Dot(twist_axis, d)
+        )
     );
-    const float cos_theta_max = cosf(max);
+    const auto cos_theta_max = max.cos();
 
     // 制限内ならそのまま返す
     if(cos_theta_max <= cos_theta) {
@@ -229,7 +233,7 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
     // 分解
     const DirectX::XMVECTOR parallel = DirectX::XMVectorScale(
         twist_axis,
-        cos_theta
+        cos_theta.get()
     );
 
     const DirectX::XMVECTOR perpendicular = DirectX::XMVectorSubtract(d, parallel);
@@ -242,8 +246,8 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
     // 最大角で再構成
     const DirectX::XMVECTOR clamped = DirectX::XMVector3Normalize(
         DirectX::XMVectorAdd(
-            DirectX::XMVectorScale(twist_axis, cos_theta_max),
-            DirectX::XMVectorScale(v, std::sin(max))
+            DirectX::XMVectorScale(twist_axis, cos_theta_max.get()),
+            DirectX::XMVectorScale(v, max.sin().get())
         )
     );
 
@@ -269,11 +273,10 @@ DirectX::XMVECTOR IKSolver::quaternion_from_to(const DirectX::XMVECTOR& from, co
         );
     }
 
-    const float angle = std::acos(dot);
     return DirectX::XMQuaternionRotationNormal(
         DirectX::XMVector3Normalize(
             DirectX::XMVector3Cross(from, to)
         ),
-        angle
+        std::acos(dot)
     );
 }

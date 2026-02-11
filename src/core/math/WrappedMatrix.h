@@ -1,4 +1,5 @@
 #pragma once
+#include "Angle.h"
 #include <concepts>
 #include <tuple>
 #include <type_traits>
@@ -59,6 +60,19 @@ private:
 public:
     constexpr WrappedMatrix(void) noexcept : matrix() {}
     constexpr explicit WrappedMatrix(const Matrix4x4& matrix) noexcept : matrix(matrix) {}
+    constexpr explicit WrappedMatrix(
+        const float& m11, const float& m12, const float& m13, const float& m14,
+        const float& m21, const float& m22, const float& m23, const float& m24,
+        const float& m31, const float& m32, const float& m33, const float& m34,
+        const float& m41, const float& m42, const float& m43, const float& m44
+    ) noexcept :
+        matrix(
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44
+        ) {
+    }
 
     template <bool InputHand, bool InputMajor>
     constexpr explicit WrappedMatrix(const WrappedMatrix<InputHand, InputMajor>& matrix) :
@@ -71,7 +85,7 @@ public:
      * @brief wrapされた行列を取得する
      * @return unwrapした行列の参照
      */
-    constexpr const Matrix4x4& get(void) const {
+    [[nodiscard]] constexpr const Matrix4x4& get(void) const {
         return this->matrix;
     }
 
@@ -79,7 +93,7 @@ public:
      * @brief 行列内の平行移動成分を取得する
      * @return 行列内の平行移動成分
      */
-    constexpr const Vector4& get_translation(void) const {
+    [[nodiscard]] constexpr const Vector4& get_translation(void) const {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -88,6 +102,77 @@ public:
             return this->matrix.r[3];
         } else {
             return this->transpose().matrix.r[3];
+        }
+#endif // USE_GLM
+    }
+
+    void set_translation(
+        const float x,
+        const float y,
+        const float z
+    ) {
+        this->set_translation(x, y, z, 1.0f);
+    }
+
+    void set_translation(
+        const float x,
+        const float y,
+        const float z,
+        const float w
+    ) {
+#ifdef USE_GLM
+        // TODO:
+        static_assert(false);
+#else
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            this->matrix.r[3] = DirectX::XMVectorSet(
+                x, y, z, w
+            );
+        } else {
+            this->matrix.r[0] = DirectX::XMVectorSetW(
+                this->matrix.r[0],
+                x
+            );
+            this->matrix.r[1] = DirectX::XMVectorSetW(
+                this->matrix.r[1],
+                y
+            );
+            this->matrix.r[2] = DirectX::XMVectorSetW(
+                this->matrix.r[2],
+                z
+            );
+            this->matrix.r[3] = DirectX::XMVectorSetW(
+                this->matrix.r[2],
+                w
+            );
+        }
+#endif // USE_GLM
+    }
+
+    void set_translation(const Vector4& vec4) {
+#ifdef USE_GLM
+        // TODO:
+        static_assert(false);
+#else
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            this->matrix.r[3] = vec4;
+        } else {
+            this->matrix.r[0] = DirectX::XMVectorSetW(
+                this->matrix.r[0],
+                DirectX::XMVectorGetX(vec4)
+            );
+            this->matrix.r[1] = DirectX::XMVectorSetW(
+                this->matrix.r[1],
+                DirectX::XMVectorGetY(vec4)
+            );
+            this->matrix.r[2] = DirectX::XMVectorSetW(
+                this->matrix.r[2],
+                DirectX::XMVectorGetZ(vec4)
+            );
+            this->matrix.r[3] = DirectX::XMVectorSetW(
+                this->matrix.r[2],
+                DirectX::XMVectorGetW(vec4)
+            );
         }
 #endif // USE_GLM
     }
@@ -101,7 +186,7 @@ public:
      * @param z z成分
      * @return 引数に指定された成分を含む行列
      */
-    static constexpr WrappedMatrix make_translation(
+    [[nodiscard]] static constexpr WrappedMatrix make_translation(
         const float x,
         const float y,
         const float z
@@ -126,11 +211,76 @@ public:
 #endif // USE_GLM
     }
 
-    // TODO:
-    static constexpr WrappedMatrix make_ratate() {
+    /**
+     * @brief 平行移動成分だけの行列を作成する
+     * @param vec 平行移動成分となるベクトル
+     * @return 引数に指定された成分を含む行列
+     */
+    [[nodiscard]] static constexpr WrappedMatrix make_translation_from_vector(
+        const Vector4& vec
+    ) {
+#ifdef USE_GLM
+        // TODO:
+        static_assert(false);
+#else
+        const Matrix4x4 translate = DirectX::XMMatrixTranslationFromVector(
+            vec
+        );
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            return WrappedMatrix(translate);
+        } else {
+            return WrappedMatrix(
+                DirectX::XMMatrixTranspose(translate)
+            );
+        }
+
+#endif // USE_GLM
     }
 
-    static constexpr WrappedMatrix make_scale(
+    // TODO:
+    [[nodiscard]] static constexpr WrappedMatrix make_rotate_from_axis_angle(
+        const Vector4& axis,
+        const Radian<float>& angle
+    ) {
+#ifdef USE_GLM
+        // TODO:
+        static_assert(false);
+#else
+        const auto& rotate = DirectX::XMMatrixRotationAxis(
+            axis,
+            angle.get()
+        );
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            return WrappedMatrix(rotate);
+        } else {
+            return WrappedMatrix(
+                DirectX::XMMatrixTranspose(rotate)
+            );
+        }
+
+#endif // USE_GLM
+    }
+
+    [[nodiscard]] static constexpr WrappedMatrix make_rotation_from_quaternion(const Vector4& quaternion) {
+#ifdef USE_GLM
+        // TODO:
+        static_assert(false);
+#else
+        const Matrix4x4 rotate = DirectX::XMMatrixRotationQuaternion(
+            quaternion
+        );
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            return WrappedMatrix(rotate);
+        } else {
+            return WrappedMatrix(
+                DirectX::XMMatrixTranspose(rotate)
+            );
+        }
+
+#endif // USE_GLM
+    }
+
+    [[nodiscard]] static constexpr WrappedMatrix make_scaling(
         const float x,
         const float y,
         const float z
@@ -167,7 +317,9 @@ public:
     }
 
 public:
-    constexpr Vector4 operator[](const unsigned int index) const {
+    // 悩み中なのでいったんコメントアウト
+    /*
+    constexpr Vector4& operator[](const unsigned int index) const {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -175,12 +327,12 @@ public:
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
             return this->matrix.r[index];
         } else {
-            // TODO: 転置せずに直接取得
             return this->transpose().matrix.r[index];
         }
 
 #endif // USE_GLM
     }
+     */
 
     template <bool CastHand, bool CastMajor>
     constexpr explicit operator WrappedMatrix<
@@ -203,7 +355,7 @@ public:
      * @return 任意の座標系と優先に変換されたラップされた行列
      */
     template <bool CastHand, bool CastMajor>
-    static constexpr WrappedMatrix<CastHand, CastMajor> cast(const WrappedMatrix& matrix) {
+    [[nodiscard]] static constexpr WrappedMatrix<CastHand, CastMajor> cast(const WrappedMatrix& matrix) {
         using Output = WrappedMatrix<CastHand, CastMajor>;
         constexpr bool is_same_hand = Output::IS_LEFT_HAND == WrappedMatrix::IS_LEFT_HAND;
         constexpr bool is_same_major = Output::IS_ROW_MAJOR == WrappedMatrix::IS_ROW_MAJOR;
@@ -230,7 +382,7 @@ public:
      * @return 任意の座標系と優先に変換されたラップされた行列
      */
     template <IsWrappedMatrix T>
-    static constexpr WrappedMatrix<
+    [[nodiscard]] static constexpr WrappedMatrix<
         T::IS_LEFT_HAND,
         T::IS_ROW_MAJOR
     > cast(const WrappedMatrix& matrix) {
@@ -244,7 +396,7 @@ public:
      * @return 任意の座標系と優先に変換されたラップされた行列
      */
     template <IsWrappedMatrix T>
-    constexpr WrappedMatrix<
+    [[nodiscard]] constexpr WrappedMatrix<
         T::IS_LEFT_HAND,
         T::IS_ROW_MAJOR
     > to(void) const {
@@ -255,21 +407,21 @@ public:
     }
 
 public:
-    constexpr WrappedMatrix::WrappedDirectXMatrix to_directx(void) const {
+    [[nodiscard]] constexpr WrappedMatrix::WrappedDirectXMatrix to_directx(void) const {
         return this->to<WrappedMatrix::WrappedDirectXMatrix>();
     }
-    constexpr WrappedMatrix::WrappedOpenGLMatrix to_opengl(void) const {
+    [[nodiscard]] constexpr WrappedMatrix::WrappedOpenGLMatrix to_opengl(void) const {
         return this->to<WrappedMatrix::WrappedOpenGLMatrix>();
     }
-    constexpr WrappedMatrix::WrappedBulletMatrix to_bullet(void) const {
+    [[nodiscard]] constexpr WrappedMatrix::WrappedBulletMatrix to_bullet(void) const {
         return this->to<WrappedMatrix::WrappedBulletMatrix>();
     }
-    constexpr WrappedMatrix::WrappedMMDMatrix to_mmd(void) const {
+    [[nodiscard]] constexpr WrappedMatrix::WrappedMMDMatrix to_mmd(void) const {
         return this->to<WrappedMatrix::WrappedMMDMatrix>();
     }
 
 public:
-    constexpr WrappedMatrix<!IsLeftHand, IsRowMajor> inverse_z(void) const {
+    [[nodiscard]] constexpr WrappedMatrix<!IsLeftHand, IsRowMajor> inverse_z(void) const {
         using Output = WrappedMatrix<!IsLeftHand, IsRowMajor>;
 
 #ifdef USE_GLM
@@ -296,7 +448,7 @@ public:
 #endif // USE_GLM
     }
 
-    constexpr WrappedMatrix<IsLeftHand, !IsRowMajor> transpose(void) const {
+    [[nodiscard]] constexpr WrappedMatrix<IsLeftHand, !IsRowMajor> transpose(void) const {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -307,7 +459,7 @@ public:
 #endif // USE_GLM
     }
 
-    constexpr WrappedMatrix inverse(void) const {
+    [[nodiscard]] constexpr WrappedMatrix inverse(void) const {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -320,7 +472,7 @@ public:
 
 public:
 
-    static constexpr WrappedMatrix make_zero_matrix(void) {
+    [[nodiscard]] static constexpr WrappedMatrix make_zero_matrix(void) {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -329,7 +481,7 @@ public:
 #endif // USE_GLM
     }
 
-    static constexpr WrappedMatrix make_identity_matrix(void) {
+    [[nodiscard]] static constexpr WrappedMatrix make_identity_matrix(void) {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -338,7 +490,7 @@ public:
 #endif // USE_GLM
     }
 
-    static constexpr WrappedMatrix make_camera_matrix(
+    [[nodiscard]] static constexpr WrappedMatrix make_camera_matrix(
         const WrappedMatrix& model,
         const WrappedMatrix& view,
         const WrappedMatrix& projection
@@ -354,7 +506,7 @@ public:
         }
     }
 
-    static constexpr WrappedMatrix make_transform_matrix(
+    [[nodiscard]] static constexpr WrappedMatrix make_transform_matrix(
         const WrappedMatrix& translate,
         const WrappedMatrix& rotate,
         const WrappedMatrix& scale
@@ -383,7 +535,7 @@ public:
      */
     template <IsWrappedMatrix T, IsWrappedMatrix... Args>
         requires (std::same_as<T, Args> && ...)
-    static constexpr WrappedMatrix multiply(
+    [[nodiscard]] static constexpr WrappedMatrix multiply(
         const T& base,
         const Args&... args
     ) {

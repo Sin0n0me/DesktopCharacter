@@ -4,4 +4,5 @@ struct VSInput {
     float2 uv : TEXCOORD;
     uint bones : BONEINDICES;
     float2 weights : BONEWEIGHTS;
+    float edge_flag : EDGE_FLAG;
 };

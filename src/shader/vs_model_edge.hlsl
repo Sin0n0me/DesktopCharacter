@@ -17,6 +17,7 @@ PSInput main(const VSInput input) {
     const float4 clip_pos = mul(view_pos, proj);
     
     output.position = clip_pos;
+    output.edge_flag = input.edge_flag;
  
     return output;
 }

@@ -7,4 +7,5 @@ struct PMDVertexData {
     float uv[2];
     uint16_t bone_index[2];	// ボーン番号(GPU上では32bitのuint扱い)
     float bone_weight[2]; // 0-1
+    float edge_flag; // 0-1
 };

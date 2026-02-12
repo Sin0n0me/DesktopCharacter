@@ -111,6 +111,7 @@ std::optional<Microsoft::WRL::ComPtr<ID3D11Buffer>> PMDMaterialData::make_buffer
         .shininess = material.shininess,
         .sphere_mul = textures.sphere_mode == SphereMode::Multiply ? 1.0f : 0.0f,
         .sphere_add = textures.sphere_mode == SphereMode::Add ? 1.0f : 0.0f,
+        .edge_flag = material.edge_flag == 1 ? 1.0f : 0.0f,
     };
     memcpy(mat.diffuse, material.diffuse, sizeof(material.diffuse));
     memcpy(mat.ambient, material.ambient, sizeof(material.ambient));

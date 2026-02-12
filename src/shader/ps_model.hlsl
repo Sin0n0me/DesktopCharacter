@@ -38,7 +38,7 @@ float4 main(const PSInput input) : SV_TARGET {
     // 光の適用
     // TODO: 光源位置や色を定数バッファで指定できるように
     const float3 light_direction = normalize(
-        float3(20.0f, 20.0f, -30.0f)
+        float3(0.0f, 0.0f, -10.0f)
     ); 
     const float3 light_color = float3(1.0, 1.0, 1.0);
     const float4 lighting_color = apply_lighting(

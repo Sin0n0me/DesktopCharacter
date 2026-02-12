@@ -5,6 +5,7 @@ cbuffer Material {
     float3 ambient;
     float sphere_mul; // ifによる分岐を減らすため ０-1 で計算
     float sphere_add;
+    float edge_flag; // 0-1
 };
 
 float4 apply_lighting(

@@ -271,6 +271,10 @@ bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
             bone_weight,
             sizeof(decltype(dst_vertex.bone_weight))
         );
+
+        // 輪郭エッジフラグ(0-1)
+        // 値が0の場合有効
+        dst_vertex.edge_flag = src_vertex.edge_flag == 0 ? 1.0f : 0.0f;
     }
 
     const D3D11_BUFFER_DESC desc{

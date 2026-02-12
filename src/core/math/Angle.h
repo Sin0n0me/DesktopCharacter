@@ -56,14 +56,14 @@ public:
 
     constexpr T to_radian_value(void) const {
         if constexpr(Angle::ANGLE_KIND == AngleKind::Degree) {
-            return this->angle * Angle::PI / static_cast<T>(180.0);
+            return this->angle * (Angle::PI / static_cast<T>(180.0));
         } else {
             return this->angle;
         }
     }
     constexpr T to_degree_value(void) const {
         if constexpr(Angle::ANGLE_KIND == AngleKind::Radian) {
-            return this->angle * static_cast<T>(180.0) / Angle::PI;
+            return this->angle * (static_cast<T>(180.0) / Angle::PI);
         } else {
             return this->angle;
         }

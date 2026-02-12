@@ -3,16 +3,16 @@
 BoneNode::BoneNode(const BindBone& bind_bone) :
     bind_bone(bind_bone),
     rotate(DirectX::XMQuaternionIdentity()),
-    local(DirectX::XMMatrixIdentity()),
-    global(DirectX::XMMatrixIdentity()) {
+    local(MMDMatrix::make_identity_matrix()),
+    global(MMDMatrix::make_identity_matrix()) {
 }
 
 BoneNode::BoneNode(const BindBone& bind_bone, const std::shared_ptr<BoneNode>& parent_node) :
     bind_bone(bind_bone),
     parent(parent_node),
     rotate(DirectX::XMQuaternionIdentity()),
-    local(DirectX::XMMatrixIdentity()),
-    global(DirectX::XMMatrixIdentity()) {
+    local(MMDMatrix::make_identity_matrix()),
+    global(MMDMatrix::make_identity_matrix()) {
 }
 
 std::shared_ptr<BoneNode> BoneNode::make(const BindBone& bind_bone) {
@@ -34,7 +34,9 @@ void BoneNode::reset(void) {
 }
 
 void BoneNode::update_local(void) {
-    const auto& rotate_matrix = DirectX::XMMatrixRotationQuaternion(this->rotate);
+    const auto& rotate_matrix = MMDMatrix::make_rotation_from_quaternion(
+        this->rotate
+    );
     this->local = rotate_matrix * this->bind_bone.local;
 }
 
@@ -65,11 +67,11 @@ void BoneNode::set_rotate(const DirectX::XMVECTOR& rotate) noexcept {
     this->rotate = DirectX::XMQuaternionNormalize(rotate);
 }
 
-void BoneNode::set_local(const DirectX::XMMATRIX& local_matrix) noexcept {
+void BoneNode::set_local(const MMDMatrix& local_matrix) noexcept {
     this->local = local_matrix;
 }
 
-void BoneNode::set_global(const DirectX::XMMATRIX& global_matrix) noexcept {
+void BoneNode::set_global(const MMDMatrix& global_matrix) noexcept {
     this->global = global_matrix;
 }
 
@@ -77,14 +79,14 @@ const DirectX::XMVECTOR& BoneNode::get_rotate(void) const noexcept {
     return this->rotate;
 }
 
-const DirectX::XMMATRIX& BoneNode::get_local(void) const noexcept {
+const MMDMatrix& BoneNode::get_local(void) const noexcept {
     return this->local;
 }
 
-const DirectX::XMMATRIX& BoneNode::get_global(void) const noexcept {
+const MMDMatrix& BoneNode::get_global(void) const noexcept {
     return this->global;
 }
 
 const DirectX::XMVECTOR& BoneNode::get_global_position(void) const noexcept {
-    return this->global.r[3];
+    return this->global.get_translation();
 }

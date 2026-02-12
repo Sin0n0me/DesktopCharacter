@@ -1,6 +1,6 @@
 #include "../../../log/Logger.h"
 #include "../../../physics/mmd/MMDPhysics.h"
-#include "../../../physics/mmd/MMDRigidBody.h"
+#include "../../../physics/mmd/rigid_body/MMDRigidBody.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../motion/vmd/VMDMotionManager.h"
@@ -74,8 +74,17 @@ bool PMDModel::init(ID3D11Device* const device) {
         return false;
     }
 
+    // 物理エンジンの初期化
+    if(!this->physics->init()) {
+        return false;
+    }
+
     // 剛体
     if(!this->make_rigid_body()) {
+        return false;
+    }
+
+    if(!this->make_joint()) {
         return false;
     }
 
@@ -374,7 +383,7 @@ bool PMDModel::make_blend_state(ID3D11Device* const device) {
 }
 
 bool PMDModel::make_rigid_body(void) {
-    if(!this->physics->init()) {
+    if(!this->physics->is_initialized()) {
         return false;
     }
 
@@ -387,6 +396,20 @@ bool PMDModel::make_rigid_body(void) {
             rigid_body,
             node
         )) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool PMDModel::make_joint(void) {
+    if(!this->physics->is_initialized()) {
+        return false;
+    }
+
+    for(const auto& joint : this->model_loader->get_physics_joints()->physics_joints) {
+        if(!this->physics->add_joint(joint)) {
             return false;
         }
     }

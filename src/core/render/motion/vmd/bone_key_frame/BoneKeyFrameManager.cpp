@@ -1,5 +1,4 @@
 #include "../../../../log/Logger.h"
-#include "../../../../utility/Algorithm.h"
 #include "../../../../utility/Convert.h"
 #include "../../../constant_buffer/Bones.h"
 #include "../../../model/pmd/bone/BoneNode.h"
@@ -65,15 +64,19 @@ void BoneKeyFrameManager::update_local_matricies(void) {
         const auto& bind_bone = bone_node->bind_bone;
 
         // ローカル行列作成
-        const auto anim_translate = DirectX::XMMatrixTranslationFromVector(
+        const auto anim_translate = MMDMatrix::make_translation_from_vector(
             key_frame_cursor->get_translate()
         );
-        const DirectX::XMMATRIX translate = bind_bone.local * anim_translate;
-        const DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationQuaternion(
+        const auto translate = bind_bone.local * anim_translate;
+        const auto rotate = MMDMatrix::make_rotation_from_quaternion(
             key_frame_cursor->get_rotate()
         );
 
-        bone_node->set_local(rotate * translate);
+        bone_node->set_local(MMDMatrix::make_transform_matrix(
+            translate,
+            rotate,
+            MMDMatrix::make_identity_matrix() // MMDにスケールはない
+        ));
     }
 }
 

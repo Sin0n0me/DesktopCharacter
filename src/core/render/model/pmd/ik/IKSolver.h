@@ -1,8 +1,8 @@
 #pragma once
 #include "../../../../math/Angle.h"
+#include "../../../../math/WrappedMatrix.h"
 #include "../../pmd/PMDFileStruct.h"
 #include "../bone/Bone.h"
-#include <DirectXMath.h>
 #include <memory>
 #include <set>
 #include <unordered_map>
@@ -17,23 +17,23 @@ private:
     std::set<BoneIndex> hinge_set; //膝などヒンジ関節である場合
 
 protected:
-    static DirectX::XMVECTOR decompose_swing_twist(
-        const DirectX::XMVECTOR& q,
-        const DirectX::XMVECTOR& twist_axis,
+    static Vector4 decompose_swing_twist(
+        const Vector4& q,
+        const Vector4& twist_axis,
         const Radian<float>& twist_min,
         const Radian<float>& twist_max,
         const Radian<float>& swing_max
     );
 
-    static DirectX::XMVECTOR clamp_swing_cone(
-        const DirectX::XMVECTOR& swing,
-        const DirectX::XMVECTOR& twist_axis,
+    static Vector4 clamp_swing_cone(
+        const Vector4& swing,
+        const Vector4& twist_axis,
         const Radian<float>& max
     );
 
-    static DirectX::XMVECTOR quaternion_from_to(
-        const DirectX::XMVECTOR& from,
-        const DirectX::XMVECTOR& to
+    static Vector4 quaternion_from_to(
+        const Vector4& from,
+        const Vector4& to
     );
 
 protected:

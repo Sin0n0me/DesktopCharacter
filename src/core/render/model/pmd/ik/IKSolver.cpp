@@ -59,14 +59,14 @@ void IKSolver::solve_ik_bone(
     const Radian<float>& ik_limit,
     const bool use_hinge
 ) const {
-    const DirectX::XMVECTOR bone_pos = bone_node->get_global_position(); // inverse用
-    const DirectX::XMVECTOR ik_pos = ik_bone_node->get_global_position();
-    const DirectX::XMVECTOR target_pos = target_bone_node->get_global_position();
+    const Vector4 bone_pos = bone_node->get_global_position(); // inverse用
+    const Vector4 ik_pos = ik_bone_node->get_global_position();
+    const Vector4 target_pos = target_bone_node->get_global_position();
 
-    const DirectX::XMVECTOR ik_vec = DirectX::XMVector3Normalize(
+    const Vector4 ik_vec = DirectX::XMVector3Normalize(
         DirectX::XMVectorSubtract(ik_pos, bone_pos)
     );
-    const DirectX::XMVECTOR target_vec = DirectX::XMVector3Normalize(
+    const Vector4 target_vec = DirectX::XMVector3Normalize(
         DirectX::XMVectorSubtract(target_pos, bone_pos)
     );
     const float dist = DirectX::XMVectorGetX(
@@ -94,14 +94,14 @@ void IKSolver::solve_ik_bone(
     // 制限なしCCD IK
     {
         // 回転軸
-        const DirectX::XMVECTOR cross = DirectX::XMVector3Normalize(
+        const Vector4 cross = DirectX::XMVector3Normalize(
             DirectX::XMVector3Cross(target_vec, ik_vec)
         );
         if(DirectX::XMVector3Equal(cross, DirectX::XMVectorZero())) {
             return;
         }
 
-        const DirectX::XMVECTOR quaternion = DirectX::XMQuaternionRotationNormal(
+        const Vector4 quaternion = DirectX::XMQuaternionRotationNormal(
             cross,
             angle.get()
         );
@@ -118,7 +118,7 @@ void IKSolver::solve_ik_bone(
     // スイング・ツイスト分解によるクオータニオンを分解し制限をかける
     if(use_hinge) {
         // TODO: 任意の軸制限
-        const DirectX::XMVECTOR twist_axis = DirectX::XMVector3Normalize(
+        const Vector4 twist_axis = DirectX::XMVector3Normalize(
             DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f) // X軸固定
         );
 
@@ -138,24 +138,24 @@ void IKSolver::solve_ik_bone(
     bone_node->update_global();
 }
 
-DirectX::XMVECTOR IKSolver::decompose_swing_twist(
-    const DirectX::XMVECTOR& q,
-    const DirectX::XMVECTOR& twist_axis,
+Vector4 IKSolver::decompose_swing_twist(
+    const Vector4& q,
+    const Vector4& twist_axis,
     const Radian<float>& twist_min,
     const Radian<float>& twist_max,
     const Radian<float>& swing_max
 ) {
-    const DirectX::XMVECTOR decomp_vec = DirectX::XMVectorSetW(q, 0.0f);
+    const Vector4 decomp_vec = DirectX::XMVectorSetW(q, 0.0f);
     const auto decomp_w = DirectX::XMVectorGetW(q);
 
     // 射影によるTwistの抽出
-    const DirectX::XMVECTOR projection = DirectX::XMVectorScale(
+    const Vector4 projection = DirectX::XMVectorScale(
         twist_axis,
         DirectX::XMVectorGetX(
             DirectX::XMVector3Dot(decomp_vec, twist_axis)
         )
     );
-    const DirectX::XMVECTOR twist = DirectX::XMQuaternionNormalize(
+    const Vector4 twist = DirectX::XMQuaternionNormalize(
         DirectX::XMVectorSet(
             DirectX::XMVectorGetX(projection),
             DirectX::XMVectorGetY(projection),
@@ -165,7 +165,7 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     );
 
     // Twistの角度の取得
-    const DirectX::XMVECTOR twist_vec = DirectX::XMVectorSetW(twist, 0.0f);
+    const Vector4 twist_vec = DirectX::XMVectorSetW(twist, 0.0f);
     auto twist_angle = Radian(
         2.0f * std::atan2(
             DirectX::XMVectorGetX(DirectX::XMVector3Length(twist_vec)),
@@ -184,14 +184,14 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     //
     // > If Axis is a normalized vector, it is faster to use XMQuaternionRotationNormal
     // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmquaternionrotationaxis
-    const DirectX::XMVECTOR limited_twist = DirectX::XMQuaternionRotationNormal(
+    const Vector4 limited_twist = DirectX::XMQuaternionRotationNormal(
         twist_axis,
         twist_angle.get()
     );
 
     // Swing 成分
-    const DirectX::XMVECTOR twist_inverse = DirectX::XMQuaternionInverse(twist);
-    const DirectX::XMVECTOR swing = DirectX::XMQuaternionNormalize(
+    const Vector4 twist_inverse = DirectX::XMQuaternionInverse(twist);
+    const Vector4 swing = DirectX::XMQuaternionNormalize(
         DirectX::XMQuaternionMultiply(
             q,
             twist_inverse
@@ -205,13 +205,13 @@ DirectX::XMVECTOR IKSolver::decompose_swing_twist(
     );
 }
 
-DirectX::XMVECTOR IKSolver::clamp_swing_cone(
-    const DirectX::XMVECTOR& swing,
-    const DirectX::XMVECTOR& twist_axis,
+Vector4 IKSolver::clamp_swing_cone(
+    const Vector4& swing,
+    const Vector4& twist_axis,
     const Radian<float>& max
 ) {
     // スイング後の軸方向
-    const DirectX::XMVECTOR d = DirectX::XMVector3Rotate(
+    const Vector4 d = DirectX::XMVector3Rotate(
         twist_axis,
         swing
     );
@@ -231,20 +231,20 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
     // 制限外は円錐表面へ射影
 
     // 分解
-    const DirectX::XMVECTOR parallel = DirectX::XMVectorScale(
+    const Vector4 parallel = DirectX::XMVectorScale(
         twist_axis,
         cos_theta.get()
     );
 
-    const DirectX::XMVECTOR perpendicular = DirectX::XMVectorSubtract(d, parallel);
+    const Vector4 perpendicular = DirectX::XMVectorSubtract(d, parallel);
     if(DirectX::XMVector3LengthSq(perpendicular).m128_f32[0] < EPSILON) {
         return DirectX::XMQuaternionIdentity();
     }
 
-    const DirectX::XMVECTOR v = DirectX::XMVector3Normalize(perpendicular);
+    const Vector4 v = DirectX::XMVector3Normalize(perpendicular);
 
     // 最大角で再構成
-    const DirectX::XMVECTOR clamped = DirectX::XMVector3Normalize(
+    const Vector4 clamped = DirectX::XMVector3Normalize(
         DirectX::XMVectorAdd(
             DirectX::XMVectorScale(twist_axis, cos_theta_max.get()),
             DirectX::XMVectorScale(v, max.sin().get())
@@ -255,7 +255,7 @@ DirectX::XMVECTOR IKSolver::clamp_swing_cone(
     return IKSolver::quaternion_from_to(twist_axis, clamped);
 }
 
-DirectX::XMVECTOR IKSolver::quaternion_from_to(const DirectX::XMVECTOR& from, const DirectX::XMVECTOR& to) {
+Vector4 IKSolver::quaternion_from_to(const Vector4& from, const Vector4& to) {
     const float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(from, to));
 
     // ほぼ同一方向

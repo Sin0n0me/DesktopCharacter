@@ -7,9 +7,9 @@
 class BoneNode {
 protected:
     std::vector<std::weak_ptr<BoneNode>> children;
-    DirectX::XMVECTOR rotate; // 四元数
-    DirectX::XMMATRIX local;
-    DirectX::XMMATRIX global;
+    Vector4 rotate; // 四元数
+    MMDMatrix local;
+    MMDMatrix global;
 
 public:
     const std::weak_ptr<const BoneNode> parent;
@@ -39,11 +39,11 @@ public:
     void update_global(void);
 
     void set_rotate(const DirectX::XMVECTOR& rotate) noexcept;
-    void set_local(const DirectX::XMMATRIX& local_matrix) noexcept;
-    void set_global(const DirectX::XMMATRIX& global_matrix) noexcept;
+    void set_local(const MMDMatrix& local_matrix) noexcept;
+    void set_global(const MMDMatrix& global_matrix) noexcept;
     const DirectX::XMVECTOR& get_rotate(void) const noexcept;
-    const DirectX::XMMATRIX& get_local(void) const noexcept;
-    const DirectX::XMMATRIX& get_global(void) const noexcept;
+    const MMDMatrix& get_local(void) const noexcept;
+    const MMDMatrix& get_global(void) const noexcept;
 
     const DirectX::XMVECTOR& get_global_position(void) const noexcept;
 };

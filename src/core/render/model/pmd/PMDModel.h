@@ -51,4 +51,5 @@ private:
     bool make_material_buffer(ID3D11Device* const device);
     bool make_blend_state(ID3D11Device* const device);
     bool make_rigid_body(void);
+    bool make_joint(void);
 };

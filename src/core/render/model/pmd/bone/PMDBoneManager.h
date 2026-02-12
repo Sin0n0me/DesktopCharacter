@@ -9,8 +9,8 @@
 #include <wrl/client.h>
 
 struct ID3D11Buffer;
+struct Bones;
 class BoneNode;
-class Bones;
 
 class PMDBoneManager : public IObjectRenderer, public IBoneAccessor {
 private:

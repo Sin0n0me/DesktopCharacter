@@ -29,14 +29,14 @@ PMDBoneManager::PMDBoneManager(
 
         const auto parent_index = bone.parent_index;
         if(parent_index == 0xFFFF) {
-            bind_bone.local = DirectX::XMMatrixTranslation(
+            bind_bone.local = MMDMatrix::make_translation(
                 bind_bone.position.x,
                 bind_bone.position.y,
                 bind_bone.position.z
             );
         } else {
             const auto& parent = bind_bone_map.at(parent_index);
-            bind_bone.local = DirectX::XMMatrixTranslation(
+            bind_bone.local = MMDMatrix::make_translation(
                 bind_bone.position.x - parent.position.x,
                 bind_bone.position.y - parent.position.y,
                 bind_bone.position.z - parent.position.z
@@ -69,10 +69,8 @@ PMDBoneManager::PMDBoneManager(
         }
 
         // 逆変換
-        bind_bone.inverse = DirectX::XMMatrixInverse(nullptr, bind_bone.global);
-        this->bones->bone_matrices[index] = DirectX::XMMatrixTranspose(
-            bind_bone.global * bind_bone.inverse
-        );
+        bind_bone.inverse = bind_bone.global.inverse();
+        this->bones->bone_matrices[index] = bind_bone.inverse * bind_bone.global;
 
         // ボーンノードの作成
         if(parent_index == 0xFFFF) {
@@ -127,9 +125,7 @@ bool PMDBoneManager::init(ID3D11Device* const device) {
 void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
     const auto size = this->bone_nodes.size();
     for(size_t i = 0; i < size; ++i) {
-        this->bones->bone_matrices[i] = DirectX::XMMatrixTranspose(
-            this->bone_nodes.at(i)->get_global()
-        );
+        this->bones->bone_matrices[i] = this->bone_nodes.at(i)->get_global();
     }
 
     D3D11_MAPPED_SUBRESOURCE mapped;

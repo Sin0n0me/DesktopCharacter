@@ -1,9 +1,10 @@
 #pragma once
+#include "../../../../math/WrappedMatrix.h"
 #include <DirectXMath.h>
 
 struct BindBone {
     DirectX::XMFLOAT3 position;
-    DirectX::XMMATRIX local;
-    DirectX::XMMATRIX global;
-    DirectX::XMMATRIX inverse;
+    MMDMatrix local;
+    MMDMatrix global;
+    MMDMatrix inverse;
 };

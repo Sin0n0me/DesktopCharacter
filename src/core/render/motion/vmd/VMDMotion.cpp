@@ -80,6 +80,9 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     // モーフの適用
     this->morph_key_frame_manager->apply_morph();
 
+    // 物理演算適用
+    //this->physics->update(delta_time);
+
     // ローカル行列作成
     this->bone_key_frame_manager->update_local_matricies();
 
@@ -91,7 +94,4 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
 
     // スキニング用の定数バッファ結果を格納
     this->bone_key_frame_manager->apply_skinning();
-
-    // 物理演算適用
-    this->physics->update(delta_time);
 }

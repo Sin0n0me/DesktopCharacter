@@ -1,5 +1,8 @@
 #include "../../../log/Logger.h"
+#include "../../../physics/mmd/joint/MMDJoint.h"
 #include "../../../physics/mmd/MMDPhysics.h"
+#include "../../../physics/mmd/MMDPhysicsWorld.h"
+#include "../../../physics/mmd/motion_state/MMDMotionState.h"
 #include "../../../physics/mmd/rigid_body/MMDRigidBody.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../motion/vmd/VMDMotion.h"
@@ -12,6 +15,8 @@
 #include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
@@ -20,8 +25,7 @@ constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 PMDModel::PMDModel(const std::filesystem::path& path) :
     Model(path),
     model_loader(new PMDModelLoader(path)),
-    vertices(new std::vector<PMDVertexData>()),
-    physics(new MMDPhysics()) {
+    vertices(new std::vector<PMDVertexData>()) {
 }
 
 bool PMDModel::init(ID3D11Device* const device) {
@@ -44,6 +48,16 @@ bool PMDModel::init(ID3D11Device* const device) {
         this->model_loader->get_bones()
     );
     if(!this->bone_manager->init(device)) {
+        return false;
+    }
+
+    // 物理エンジンの初期化
+    this->physics = std::make_unique<MMDPhysics>(
+        std::make_shared<MMDPhysicsWorld>(
+            this->bone_manager->get_root_bones()
+        )
+    );
+    if(!this->physics->init()) {
         return false;
     }
 
@@ -74,11 +88,6 @@ bool PMDModel::init(ID3D11Device* const device) {
         return false;
     }
 
-    // 物理エンジンの初期化
-    if(!this->physics->init()) {
-        return false;
-    }
-
     // 剛体
     if(!this->make_rigid_body()) {
         return false;
@@ -87,6 +96,7 @@ bool PMDModel::init(ID3D11Device* const device) {
     if(!this->make_joint()) {
         return false;
     }
+    this->physics->reset_physics();
 
     return true;
 }
@@ -183,7 +193,8 @@ bool PMDModel::is_loaded_model() {
     return bool(this->bone_manager)
         && bool(this->motion_manager)
         && bool(this->morph_manager)
-        && bool(this->ik_soulver);
+        && bool(this->ik_soulver)
+        && bool(this->physics);
 }
 
 // 主成分分析による最小体積のOBBを作成
@@ -391,12 +402,13 @@ bool PMDModel::make_rigid_body(void) {
         return false;
     }
 
+    const auto world = this->physics->get_mmd_world();
     for(const auto& rigid_body : this->model_loader->get_rigid_bodies()->rigid_bodies) {
         const auto node = this->bone_manager->get_bone_node(
             rigid_body.relate_bone_index
         );
 
-        if(!this->physics->add_rigid_body(
+        if(!world->add_rigid_body(
             rigid_body,
             node
         )) {
@@ -412,8 +424,9 @@ bool PMDModel::make_joint(void) {
         return false;
     }
 
+    const auto world = this->physics->get_mmd_world();
     for(const auto& joint : this->model_loader->get_physics_joints()->physics_joints) {
-        if(!this->physics->add_joint(joint)) {
+        if(!world->add_joint(joint)) {
             return false;
         }
     }

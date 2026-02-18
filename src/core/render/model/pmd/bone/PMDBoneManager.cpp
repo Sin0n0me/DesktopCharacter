@@ -29,17 +29,16 @@ PMDBoneManager::PMDBoneManager(
 
         const auto parent_index = bone.parent_index;
         if(parent_index == 0xFFFF) {
-            bind_bone.local = MMDMatrix::make_translation(
-                bind_bone.position.x,
-                bind_bone.position.y,
-                bind_bone.position.z
+            bind_bone.local = MMDMatrix::make_translation_from_vector(
+                bind_bone.position
             );
         } else {
             const auto& parent = bind_bone_map.at(parent_index);
-            bind_bone.local = MMDMatrix::make_translation(
-                bind_bone.position.x - parent.position.x,
-                bind_bone.position.y - parent.position.y,
-                bind_bone.position.z - parent.position.z
+            bind_bone.local = MMDMatrix::make_translation_from_vector(
+                DirectX::XMVectorSubtract(
+                    bind_bone.position,
+                    parent.position
+                )
             );
         }
 
@@ -69,8 +68,8 @@ PMDBoneManager::PMDBoneManager(
         }
 
         // 逆変換
-        bind_bone.inverse = bind_bone.global.inverse();
-        this->bones->bone_matrices[index] = bind_bone.inverse * bind_bone.global;
+        bind_bone.global_inverse = bind_bone.global.inverse();
+        this->bones->bone_matrices[index] = bind_bone.global_inverse * bind_bone.global;
 
         // ボーンノードの作成
         if(parent_index == 0xFFFF) {
@@ -160,4 +159,16 @@ std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name)
     }
 
     return iter->second.index;
+}
+
+std::vector<std::shared_ptr<BoneNode>> PMDBoneManager::get_root_bones(void) const {
+    std::vector<std::shared_ptr<BoneNode>> vec{};
+
+    for(const auto& node : this->bone_nodes) {
+        if(!bool(node->parent.lock())) {
+            vec.push_back(node);
+        }
+    }
+
+    return vec;
 }

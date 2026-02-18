@@ -39,4 +39,5 @@ public:
 
     std::shared_ptr<BoneNode> get_bone_node(const BoneIndex& index) const override;
     std::optional<BoneIndex> get_bone_index(const std::string& name) const override;
+    std::vector<std::shared_ptr<BoneNode>> get_root_bones(void) const override;
 };

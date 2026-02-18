@@ -12,5 +12,6 @@ assets/**/
 *.pmm
 *.vmd
 *.pmd
+*.aieproj
 
 log.txt

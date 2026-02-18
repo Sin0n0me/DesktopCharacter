@@ -11,7 +11,7 @@
 #include <thread>
 #include <type_traits>
 
-namespace detail {
+namespace {
     template <typename T>
     struct IsAllowedInteger : std::bool_constant<
         std::is_same_v<T, int8_t> ||
@@ -27,6 +27,18 @@ namespace detail {
 
     template <typename T>
     constexpr bool IS_ALLORWD_INTERGER = IsAllowedInteger<std::remove_cv_t<T>>::value;
+
+    template <typename T>
+    struct IsAllowedFloat : std::bool_constant<
+        std::is_same_v<T, float> ||
+        std::is_same_v<T, double> ||
+        std::is_same_v<T, long double> ||
+        std::is_same_v<T, float_t>
+    > {
+    };
+
+    template <typename T>
+    constexpr bool IS_ALLORWD_FLOAT = IsAllowedFloat<std::remove_cv_t<T>>::value;
 
     template <typename T>
     constexpr bool IS_CHAR8_STRING = std::is_same_v<std::remove_cv_t<T>, const char8_t*> ||
@@ -72,9 +84,10 @@ public:
         static_assert(
             (... &&
                 (
-                    detail::IS_ALLORWD_INTERGER<Args> ||
-                    detail::IS_CHAR8_STRING<Args> ||
-                    detail::IS_U8STRING<Args>)
+                    IS_ALLORWD_INTERGER<Args> ||
+                    IS_ALLORWD_FLOAT<Args> ||
+                    IS_CHAR8_STRING<Args> ||
+                    IS_U8STRING<Args>)
                 ),
             "Args must be char8_t string types, std::u8string or fixed-width integer types"
             );
@@ -85,12 +98,19 @@ public:
             using T = std::decay_t<decltype(value)>;
             using Promoted = std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>; // int8_t, uint8_t対策(必ず数値として扱う)
 
-            if constexpr(detail::IS_U8STRING<T>) {
+            if constexpr(IS_U8STRING<T>) {
                 result.append(value);
-            } else if constexpr(detail::IS_CHAR8_STRING<T>) {
+            } else if constexpr(IS_CHAR8_STRING<T>) {
                 result.append(value);
-            } else if constexpr(detail::IS_ALLORWD_INTERGER<T>) {
+            } else if constexpr(IS_ALLORWD_INTERGER<T>) {
                 const std::string tmp = std::format("{}", static_cast<Promoted>(value));
+
+                result.append(
+                    reinterpret_cast<const char8_t*>(tmp.data()),
+                    reinterpret_cast<const char8_t*>(tmp.data() + tmp.size())
+                );
+            } else if constexpr(IS_ALLORWD_FLOAT<T>) {
+                const std::string tmp = std::format("{:.8f}", value);
 
                 result.append(
                     reinterpret_cast<const char8_t*>(tmp.data()),

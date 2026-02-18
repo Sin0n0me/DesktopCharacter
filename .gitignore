@@ -2,7 +2,7 @@
 x64/
 Debug/
 
-assets/models/
+assets/**/
 
 *.user
 *.obj

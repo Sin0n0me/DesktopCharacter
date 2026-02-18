@@ -161,16 +161,16 @@ public:
         );
     }
 
-    constexpr Angle<T, AngleKind::Radian> sin(void) const {
-        return Angle::Radian(std::sin(this->to_radian_value()));
+    constexpr T sin(void) const {
+        return std::sin(this->to_radian_value());
     }
 
-    constexpr Angle<T, AngleKind::Radian> cos(void) const {
-        return Angle::Radian(std::cos(this->to_radian_value()));
+    constexpr T cos(void) const {
+        return std::cos(this->to_radian_value());
     }
 
-    constexpr Angle<T, AngleKind::Radian> tan(void) const {
-        return Angle::Radian(std::tan(this->to_radian_value()));
+    constexpr T tan(void) const {
+        return std::tan(this->to_radian_value());
     }
 
 public:

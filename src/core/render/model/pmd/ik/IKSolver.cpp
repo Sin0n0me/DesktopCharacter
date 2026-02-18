@@ -224,7 +224,7 @@ Vector4 IKSolver::clamp_swing_cone(
     const auto cos_theta_max = max.cos();
 
     // 制限内ならそのまま返す
-    if(cos_theta_max <= cos_theta) {
+    if(cos_theta_max <= cos_theta.get()) {
         return swing;
     }
 
@@ -246,8 +246,8 @@ Vector4 IKSolver::clamp_swing_cone(
     // 最大角で再構成
     const Vector4 clamped = DirectX::XMVector3Normalize(
         DirectX::XMVectorAdd(
-            DirectX::XMVectorScale(twist_axis, cos_theta_max.get()),
-            DirectX::XMVectorScale(v, max.sin().get())
+            DirectX::XMVectorScale(twist_axis, cos_theta_max),
+            DirectX::XMVectorScale(v, max.sin())
         )
     );
 

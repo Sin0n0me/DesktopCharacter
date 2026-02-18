@@ -38,6 +38,8 @@ public:
 
     void update_global(void);
 
+    void update_children_global(void);
+
     void set_rotate(const DirectX::XMVECTOR& rotate) noexcept;
     void set_local(const MMDMatrix& local_matrix) noexcept;
     void set_global(const MMDMatrix& global_matrix) noexcept;

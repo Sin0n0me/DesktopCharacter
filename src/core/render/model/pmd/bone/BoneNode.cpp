@@ -47,19 +47,20 @@ void BoneNode::update_global(void) {
         this->global = this->local;
     }
 
+    this->update_children_global();
+}
+
+void BoneNode::update_children_global(void) {
     for(const auto& child : this->children) {
-        const auto node = child.lock();
-        if(!bool(node)) {
-            continue;
-        }
+        if(const auto node = child.lock()) {
+            if(const auto parent_node = node->parent.lock()) {
+                node->global = node->local * parent_node->global;
+            } else {
+                node->global = node->local;
+            }
 
-        if(const auto parent_node = node->parent.lock()) {
-            node->global = node->local * parent_node->global;
-        } else {
-            node->global = node->local;
+            node->update_children_global();
         }
-
-        node->update_global();
     }
 }
 

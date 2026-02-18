@@ -16,6 +16,18 @@ DeltaTime::DeltaTime(const std::chrono::seconds& second) :
     delta_time(std::chrono::duration_cast<DeltaTime::Resolution>(second)) {
 }
 
+DeltaTime::DeltaTime(const float dt) :
+    delta_time(std::chrono::duration_cast<DeltaTime::Resolution>(
+        std::chrono::duration<float>(dt)
+    )) {
+}
+
+DeltaTime::DeltaTime(const double dt) :
+    delta_time(std::chrono::duration_cast<DeltaTime::Resolution>(
+        std::chrono::duration<double>(dt)
+    )) {
+}
+
 float DeltaTime::to_float(void) const {
     return static_cast<float>(this->delta_time.count());
 }

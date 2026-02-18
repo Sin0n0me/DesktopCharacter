@@ -24,8 +24,8 @@ void FrameTimer::set_invalidation_limit(const Resolution& invalidation_limit) {
 }
 
 void FrameTimer::add_delta_time(const DeltaTime& delta_time) noexcept {
-    // 大きく時間が飛んだ場合は時間を進めない
-    if(this->invalidation_limit < delta_time.delta_time) {
+    // 加算できるかチェック
+    if(!this->can_add_delta_time(delta_time)) {
         return;
     }
 
@@ -68,6 +68,15 @@ void FrameTimer::set_current_frame(const FrameTimer::Frame& frame) noexcept {
 
 FrameTimer::Frame FrameTimer::get_current_frame(void) const noexcept {
     return this->current_frame;
+}
+
+bool FrameTimer::can_add_delta_time(const DeltaTime& delta_time) noexcept {
+    // 大きく時間が飛んだ場合は時間を進めない
+    if(this->invalidation_limit < delta_time.delta_time) {
+        return false;
+    }
+
+    return true;
 }
 
 double FrameTimer::progress(

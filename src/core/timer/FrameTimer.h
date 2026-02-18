@@ -34,6 +34,7 @@ public:
     void set_time(const Resolution& time) noexcept;
     void set_current_frame(const Frame& frame) noexcept;
     Frame get_current_frame(void) const noexcept;
+    bool can_add_delta_time(const DeltaTime& delta_time) noexcept;
 
     double progress(
         const Frame& start_frame,

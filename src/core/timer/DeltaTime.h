@@ -16,6 +16,8 @@ public:
     explicit DeltaTime(const std::chrono::microseconds& micro);
     explicit DeltaTime(const std::chrono::milliseconds& mill);
     explicit DeltaTime(const std::chrono::seconds& second);
+    explicit DeltaTime(const float dt);
+    explicit DeltaTime(const double dt);
 
     float to_float(void) const;
     double to_double(void) const;

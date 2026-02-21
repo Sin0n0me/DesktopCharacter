@@ -107,3 +107,12 @@ void Logger::error(const std::u8string& msg) {
         msg
     );
 }
+
+#ifdef _WIN32
+#include <system_error>
+std::u8string hresult_message(const HRESULT& hr) {
+    const auto message = std::system_category().message(hr);
+    return std::u8string(message.begin(), message.end());
+}
+
+#endif // _WIN32

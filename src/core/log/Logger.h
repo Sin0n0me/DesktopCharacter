@@ -124,3 +124,9 @@ public:
         return result;
     }
 };
+
+#ifdef _WIN32
+#include <Windows.h>
+std::u8string hresult_message(const HRESULT& hr);
+
+#endif // _WIN32

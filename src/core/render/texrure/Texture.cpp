@@ -27,7 +27,7 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
     this->file_path_hash = hash_u32(path.string().c_str());
     if(Texture::texture_map.contains(this->file_path_hash)) {
         Logger::debug(Logger::make_message(
-            u8"テクスチャの読み込みに成功しました(読み込み済み): ",
+            u8"loaded texture(use cache): ",
             path.u8string()
         ));
 
@@ -145,7 +145,7 @@ bool Texture::load_texure(ID3D11Device* const device, const std::filesystem::pat
     }
 
     Logger::debug(Logger::make_message(
-        u8"テクスチャの読み込みに成功しました: ",
+        u8"loaded texture: ",
         path.u8string()
     ));
 
@@ -285,9 +285,18 @@ void Texture::set_resource(
     ID3D11DeviceContext* const context,
     const ShaderBindingSlots* slots
 ) const {
-    const auto& resouce = this->use_dummy_texture ?
-        Texture::dummy_texture :
-        Texture::texture_map.at(this->file_path_hash);
+    const auto& resouce = [this]() -> Texture::TextureResouce {
+        if(this->use_dummy_texture) {
+            return Texture::dummy_texture;
+        }
+
+        const auto& iter = Texture::texture_map.find(this->file_path_hash);
+        if(iter == Texture::texture_map.end()) {
+            return Texture::dummy_texture;
+        }
+
+        return iter->second;
+        }();
 
     const BindingSlotKey texture_key = BindingSlotKey{
         this->texture_name_hash,

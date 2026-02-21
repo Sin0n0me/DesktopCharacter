@@ -123,7 +123,7 @@ public:
 public:
 
     /**
-     * @brief wrapされた行列を取得する
+     * @brief unwrapされた行列を取得する
      * @return unwrapした行列の参照
      */
     [[nodiscard]] constexpr const Matrix4x4& get(void) const {
@@ -161,20 +161,42 @@ public:
     }
 
     /**
-     * @brief 行列をfloatの配列として取得する
-     * @return 16個のfloatの要素を持つ配列
+     * @brief 行列をfloatの配列(行優先)として取得する
+     * @return 行優先と同じメモリ配置の16個のfloatの要素を持つ配列
      */
-    [[nodiscard]] constexpr std::array<float, 16> to_array(void) const {
+    [[nodiscard]] constexpr std::array<float, 16> to_row_major_array(void) const {
         std::array<float, 16> result{};
 
 #ifdef USE_GLM
-        // TODO:
+        // TODO: glmは転置する必要がある
         static_assert(false);
 #else
         DirectX::XMStoreFloat4x4(
             reinterpret_cast<DirectX::XMFLOAT4X4*>(result.data()),
             this->matrix
         );
+
+#endif // USE_GLM
+
+        return result;
+    }
+
+    /**
+     * @brief 行列をfloatの配列(列優先)として取得する
+     * @return 列優先と同じメモリ配置の16個のfloatの要素を持つ配列
+     */
+    [[nodiscard]] constexpr std::array<float, 16> to_column_major_array(void) const {
+        std::array<float, 16> result{};
+
+#ifdef USE_GLM
+        // TODO: glmは転置するはない
+        static_assert(false);
+#else
+        DirectX::XMStoreFloat4x4(
+            reinterpret_cast<DirectX::XMFLOAT4X4*>(result.data()),
+            DirectX::XMMatrixTranspose(this->matrix)
+        );
+
 #endif // USE_GLM
 
         return result;
@@ -469,7 +491,7 @@ public:
             if constexpr(is_same_major) {
                 return matrix.inverse_z();
             } else {
-                return matrix.inverse_z().transpose();
+                return matrix.transpose().inverse_z();
             }
         }
     }

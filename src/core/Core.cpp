@@ -153,8 +153,8 @@ void Engine::run(void) {
         const auto duration = timer.get_delta_time();
         timer.frame_reset();
 
-        this->render_update();
         this->update(duration);
+        this->render_update();
         this->render();
     }
 }

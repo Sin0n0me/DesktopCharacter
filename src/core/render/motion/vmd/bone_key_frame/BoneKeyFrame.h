@@ -1,12 +1,12 @@
 #pragma once
 #include "../VMDFileStruct.h"
-#include <array>
+#include "VMDAnimationBezier.h"
 #include <DirectXMath.h>
 
 struct BoneKeyFrame {
     const DirectX::XMVECTOR translation;
     const DirectX::XMVECTOR rotation;
-    const std::array<uint8_t, 64> interpolation;
+    const VMDAnimationBezier bezier;
     const uint32_t frame;
 
     explicit BoneKeyFrame(const VMDBoneKeyFrame& key_frame);

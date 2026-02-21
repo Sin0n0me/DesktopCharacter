@@ -5,6 +5,7 @@
 #include <filesystem>
 
 constexpr char8_t MOTION_WAVE_YUKARI[] = u8"assets/motion/手を振る.vmd";
+constexpr char8_t MOTION_WALK_YUKARI[] = u8"assets/motion/歩く_結月ゆかり用.vmd";
 constexpr char8_t MOTION_WAVE_AKARI[] = u8"assets/motion/手を振る_紲星あかり用.vmd";
 
 VMDMotionManager::VMDMotionManager(
@@ -42,11 +43,11 @@ bool VMDMotionManager::load() {
     // 仮
     auto& motion = this->motion_map.at(this->current_motion);
 
-    if(!motion->init_motion()) {
+    if(!motion->load_motion_file(MOTION_WALK_YUKARI)) {
         return false;
     }
 
-    if(!motion->load_motion_file(MOTION_WAVE_YUKARI)) {
+    if(!motion->init_motion()) {
         return false;
     }
 

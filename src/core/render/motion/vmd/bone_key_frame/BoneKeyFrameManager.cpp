@@ -10,7 +10,9 @@ BoneKeyFrameManager::BoneKeyFrameManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
     const std::shared_ptr<KeyFrameTimer>& frame_manager,
     const std::vector<VMDBoneKeyFrame>& key_frame_list
-) : bone_accessor(bone_accessor) {
+) :
+    bone_accessor(bone_accessor),
+    root_nodes(bone_accessor->get_root_bones()) {
     // VMDで動かすボーンを収集
     // ボーンごとに纏める
     std::unordered_map<BoneIndex, std::vector<BoneKeyFrame>> temp_map;
@@ -58,46 +60,38 @@ void BoneKeyFrameManager::update_local_matricies(void) {
     // ローカル行列作成
     for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
         const auto& bone_node = this->bone_accessor->get_bone_node(bone_index);
-        const auto& opt_previous_key_frame = key_frame_cursor->get_previous_key_frame();
-        const auto& opt_bone_key_frame = key_frame_cursor->get_current_key_frame();
-        const auto& bone_key_frame = opt_bone_key_frame.value();
         const auto& bind_bone = bone_node->bind_bone;
 
         // ローカル行列作成
         const auto anim_translate = MMDMatrix::make_translation_from_vector(
             key_frame_cursor->get_translate()
         );
+        // 累積を合成
         const auto translate = bind_bone.local * anim_translate;
         const auto rotate = MMDMatrix::make_rotation_from_quaternion(
             key_frame_cursor->get_rotate()
         );
-
-        bone_node->set_local(MMDMatrix::make_transform_matrix(
+        const MMDMatrix local = MMDMatrix::make_transform_matrix(
             translate,
             rotate,
             MMDMatrix::make_identity_matrix() // MMDにスケールはない
-        ));
+        );
+
+        bone_node->set_local(local);
     }
 }
 
 void BoneKeyFrameManager::update_global_matricies(void) {
     // グローバル行列作成
-    for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
-        const auto& bone_node = this->bone_accessor->get_bone_node(bone_index);
-        const auto& bind_bone = bone_node->bind_bone;
-        if(const auto parent = bone_node->parent.lock()) {
-            bone_node->set_global(bone_node->get_local() * parent->get_global());
-        } else {
-            bone_node->set_global(bone_node->get_local());
-        }
+    for(const auto& bone_node : this->root_nodes) {
+        bone_node->update_global();
     }
 }
 
 void BoneKeyFrameManager::apply_skinning(void) {
     // スキニング用の定数バッファ結果を格納
-    for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
-        const auto bone_node = this->bone_accessor->get_bone_node(bone_index);
-        const auto& inverse = bone_node->bind_bone.inverse;
+    for(const auto& bone_node : this->bone_accessor->get_all_bone_nodes()) {
+        const auto& inverse = bone_node->bind_bone.global_inverse;
         bone_node->set_global(inverse * bone_node->get_global());
     }
 }

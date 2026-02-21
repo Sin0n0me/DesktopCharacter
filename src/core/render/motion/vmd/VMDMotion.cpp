@@ -33,6 +33,14 @@ VMDMotion::VMDMotion(
 }
 
 bool VMDMotion::init_motion(void) {
+    this->frame_manager->set_frame(0);
+    this->morph_key_frame_manager->apply_morph();
+    this->bone_key_frame_manager->update_local_matricies();
+    this->bone_key_frame_manager->update_global_matricies();
+    this->ik_key_frame_manager->apply_ik();
+    this->physics->apply_physics();
+    this->bone_key_frame_manager->apply_skinning();
+
     return true;
 }
 
@@ -54,7 +62,7 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
         loader.get_morph_key_frames()
     );
 
-    this->ik = std::make_unique<IKKeyFrameManager>(
+    this->ik_key_frame_manager = std::make_unique<IKKeyFrameManager>(
         this->bone_accessor,
         this->frame_manager,
         this->ik_solver,
@@ -77,11 +85,11 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     // フレームの更新
     this->frame_manager->update(delta_time);
 
+    // 物理シミュレーション通知
+    this->physics->notify_update(delta_time);
+
     // モーフの適用
     this->morph_key_frame_manager->apply_morph();
-
-    // 物理演算適用
-    //this->physics->update(delta_time);
 
     // ローカル行列作成
     this->bone_key_frame_manager->update_local_matricies();
@@ -90,8 +98,11 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     this->bone_key_frame_manager->update_global_matricies();
 
     // IK
-    this->ik->apply_ik();
+    this->ik_key_frame_manager->apply_ik();
 
-    // スキニング用の定数バッファ結果を格納
+    // 物理演算適用
+    this->physics->apply_physics();
+
+    // スキニング用のグローバル行列の確定
     this->bone_key_frame_manager->apply_skinning();
 }

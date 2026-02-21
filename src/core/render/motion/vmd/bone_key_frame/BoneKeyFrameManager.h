@@ -9,7 +9,9 @@
 class IBoneAccessor;
 
 class BoneKeyFrameManager {
+private:
     const std::shared_ptr<const IBoneAccessor> bone_accessor;
+    const std::vector<std::shared_ptr<BoneNode>> root_nodes;
     std::map<BoneIndex, std::unique_ptr<BoneKeyFrameCursor>> bone_key_frame_map;
 
 public:

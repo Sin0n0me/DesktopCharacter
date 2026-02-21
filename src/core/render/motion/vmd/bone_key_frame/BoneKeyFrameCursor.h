@@ -5,6 +5,10 @@
 #include <DirectXMath.h>
 
 class BoneKeyFrameCursor : public KeyFrameCursor<BoneKeyFrame> {
+private:
+
+    float get_frame_ratio(void) const noexcept;
+
 public:
 
     explicit BoneKeyFrameCursor(

@@ -96,7 +96,6 @@ bool PMDModel::init(ID3D11Device* const device) {
     if(!this->make_joint()) {
         return false;
     }
-    this->physics->reset_physics();
 
     return true;
 }
@@ -404,6 +403,10 @@ bool PMDModel::make_rigid_body(void) {
 
     const auto world = this->physics->get_mmd_world();
     for(const auto& rigid_body : this->model_loader->get_rigid_bodies()->rigid_bodies) {
+        if(rigid_body.relate_bone_index == 0xFFFF) {
+            continue;
+        }
+
         const auto node = this->bone_manager->get_bone_node(
             rigid_body.relate_bone_index
         );

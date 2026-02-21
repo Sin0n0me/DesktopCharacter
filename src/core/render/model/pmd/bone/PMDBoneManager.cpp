@@ -84,6 +84,9 @@ PMDBoneManager::PMDBoneManager(
 
         const auto& node = this->bone_nodes.at(index);
         node->update_local();
+    }
+
+    for(const auto& node : this->get_root_bones()) {
         node->update_global();
     }
 }
@@ -148,7 +151,11 @@ void PMDBoneManager::render(
     );
 }
 
-std::shared_ptr<BoneNode> PMDBoneManager::get_bone_node(const BoneIndex& index) const {
+const std::vector<BoneNodePtr>& PMDBoneManager::get_all_bone_nodes(void) const {
+    return this->bone_nodes;
+}
+
+BoneNodePtr PMDBoneManager::get_bone_node(const BoneIndex& index) const {
     return this->bone_nodes.at(index);
 }
 
@@ -161,8 +168,8 @@ std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name)
     return iter->second.index;
 }
 
-std::vector<std::shared_ptr<BoneNode>> PMDBoneManager::get_root_bones(void) const {
-    std::vector<std::shared_ptr<BoneNode>> vec{};
+std::vector<BoneNodePtr> PMDBoneManager::get_root_bones(void) const {
+    std::vector<BoneNodePtr> vec{};
 
     for(const auto& node : this->bone_nodes) {
         if(!bool(node->parent.lock())) {

@@ -39,7 +39,7 @@ bool Shader::make_vertex_shader(ID3D11Device* const device, ID3D11VertexShader**
         vertex_shader
     );
     if(FAILED(hr)) {
-        Logger::error(u8"頂点シェーダーの作成に失敗しました");
+        Logger::error(u8"頂点シェーダーの作成に失敗しました: " + hresult_message(hr));
         return false;
     }
 
@@ -62,7 +62,7 @@ bool Shader::make_pixel_shader(ID3D11Device* const device, ID3D11PixelShader** c
         pixel_shader
     );
     if(FAILED(hr)) {
-        Logger::error(u8"ピクセルシェーダーの作成に失敗しました");
+        Logger::error(u8"ピクセルシェーダーの作成に失敗しました: " + hresult_message(hr));
         return false;
     }
 
@@ -85,7 +85,7 @@ bool Shader::make_compute_shader(ID3D11Device* const device, ID3D11ComputeShader
         compute_shader
     );
     if(FAILED(hr)) {
-        Logger::error(u8"コンピュートシェーダーの作成に失敗しました");
+        Logger::error(u8"コンピュートシェーダーの作成に失敗しました: " + hresult_message(hr));
         return false;
     }
 
@@ -173,7 +173,7 @@ bool Shader::make_input_layout(
     if(!opt_input_elements.has_value()) {
         return false;
     }
-    const auto& input_elements = opt_input_elements.value();
+    const auto& input_elements = opt_input_elements.value().get_elements();
 
     const HRESULT hr = device->CreateInputLayout(
         input_elements.data(),
@@ -183,7 +183,7 @@ bool Shader::make_input_layout(
         input_layout
     );
     if(FAILED(hr)) {
-        Logger::error(u8"InputLayoutの作成に失敗しました");
+        Logger::error(u8"InputLayoutの作成に失敗しました: " + hresult_message(hr));
         return false;
     }
 

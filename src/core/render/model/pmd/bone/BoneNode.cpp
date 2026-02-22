@@ -2,7 +2,9 @@
 
 BoneNode::BoneNode(const BindBone& bind_bone) :
     bind_bone(bind_bone),
-    rotate(DirectX::XMQuaternionIdentity()),
+    translate(DirectX::XMVectorSet(0, 0, 0, 1)),
+    animation_rotate(DirectX::XMQuaternionIdentity()),
+    ik_rotate(DirectX::XMQuaternionIdentity()),
     local(MMDMatrix::make_identity_matrix()),
     global(MMDMatrix::make_identity_matrix()) {
 }
@@ -10,7 +12,9 @@ BoneNode::BoneNode(const BindBone& bind_bone) :
 BoneNode::BoneNode(const BindBone& bind_bone, const std::shared_ptr<BoneNode>& parent_node) :
     bind_bone(bind_bone),
     parent(parent_node),
-    rotate(DirectX::XMQuaternionIdentity()),
+    translate(DirectX::XMVectorSet(0, 0, 0, 1)),
+    animation_rotate(DirectX::XMQuaternionIdentity()),
+    ik_rotate(DirectX::XMQuaternionIdentity()),
     local(MMDMatrix::make_identity_matrix()),
     global(MMDMatrix::make_identity_matrix()) {
 }
@@ -29,15 +33,28 @@ std::shared_ptr<BoneNode> BoneNode::make(
 }
 
 void BoneNode::reset(void) {
+    this->animation_rotate = DirectX::XMQuaternionIdentity();
+    this->ik_rotate = DirectX::XMQuaternionIdentity();
+    this->translate = DirectX::XMVectorSet(0, 0, 0, 1);
     this->local = this->bind_bone.local;
     this->global = this->bind_bone.global;
 }
 
 void BoneNode::update_local(void) {
-    const auto& rotate_matrix = MMDMatrix::make_rotation_from_quaternion(
-        this->rotate
+    // 累積を合成
+    const auto anim_translate = MMDMatrix::make_translation_from_vector(this->translate);
+    const auto translate_matrix = this->bind_bone.local * anim_translate;
+    const auto rotate = DirectX::XMQuaternionMultiply(
+        this->animation_rotate,
+        this->ik_rotate
     );
-    this->local = rotate_matrix * this->bind_bone.local;
+    const auto rotate_matrix = MMDMatrix::make_rotation_from_quaternion(rotate);
+
+    this->local = MMDMatrix::make_transform_matrix(
+        translate_matrix,
+        rotate_matrix,
+        MMDMatrix::make_identity_matrix() // MMDにスケールはない
+    );
 }
 
 void BoneNode::update_global(void) {
@@ -64,8 +81,16 @@ void BoneNode::update_children_global(void) {
     }
 }
 
-void BoneNode::set_rotate(const DirectX::XMVECTOR& rotate) noexcept {
-    this->rotate = DirectX::XMQuaternionNormalize(rotate);
+void BoneNode::set_translate(const Vector4& translate) noexcept {
+    this->translate = translate;
+}
+
+void BoneNode::set_animation_rotate(const Vector4& rotate) noexcept {
+    this->animation_rotate = rotate;
+}
+
+void BoneNode::set_ik_rotate(const Vector4& rotate) noexcept {
+    this->ik_rotate = DirectX::XMQuaternionNormalize(rotate);
 }
 
 void BoneNode::set_local(const MMDMatrix& local_matrix) noexcept {
@@ -76,8 +101,16 @@ void BoneNode::set_global(const MMDMatrix& global_matrix) noexcept {
     this->global = global_matrix;
 }
 
-const DirectX::XMVECTOR& BoneNode::get_rotate(void) const noexcept {
-    return this->rotate;
+const Vector4& BoneNode::get_translate(void) const noexcept {
+    return this->translate;
+}
+
+const Vector4& BoneNode::get_animation_rotate(void) const noexcept {
+    return this->animation_rotate;
+}
+
+const Vector4& BoneNode::get_ik_rotate(void) const noexcept {
+    return this->ik_rotate;
 }
 
 const MMDMatrix& BoneNode::get_local(void) const noexcept {
@@ -88,6 +121,6 @@ const MMDMatrix& BoneNode::get_global(void) const noexcept {
     return this->global;
 }
 
-const DirectX::XMVECTOR& BoneNode::get_global_position(void) const noexcept {
+const Vector4& BoneNode::get_global_position(void) const noexcept {
     return this->global.get_translation();
 }

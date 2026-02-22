@@ -43,7 +43,7 @@ bool VMDMotionManager::load() {
     // 仮
     auto& motion = this->motion_map.at(this->current_motion);
 
-    if(!motion->load_motion_file(MOTION_WALK_YUKARI)) {
+    if(!motion->load_motion_file(MOTION_WAVE_YUKARI)) {
         return false;
     }
 

@@ -18,6 +18,7 @@ IKSolver::IKSolver(
     hinge_set() {
     for(const auto& ik : iks->iks) {
         this->ik_map[ik.ik_bone] = ik;
+        this->ik_quaternion_map[ik.ik_bone] = DirectX::XMQuaternionIdentity();
     }
 
     // TODO: 削除
@@ -25,7 +26,7 @@ IKSolver::IKSolver(
     this->hinge_set.insert(8);
 }
 
-void IKSolver::apply_ik(const BoneIndex& bone_index) const {
+void IKSolver::apply_ik(const BoneIndex& bone_index) {
     const auto iter = this->ik_map.find(bone_index);
     if(iter == this->ik_map.end()) {
         return;
@@ -36,8 +37,16 @@ void IKSolver::apply_ik(const BoneIndex& bone_index) const {
         return;
     }
 
+    for(const auto& index : ik.chain) {
+        const auto bone_node = this->bone_accessor->get_bone_node(index).get();
+        bone_node->set_ik_rotate(DirectX::XMQuaternionIdentity());
+        bone_node->update_local();
+        bone_node->update_global();
+    }
+
     const auto ik_node = this->bone_accessor->get_bone_node(ik.ik_bone).get();
     const auto target_node = this->bone_accessor->get_bone_node(ik.target_bone).get();
+    float max_distance = std::numeric_limits<float>::max();
     for(int i = 0; i < ik.iterations; ++i) {
         for(const auto& index : ik.chain) {
             const auto bone_node = this->bone_accessor->get_bone_node(index).get();
@@ -49,6 +58,32 @@ void IKSolver::apply_ik(const BoneIndex& bone_index) const {
                 this->hinge_set.contains(index)
             );
         }
+
+        // 発散防止
+        const Vector4 ik_pos = ik_node->get_global_position();
+        const Vector4 target_pos = target_node->get_global_position();
+        const float distance = DirectX::XMVectorGetX(
+            DirectX::XMVector3Length(
+                DirectX::XMVectorSubtract(target_pos, ik_pos)
+            )
+        );
+        if(distance < max_distance) {
+            max_distance = distance;
+            for(const auto& index : ik.chain) {
+                const auto bone_node = this->bone_accessor->get_bone_node(index).get();
+                this->ik_quaternion_map[index] = bone_node->get_ik_rotate();
+            }
+        } else {
+            for(const auto& index : ik.chain) {
+                const auto bone_node = this->bone_accessor->get_bone_node(index).get();
+                bone_node->set_ik_rotate(
+                    this->ik_quaternion_map.at(index)
+                );
+                bone_node->update_local();
+                bone_node->update_global();
+            }
+            break;
+        }
     }
 }
 
@@ -59,19 +94,21 @@ void IKSolver::solve_ik_bone(
     const Radian<float>& ik_limit,
     const bool use_hinge
 ) const {
-    const Vector4 bone_pos = bone_node->get_global_position(); // inverse用
-    const Vector4 ik_pos = ik_bone_node->get_global_position();
-    const Vector4 target_pos = target_bone_node->get_global_position();
-
+    const MMDMatrix inv_bone = bone_node->get_global().inverse(); // inverse用
+    const Vector4 bone_pos = bone_node->get_global_position();
+    const Vector4 ik_pos = DirectX::XMVectorSubtract(ik_bone_node->get_global_position(), bone_pos);
+    const Vector4 target_pos = DirectX::XMVectorSubtract(target_bone_node->get_global_position(), bone_pos);
     const Vector4 ik_vec = DirectX::XMVector3Normalize(
-        DirectX::XMVectorSubtract(ik_pos, bone_pos)
+        DirectX::XMVector3TransformNormal(ik_pos, inv_bone.get())
     );
     const Vector4 target_vec = DirectX::XMVector3Normalize(
-        DirectX::XMVectorSubtract(target_pos, bone_pos)
+        DirectX::XMVector3TransformNormal(target_pos, inv_bone.get())
     );
+
+    //
     const float dist = DirectX::XMVectorGetX(
         DirectX::XMVector3Length(
-            DirectX::XMVectorSubtract(target_pos, ik_pos)
+            DirectX::XMVectorSubtract(target_vec, ik_vec)
         )
     );
     if(dist < EPSILON) {
@@ -86,6 +123,7 @@ void IKSolver::solve_ik_bone(
         1.0f
     );
 
+    // acos(dot)=[0, π]
     const auto angle = Radian(std::min(std::acos(dot), ik_limit.get()));
     if(angle < Radian(EPSILON)) {
         return;
@@ -93,29 +131,34 @@ void IKSolver::solve_ik_bone(
 
     // 制限なしCCD IK
     {
-        // 回転軸
+        // 回転軸決め
         const Vector4 cross = DirectX::XMVector3Normalize(
             DirectX::XMVector3Cross(target_vec, ik_vec)
         );
-        if(DirectX::XMVector3Equal(cross, DirectX::XMVectorZero())) {
+        if(DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(cross)) < EPSILON) {
             return;
         }
 
-        const Vector4 quaternion = DirectX::XMQuaternionRotationNormal(
+        // 回転の作成
+        const Vector4 rotation = DirectX::XMQuaternionRotationNormal(
             cross,
             angle.get()
         );
 
-        bone_node->set_rotate(
-            DirectX::XMQuaternionMultiply(
-                quaternion,
-                bone_node->get_rotate()
-            )
-        );
+        // TODO: Quaternion型作ってラップする
+        // ik_rotate = normalize(inv(A) * R * A * IK)
+        const auto& animation_rotate = bone_node->get_animation_rotate();
+        const auto& inv_animation_rotate = DirectX::XMQuaternionInverse(animation_rotate);
+        const auto q1 = DirectX::XMQuaternionMultiply(inv_animation_rotate, rotation);
+        const auto q2 = DirectX::XMQuaternionMultiply(animation_rotate, q1);
+        const auto q3 = DirectX::XMQuaternionMultiply(bone_node->get_ik_rotate(), q2);
+
+        // セット時に正規化される
+        bone_node->set_ik_rotate(q3);
     }
 
-    // 制限ありCCD IK(通常のCCD IK適用後に行う)
-    // スイング・ツイスト分解によるクオータニオンを分解し制限をかける
+    // 制限ありCCD IK
+    // スイング・ツイスト分解によるクオータニオンを分解してから制限をかけるのでCCD IK適用後に行う
     if(use_hinge) {
         // TODO: 任意の軸制限
         const Vector4 twist_axis = DirectX::XMVector3Normalize(
@@ -123,9 +166,9 @@ void IKSolver::solve_ik_bone(
         );
 
         // 回転の適用
-        bone_node->set_rotate(
+        bone_node->set_ik_rotate(
             IKSolver::decompose_swing_twist(
-                bone_node->get_rotate(),
+                bone_node->get_ik_rotate(),
                 twist_axis,
                 Radian(0.0f),
                 ik_limit,

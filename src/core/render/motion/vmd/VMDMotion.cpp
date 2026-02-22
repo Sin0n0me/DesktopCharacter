@@ -35,11 +35,11 @@ VMDMotion::VMDMotion(
 bool VMDMotion::init_motion(void) {
     this->frame_manager->set_frame(0);
     this->morph_key_frame_manager->apply_morph();
+    this->ik_key_frame_manager->apply_ik();
     this->bone_key_frame_manager->update_local_matricies();
     this->bone_key_frame_manager->update_global_matricies();
-    this->ik_key_frame_manager->apply_ik();
-    this->physics->apply_physics();
     this->bone_key_frame_manager->apply_skinning();
+    this->physics->apply_physics();
 
     return true;
 }

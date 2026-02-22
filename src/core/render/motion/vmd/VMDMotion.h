@@ -18,7 +18,7 @@ private:
     const std::shared_ptr<IMorphAccessor> morph_accessor;
     const std::shared_ptr<IKSolver> ik_solver;
     const std::shared_ptr<MMDPhysics> physics;
-    std::unique_ptr<IKKeyFrameManager> ik;
+    std::unique_ptr<IKKeyFrameManager> ik_key_frame_manager;
     std::unique_ptr<MorphKeyFrameManager> morph_key_frame_manager;
     std::unique_ptr<BoneKeyFrameManager> bone_key_frame_manager;
 

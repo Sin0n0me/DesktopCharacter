@@ -13,8 +13,8 @@ class IKKeyFrameCursor;
 class IKKeyFrameManager {
 private:
     const std::shared_ptr<const IBoneAccessor> bone_accessor;
-    const std::shared_ptr<const IKSolver> ik_solver;
     const std::shared_ptr<const KeyFrameTimer> frame_manager;
+    const std::shared_ptr<IKSolver> ik_solver;
     std::map<BoneIndex, std::unique_ptr<IKKeyFrameCursor>> ik_frame_map; // first: frame
 
 public:

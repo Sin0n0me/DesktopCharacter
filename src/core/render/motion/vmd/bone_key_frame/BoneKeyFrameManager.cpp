@@ -60,24 +60,15 @@ void BoneKeyFrameManager::update_local_matricies(void) {
     // ローカル行列作成
     for(const auto& [bone_index, key_frame_cursor] : this->bone_key_frame_map) {
         const auto& bone_node = this->bone_accessor->get_bone_node(bone_index);
-        const auto& bind_bone = bone_node->bind_bone;
 
-        // ローカル行列作成
-        const auto anim_translate = MMDMatrix::make_translation_from_vector(
+        bone_node->set_translate(
             key_frame_cursor->get_translate()
         );
-        // 累積を合成
-        const auto translate = bind_bone.local * anim_translate;
-        const auto rotate = MMDMatrix::make_rotation_from_quaternion(
+        bone_node->set_animation_rotate(
             key_frame_cursor->get_rotate()
         );
-        const MMDMatrix local = MMDMatrix::make_transform_matrix(
-            translate,
-            rotate,
-            MMDMatrix::make_identity_matrix() // MMDにスケールはない
-        );
 
-        bone_node->set_local(local);
+        bone_node->update_local();
     }
 }
 

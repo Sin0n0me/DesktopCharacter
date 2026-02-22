@@ -14,6 +14,7 @@ class IKSolver {
 private:
     const std::shared_ptr<const IBoneAccessor> bone_accessor;
     std::unordered_map<BoneIndex, PMDIK> ik_map; // first: index, second: ik
+    std::unordered_map<BoneIndex, Vector4> ik_quaternion_map; // first: index, second: ik(quaternion)
     std::set<BoneIndex> hinge_set; //膝などヒンジ関節である場合
 
 protected:
@@ -52,5 +53,5 @@ public:
         const std::shared_ptr<const PMDIKs>& iks
     ) noexcept;
 
-    void apply_ik(const BoneIndex& index) const;
+    void apply_ik(const BoneIndex& index);
 };

@@ -218,6 +218,9 @@ bool WindowManager::make_console_window(void) {
         return true;
     }
 
+    // もうコンソール出す必要ない’かもしれない
+    return true;
+
     if(AllocConsole() == FALSE) {
         return false;
     }
@@ -336,7 +339,7 @@ void WindowManager::update_hit_window(void) {
     const int right_bottom_x = pt.x + size.x;
     const int right_bottom_y = pt.y + size.y;
     const int offset_x = size.x / 2;
-    const int offset_y = size.x / 2;
+    const int offset_y = size.y / 2;
 
     this->hit_window.screen_position.x = pt.x - offset_x;
     this->hit_window.screen_position.y = pt.y - offset_y;

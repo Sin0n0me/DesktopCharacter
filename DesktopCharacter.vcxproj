@@ -80,7 +80,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -109,7 +109,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -138,7 +138,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -167,7 +167,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -188,6 +188,19 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\render\model\pmd\bone\BoneType.h" />
+    <ClInclude Include="src\core\render\shader\InputElements.h" />
+    <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.h" />
+    <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\Bezier.h" />
+    <ClInclude Include="src\config\Config.h" />
+    <ClInclude Include="src\config\IConfigChangeListener.h" />
+    <ClInclude Include="src\core\physics\mmd\MMDPhysicsWorld.h" />
+    <ClInclude Include="src\core\physics\IPhysicsSimulationListener.h" />
+    <ClInclude Include="src\core\physics\PhysicsWorld.h" />
+    <ClInclude Include="src\config\GraphicsAPI.h" />
+    <ClInclude Include="src\config\ApplicationConfig.h" />
+    <ClInclude Include="src\core\math\Angle.h" />
+    <ClInclude Include="src\core\math\WrappedMatrix.h" />
     <ClInclude Include="src\core\timer\FrameTimer.h" />
     <ClInclude Include="src\core\timer\DeltaTime.h" />
     <ClInclude Include="src\core\physics\PhysicsSettings.h" />
@@ -195,13 +208,13 @@
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDDynamicAndBoneMergeMotionState.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDDynamicMotionState.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDKinematicMotionState.h" />
-    <ClInclude Include="src\core\physics\mmd\MMDRigidBodyShape.h" />
+    <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBodyShape.h" />
     <ClInclude Include="src\core\physics\mmd\MMDFilterCallback.h" />
     <ClInclude Include="src\core\physics\mmd\MMDPhysics.h" />
-    <ClInclude Include="src\core\physics\mmd\MMDRigidBodyType.h" />
-    <ClInclude Include="src\core\physics\mmd\MMDJoint.h" />
+    <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBodyType.h" />
+    <ClInclude Include="src\core\physics\mmd\joint\MMDJoint.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDMotionState.h" />
-    <ClInclude Include="src\core\physics\mmd\MMDRigidBody.h" />
+    <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBody.h" />
     <ClInclude Include="src\core\physics\Physics.h" />
     <ClInclude Include="src\core\render\constant_buffer\Light.h" />
     <ClInclude Include="src\core\render\constant_buffer\ModelEdge.h" />
@@ -315,18 +328,25 @@
     <ClInclude Include="src\core\render\unordered_access_view\UnorderedAccessViewNames.h" />
     <ClInclude Include="src\core\window\WindowManager.h" />
     <ClInclude Include="src\core\window\WindowStatus.h" />
+    <ClInclude Include="src\core\physics\TransformConverter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\render\shader\InputElements.cpp" />
+    <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\Bezier.cpp" />
+    <ClCompile Include="src\core\physics\mmd\MMDPhysicsWorld.cpp" />
+    <ClCompile Include="src\core\physics\PhysicsWorld.cpp" />
+    <ClCompile Include="src\config\ApplicationConfig.cpp" />
+    <ClCompile Include="src\core\math\test.cpp" />
+    <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.cpp" />
     <ClCompile Include="src\core\timer\FrameTimer.cpp" />
     <ClCompile Include="src\core\timer\DeltaTime.cpp" />
-    <ClCompile Include="src\core\physics\mmd\MMDRigidBodyType.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicAndBoneMergeMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDKinematicMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDFilterCallback.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDPhysics.cpp" />
-    <ClCompile Include="src\core\physics\mmd\MMDJoint.cpp" />
-    <ClCompile Include="src\core\physics\mmd\MMDRigidBody.cpp" />
+    <ClCompile Include="src\core\physics\mmd\joint\MMDJoint.cpp" />
+    <ClCompile Include="src\core\physics\mmd\rigid_body\MMDRigidBody.cpp" />
     <ClCompile Include="src\core\physics\Physics.cpp" />
     <ClCompile Include="src\core\render\model\pmd\bone\BoneNode.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgePixelShader.cpp" />
@@ -400,6 +420,7 @@
     <ClCompile Include="src\core\render\motion\vmd\VMDLoader.cpp" />
     <ClCompile Include="src\core\window\WindowManager.cpp" />
     <ClCompile Include="src\core\window\WindowStatus.cpp" />
+    <ClCompile Include="src\core\physics\TransformConverter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

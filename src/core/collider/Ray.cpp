@@ -2,6 +2,7 @@
 #include "../render/constant_buffer/Camera.h"
 #include "Ray.h"
 
+// TODO: ラッパークラスへ移行
 Ray Ray::make_ray_from_screen(const float x, const float y, const Camera& camera) {
     // スクリーン座標からNDCに
     const float ndc_x = (2.0f * x / WIDTH) - 1.0f;
@@ -11,10 +12,7 @@ Ray Ray::make_ray_from_screen(const float x, const float y, const Camera& camera
     const DirectX::XMVECTOR ray_clip = DirectX::XMVectorSet(ndc_x, ndc_y, 1.0f, 1.0f);
 
     // ビュー空間へ逆変換
-    const DirectX::XMMATRIX inverse_projection = DirectX::XMMatrixInverse(
-        nullptr,
-        DirectX::XMMatrixTranspose(camera.projection) // 転置しているので再度転置が必要
-    );
+    const DirectX::XMMATRIX inverse_projection = camera.get_projection().inverse().transpose().get();
     DirectX::XMVECTOR ray_view = DirectX::XMVector4Transform(
         ray_clip,
         inverse_projection
@@ -24,10 +22,7 @@ Ray Ray::make_ray_from_screen(const float x, const float y, const Camera& camera
     ray_view = DirectX::XMVectorSetW(ray_view, 0.0f);
 
     // ワールド空間へ逆変換
-    const DirectX::XMMATRIX inverse_view = DirectX::XMMatrixInverse(
-        nullptr,
-        DirectX::XMMatrixTranspose(camera.view) // 転置しているので再度転置が必要
-    );
+    const DirectX::XMMATRIX inverse_view = camera.get_view().inverse().transpose().get();
     DirectX::XMVECTOR ray_direction = DirectX::XMVector3Normalize(
         DirectX::XMVector3TransformNormal(ray_view, inverse_view)
     );

@@ -42,7 +42,7 @@ bool VMDMotionManager::init(void) {
 bool VMDMotionManager::load() {
     // 仮
     auto& motion = this->motion_map.at(this->current_motion);
-    const std::filesystem::path path(MOTION_WALK_YUKARI);
+    const std::filesystem::path path(MOTION_WAVE_YUKARI);
 
     if(!motion->load_motion_file(path)) {
         return false;

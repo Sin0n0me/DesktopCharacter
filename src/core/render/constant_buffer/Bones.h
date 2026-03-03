@@ -1,7 +1,7 @@
 #pragma once
-#include "../../math/WrappedMatrix.h"
+#include "../../math/HLSLMatrix.h"
 
 struct alignas(16) Bones {
     static constexpr int MAX_MATRIX_SIZE = 512;
-    MMDMatrix bone_matrices[MAX_MATRIX_SIZE];
+    HLSLMatrix bone_matrices[MAX_MATRIX_SIZE];
 };

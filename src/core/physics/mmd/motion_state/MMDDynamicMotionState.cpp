@@ -24,15 +24,15 @@ void MMDDynamicMotionState::setWorldTransform(const btTransform& worldTrans) {
 void MMDDynamicMotionState::reset(void) {
     // mmdの世界からbulletの世界に変換しオフセット適用
     const MMDMatrix global = this->bone_node->get_global();
-    const MMDMatrix offset_matrix = this->offset * global;
-    this->transform = matrix_to_transform(offset_matrix);
+    const MMDMatrix offset_matrix = global * this->offset;
+    this->transform = matrix_to_transform(offset_matrix.inverse_z());
 }
 
 void MMDDynamicMotionState::reflect_global_transform(void) {
     // 行優先計算
     // 中心とのoffsetが掛かっているので
     // offsetの逆行列を掛けることでボーン空間に戻す
-    const MMDMatrix global = this->inverse_offset * transform_to_matrix(this->transform);
+    const MMDMatrix global = transform_to_matrix(this->transform).inverse_z() * this->inverse_offset;
 
     // MMDの世界に変換
     this->bone_node->set_global(global);

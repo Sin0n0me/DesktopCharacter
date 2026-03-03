@@ -53,28 +53,31 @@ std::unique_ptr<btCollisionShape> MMDRigidBody::make_shape(const PMDRigidBody& r
 
 // 剛体中心とのオフセットは以下で求める(列優先の場合)
 // Inverse(global) * InvZ(InvZ(global) * T * R)
-// 行優先なので
-// R * T * Inverse(global)
 MMDMatrix MMDRigidBody::make_offset(
     const PMDRigidBody& rigid_body,
     const BoneNode* node
 ) {
-    // 剛体自体のオフセットを
-    // pitch, yaw, rollの順序で格納されている(Z->X->Yの順序になるよう)
-    // 引数はroll, pitch, yawの順序
-    const MMDMatrix global = node->get_global();
-    const MMDMatrix rotate_matrix = MMDMatrix::make_rotation_from_roll_pitch_yaw(
-        Radian(rigid_body.rotation[2]),
-        Radian(rigid_body.rotation[0]),
+    const BulletMatrix rx = BulletMatrix::make_rotate_from_axis_angle(
+        DirectX::XMVectorSet(1, 0, 0, 1),
+        Radian(rigid_body.rotation[0])
+    );
+    const BulletMatrix ry = BulletMatrix::make_rotate_from_axis_angle(
+        DirectX::XMVectorSet(0, 1, 0, 1),
         Radian(rigid_body.rotation[1])
     );
-    const MMDMatrix translate_matrix = MMDMatrix::make_translation(
+    const BulletMatrix rz = BulletMatrix::make_rotate_from_axis_angle(
+        DirectX::XMVectorSet(0, 0, 1, 1),
+        Radian(rigid_body.rotation[2])
+    );
+    const BulletMatrix rotate_matrix = ry * rx * rz;
+    const BulletMatrix translate_matrix = BulletMatrix::make_translation(
         rigid_body.position[0],
         rigid_body.position[1],
         rigid_body.position[2]
     );
-    const MMDMatrix transform = rotate_matrix * translate_matrix;
-    const MMDMatrix offset = transform * node->bind_bone.global_inverse;
+    const BulletMatrix transform = translate_matrix * rotate_matrix;
+    const BulletMatrix world_transform = node->bind_bone.global.inverse_z() * transform;
+    const MMDMatrix offset = node->bind_bone.global_inverse * world_transform.inverse_z();
 
     return offset;
 }
@@ -237,7 +240,7 @@ void MMDRigidBody::apply_local_transform(void) {
     const auto& global = this->node->get_global();
     if(const auto parent_node = this->node->parent.lock()) {
         const MMDMatrix& parent_globale = parent_node->get_global();
-        const MMDMatrix& local = global * parent_globale.inverse();
+        const MMDMatrix& local = parent_globale.inverse() * global;
 
         this->node->set_local(local);
     } else {

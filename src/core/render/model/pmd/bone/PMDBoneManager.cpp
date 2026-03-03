@@ -64,12 +64,14 @@ PMDBoneManager::PMDBoneManager(
             bind_bone.global = bind_bone.local;
         } else {
             const auto& parent = bind_bone_map.at(parent_index);
-            bind_bone.global = bind_bone.local * parent.global;
+            bind_bone.global = parent.global * bind_bone.local;
         }
 
         // 逆変換
         bind_bone.global_inverse = bind_bone.global.inverse();
-        this->bones->bone_matrices[index] = bind_bone.global_inverse * bind_bone.global;
+        this->bones->bone_matrices[index].set(
+            bind_bone.global * bind_bone.global_inverse
+        );
 
         // ボーンノードの作成
         if(parent_index == 0xFFFF) {
@@ -129,7 +131,7 @@ void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
     for(size_t i = 0; i < size; ++i) {
         const auto& bone = this->bone_nodes.at(i)->bind_bone;
 
-        this->bones->bone_matrices[i] = this->bone_nodes.at(i)->get_global();
+        this->bones->bone_matrices[i].set(this->bone_nodes.at(i)->get_global());
     }
 
     D3D11_MAPPED_SUBRESOURCE mapped;

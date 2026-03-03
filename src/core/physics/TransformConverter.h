@@ -2,5 +2,5 @@
 #include "../math/WrappedMatrix.h"
 #include <btBulletCollisionCommon.h>
 
-btTransform matrix_to_transform(const MMDMatrix& transform) noexcept;
-MMDMatrix transform_to_matrix(const btTransform& transform) noexcept;
+btTransform matrix_to_transform(const BulletMatrix& transform) noexcept;
+BulletMatrix transform_to_matrix(const btTransform& transform) noexcept;

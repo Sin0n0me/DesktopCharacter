@@ -6,7 +6,9 @@
 #include <type_traits>
 #include <utility>
 
-#ifdef _WIN32
+//#define USE_GLM
+
+#if defined(_WIN32) && !defined(USE_GLM)
 #include <DirectXMath.h>
 
 using Matrix4x4 = DirectX::XMMATRIX;
@@ -36,6 +38,8 @@ namespace {
 }
 
 // 右手系, 左手系, 行優先, 列優先が混じり分からなくなって辛かったので行列のラッパークラス作成
+// このプロジェクトではMMDに合わせて基本すべて列優先, 左手系として扱うので
+// このクラス内でプロジェクトの基準に合わせた行列の配置にする
 template <bool IsLeftHand = true, bool IsRowMajor = true>
 class WrappedMatrix {
 private:
@@ -43,18 +47,20 @@ private:
     friend class WrappedMatrix;
 
 public:
-    using WrappedDirectXMatrix = WrappedMatrix<true, true>;  // 左手系 行優先
-    using WrappedOpenGLMatrix = WrappedMatrix<false, false>; // 右手系 列優先
-    using WrappedBulletMatrix = WrappedMatrix<false, false>; // 右手系 列優先
-    using WrappedMMDMatrix = WrappedMatrix<true, true>;      // 左手系 行優先
+    using WrappedDirectXMathMatrix = WrappedMatrix<true, true>;   // 左手系 行優先
+    using WrappedGLMMatrix = WrappedMatrix<true, false>;          // 左手系 列優先
+    using WrappedHLSLMatrix = WrappedMatrix<true, false>;         // 左手系 列優先
+    using WrappedGLSLMatrix = WrappedMatrix<false, false>;        // 右手系 列優先
+    using WrappedBulletMatrix = WrappedMatrix<false, false>;      // 右手系 列優先
+    using WrappedMMDMatrix = WrappedMatrix<true, false>;          // 左手系 列優先
 
 public:
     static constexpr bool IS_LEFT_HAND = IsLeftHand;
     static constexpr bool IS_ROW_MAJOR = IsRowMajor;
 
 public:
-    //static constexpr WrappedMatrix Zero = WrappedMatrix();
-    //static constexpr WrappedMatrix Identity = WrappedMatrix();
+    //static constexpr WrappedMatrix Zero = WrappedMatrix::make_zero_matrix();
+    //static constexpr WrappedMatrix Identity = WrappedMatrix::make_identity_matrix();
 
 private:
     Matrix4x4 matrix;
@@ -63,8 +69,12 @@ public:
     constexpr WrappedMatrix(void) noexcept :
         matrix(
 #ifdef USE_GLM
-            // TODO:
-            static_assert(false);
+            Matrix4x4(
+                Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+                Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+                Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+                Vector4(0.0f, 0.0f, 0.0f, 0.0f)
+            )
 #else
             Matrix4x4(
                 DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
@@ -78,7 +88,16 @@ public:
     constexpr WrappedMatrix(const WrappedMatrix& matrix) noexcept :
         matrix(matrix.matrix) {
     }
-    constexpr explicit WrappedMatrix(const Matrix4x4& matrix) noexcept : matrix(matrix) {}
+    constexpr explicit WrappedMatrix(const Matrix4x4& matrix) noexcept :
+        matrix(
+#ifdef USE_GLM
+            matrix
+#else
+            IS_ROW_MAJOR ? matrix : DirectX::XMMatrixTranspose(matrix)
+#endif // USE_GLM
+        ) {
+    }
+
     constexpr explicit WrappedMatrix(
         const float m11, const float m12, const float m13, const float m14,
         const float m21, const float m22, const float m23, const float m24,
@@ -96,8 +115,19 @@ public:
     constexpr explicit WrappedMatrix(const std::array<float, 16>& array) noexcept :
         matrix(
 #ifdef USE_GLM
-            // TODO:
-            static_assert(false);
+            IsRowMajor ?
+            Matrix4x4(
+                array[0], array[4], array[8], array[12],
+                array[1], array[5], array[9], array[13],
+                array[2], array[6], array[10], array[14],
+                array[3], array[7], array[11], array[15]
+            ) :
+            Matrix4x4(
+                array[0], array[1], array[2], array[3],
+                array[4], array[5], array[6], array[7],
+                array[8], array[9], array[10], array[11],
+                array[12], array[13], array[14], array[15]
+            )
 #else
             IsRowMajor ?
             Matrix4x4(
@@ -136,8 +166,16 @@ public:
      */
     [[nodiscard]] constexpr Vector4 get_translation(void) const noexcept {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            return Vector4(
+                this->matrix[0].w,
+                this->matrix[1].w,
+                this->matrix[2].w,
+                this->matrix[3].w
+            );
+        } else {
+            return this->matrix[3];
+        }
 #else
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
             return this->matrix.r[3];
@@ -170,6 +208,7 @@ public:
 #ifdef USE_GLM
         // TODO: glmは転置する必要がある
         static_assert(false);
+
 #else
         DirectX::XMFLOAT4X4 tmp;
         DirectX::XMStoreFloat4x4(&tmp, this->matrix);
@@ -205,8 +244,7 @@ public:
         const float z
     ) {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
+        this->matrix[3] = Vector4(x, y, z, 1.0f);
 #else
         this->set_translation(
             DirectX::XMVectorSet(x, y, z, 1.0f)
@@ -221,8 +259,7 @@ public:
         const float w
     ) {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
+        this->matrix[3] = Vector4(x, y, z, w);
 #else
         this->set_translation(
             DirectX::XMVectorSet(x, y, z, w)
@@ -232,8 +269,7 @@ public:
 
     void set_translation(const Vector4& vec4) {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
+        this->matrix[3] = vec4;
 #else
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
             this->matrix.r[3] = vec4;
@@ -273,22 +309,11 @@ public:
         const float z
     ) {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
+        return WrappedMatrix::make_translation_from_vector(Vector4(x, y, z, 1.0));
 #else
-        const Matrix4x4 translate = DirectX::XMMatrixTranslation(
-            x,
-            y,
-            z
+        return WrappedMatrix::make_translation_from_vector(
+            DirectX::XMVectorSet(x, y, z, 1.0)
         );
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(translate);
-        } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(translate)
-            );
-        }
-
 #endif // USE_GLM
     }
 
@@ -301,20 +326,18 @@ public:
         const Vector4& vec
     ) {
 #ifdef USE_GLM
-        // TODO:
-        static_assert(false);
-#else
-        const Matrix4x4 translate = DirectX::XMMatrixTranslationFromVector(
-            vec
-        );
+        const Matrix4x4 model = Matrix4x4(1.0f);
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(translate);
+            return WrappedMatrix(glm::transpose(model * vec));
         } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(translate)
-            );
+            return WrappedMatrix(model * vec);
         }
-
+#else
+        return WrappedMatrix(
+            DirectX::XMMatrixTranslationFromVector(
+                vec
+            )
+        );
 #endif // USE_GLM
     }
 
@@ -332,17 +355,12 @@ public:
         // TODO:
         static_assert(false);
 #else
-        const auto& rotate = DirectX::XMMatrixRotationAxis(
-            axis,
-            angle.get()
+        return WrappedMatrix(
+            DirectX::XMMatrixRotationAxis(
+                axis,
+                angle.get()
+            )
         );
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(rotate);
-        } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(rotate)
-            );
-        }
 
 #endif // USE_GLM
     }
@@ -359,16 +377,11 @@ public:
         // TODO:
         static_assert(false);
 #else
-        const Matrix4x4 rotate = DirectX::XMMatrixRotationQuaternion(
-            quaternion
+        return WrappedMatrix(
+            DirectX::XMMatrixRotationQuaternion(
+                quaternion
+            )
         );
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(rotate);
-        } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(rotate)
-            );
-        }
 
 #endif // USE_GLM
     }
@@ -382,18 +395,13 @@ public:
         // TODO:
         static_assert(false);
 #else
-        const Matrix4x4 rotate = DirectX::XMMatrixRotationRollPitchYaw(
-            pitch.get(),
-            yaw.get(),
-            roll.get()
+        return WrappedMatrix(
+            DirectX::XMMatrixRotationRollPitchYaw(
+                pitch.get(),
+                yaw.get(),
+                roll.get()
+            )
         );
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(rotate);
-        } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(rotate)
-            );
-        }
 
 #endif // USE_GLM
     }
@@ -412,14 +420,7 @@ public:
             y,
             z
         );
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(scale);
-        } else {
-            return WrappedMatrix(
-                DirectX::XMMatrixTranspose(scale)
-            );
-        }
-
+        return WrappedMatrix(scale);
 #endif // USE_GLM
     }
 
@@ -435,26 +436,19 @@ public:
         return *this;
     }
     constexpr WrappedMatrix operator*(const WrappedMatrix& input) const noexcept {
-        return WrappedMatrix(this->matrix * input.matrix);
+        /*
+        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
+            return WrappedMatrix(input.matrix * this->matrix);
+        } else {
+            return WrappedMatrix(this->matrix * input.matrix);
+        }
+        */
+        WrappedMatrix output;
+        output.matrix = this->matrix * input.matrix;
+        return output;
     }
 
 public:
-    // 悩み中なのでいったんコメントアウト
-    /*
-    constexpr Vector4& operator[](const unsigned int index) const {
-#ifdef USE_GLM
-        // TODO:
-        static_assert(false);
-#else
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return this->matrix.r[index];
-        } else {
-            return this->transpose().matrix.r[index];
-        }
-
-#endif // USE_GLM
-    }
-     */
 
     template <bool CastHand, bool CastMajor>
     constexpr explicit operator WrappedMatrix<
@@ -529,54 +523,44 @@ public:
     }
 
 public:
-    [[nodiscard]] constexpr WrappedMatrix::WrappedDirectXMatrix to_directx(void) const {
-        return this->to<WrappedMatrix::WrappedDirectXMatrix>();
-    }
-    [[nodiscard]] constexpr WrappedMatrix::WrappedOpenGLMatrix to_opengl(void) const {
-        return this->to<WrappedMatrix::WrappedOpenGLMatrix>();
-    }
-    [[nodiscard]] constexpr WrappedMatrix::WrappedBulletMatrix to_bullet(void) const {
-        return this->to<WrappedMatrix::WrappedBulletMatrix>();
-    }
-    [[nodiscard]] constexpr WrappedMatrix::WrappedMMDMatrix to_mmd(void) const {
-        return this->to<WrappedMatrix::WrappedMMDMatrix>();
-    }
-
-public:
     [[nodiscard]] constexpr WrappedMatrix<!IsLeftHand, IsRowMajor> inverse_z(void) const {
         using Output = WrappedMatrix<!IsLeftHand, IsRowMajor>;
-
+        Output output;
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
 #else
         const auto scale = DirectX::XMMatrixScaling(1.0f, 1.0f, -1.0f);
-        return Output(
-            scale * this->matrix * scale
-        );
+        output.matrix = scale * this->matrix * scale;
 #endif // USE_GLM
+        return output;
     }
 
     [[nodiscard]] constexpr WrappedMatrix<IsLeftHand, !IsRowMajor> transpose(void) const {
+        WrappedMatrix<IsLeftHand, !IsRowMajor> output;
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
 #else
-        return WrappedMatrix<IsLeftHand, !IsRowMajor>(
-            DirectX::XMMatrixTranspose(this->matrix)
-        );
+        output.matrix = DirectX::XMMatrixTranspose(this->matrix);
 #endif // USE_GLM
+        return output;
     }
 
     [[nodiscard]] constexpr WrappedMatrix inverse(void) const {
+        WrappedMatrix output;
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
 #else
-        return WrappedMatrix(
-            DirectX::XMMatrixInverse(nullptr, this->matrix)
+        output.matrix = DirectX::XMMatrixTranspose(
+            DirectX::XMMatrixInverse(
+                nullptr,
+                this->transpose().get()
+            )
         );
 #endif // USE_GLM
+        return output;
     }
 
 public:
@@ -611,15 +595,13 @@ public:
         const WrappedMatrix& view,
         const WrappedMatrix& projection
     ) {
+        WrappedMatrix output;
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(
-                model.matrix * view.matrix * projection.matrix
-            );
+            output.matrix = model.matrix * view.matrix * projection.matrix;
         } else {
-            return WrappedMatrix(
-                projection.matrix * view.matrix * model.matrix
-            );
+            output.matrix = projection.matrix * view.matrix * model.matrix;
         }
+        return output;
     }
 
     /**
@@ -634,15 +616,13 @@ public:
         const WrappedMatrix& rotate,
         const WrappedMatrix& scale
     ) {
+        WrappedMatrix output;
         if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(
-                scale.matrix * rotate.matrix * translate.matrix
-            );
+            output.matrix = scale.matrix * rotate.matrix * translate.matrix;
         } else {
-            return WrappedMatrix(
-                translate.matrix * rotate.matrix * scale.matrix
-            );
+            output.matrix = translate.matrix * rotate.matrix * scale.matrix;
         }
+        return output;
     }
 
 public:
@@ -679,7 +659,13 @@ public:
     }
 };
 
-using DirectXMatrix = WrappedMatrix<>::WrappedDirectXMatrix;
-using OpenGLMatrix = WrappedMatrix<>::WrappedOpenGLMatrix;
+using DirectXMathMatrix = WrappedMatrix<>::WrappedDirectXMathMatrix;
+using GLMMatrix = WrappedMatrix<>::WrappedGLMMatrix;
 using BulletMatrix = WrappedMatrix<>::WrappedBulletMatrix;
 using MMDMatrix = WrappedMatrix<>::WrappedMMDMatrix;
+
+#if defined(USE_GLM)
+using Matrix = GLMMatrix;
+#else
+using Matrix = DirectXMathMatrix;
+#endif // USE_GLM

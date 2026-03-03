@@ -57,7 +57,7 @@ void MMDPhysicsWorld::reset_physics(btDiscreteDynamicsWorld* const world) {
         rb->apply_local_transform();
     }
     for(auto& node : this->root_nodes) {
-        node->update_global();
+        // node->update_global();
     }
     for(auto& rb : this->rigid_bodies) {
         rb->reset(world);
@@ -72,7 +72,7 @@ void MMDPhysicsWorld::apply_physics(btDiscreteDynamicsWorld* const world) {
         rb->apply_local_transform();
     }
     for(auto& node : this->root_nodes) {
-        node->update_global();
+        //node->update_global();
     }
 }
 

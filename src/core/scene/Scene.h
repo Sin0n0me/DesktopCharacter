@@ -1,22 +1,26 @@
 #pragma once
-#include "light/Light.h"
+#include <memory>
 
 struct ID3D11DeviceContext;
 struct ID3D11Device;
+struct Camera;
+struct Shadow;
+class CommonResource;
 
 class Scene {
 private:
     std::shared_ptr<Camera> camera;
-    Light light;
+    std::shared_ptr<Shadow> light;
 
     std::shared_ptr<CommonResource> resource;
 
     bool make_camera(ID3D11Device* const device);
+    bool make_shadow_map_light(ID3D11Device* const device);
 
 public:
 
-    const std::shared_ptr<Camera> get_camera(void) const;
-    const Light& get_lignt(void) const;
+    std::shared_ptr<Camera> get_camera(void) const;
+    std::shared_ptr<Shadow> get_lignt(void) const;
 
     explicit Scene(const std::shared_ptr<CommonResource>& resouce);
 

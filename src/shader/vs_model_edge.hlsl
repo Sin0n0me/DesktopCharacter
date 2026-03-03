@@ -6,16 +6,12 @@
 
 PSInput main(const VSInput input) {
     PSInput output;
-
+    
     // スキニング
     const float4 expanded_position = float4(input.position + input.normal * edge_width, 1.0f);
     const float4 skinned_pos = skinned_position(expanded_position, input.bones, input.weights);
-    
-    // カメラ
-    const float4 world_pos = mul(skinned_pos, world);
-    const float4 view_pos = mul(world_pos, view);
-    const float4 clip_pos = mul(view_pos, proj);
-    
+    const float4 clip_pos = apply_camera(skinned_pos);
+
     output.position = clip_pos;
     output.edge_flag = input.edge_flag;
  

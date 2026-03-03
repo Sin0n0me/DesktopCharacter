@@ -14,8 +14,8 @@ MMDKinematicMotionState::MMDKinematicMotionState(
 void MMDKinematicMotionState::getWorldTransform(btTransform& worldTrans) const {
     // mmdの世界でオフセット適用後にbulletの世界に変換
     const MMDMatrix global = this->bone_node->get_global();
-    const MMDMatrix offset_matrix = this->offset * global;
-    worldTrans = matrix_to_transform(offset_matrix);
+    const MMDMatrix offset_matrix = global * this->offset;
+    worldTrans = matrix_to_transform(offset_matrix.inverse_z());
 }
 
 void MMDKinematicMotionState::setWorldTransform(const btTransform& worldTrans) {

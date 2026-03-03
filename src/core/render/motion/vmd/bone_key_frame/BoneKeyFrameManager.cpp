@@ -83,7 +83,7 @@ void BoneKeyFrameManager::apply_skinning(void) {
     // スキニング用の定数バッファ結果を格納
     for(const auto& bone_node : this->bone_accessor->get_all_bone_nodes()) {
         const auto& inverse = bone_node->bind_bone.global_inverse;
-        bone_node->set_global(inverse * bone_node->get_global());
+        bone_node->set_global(bone_node->get_global() * inverse);
     }
 }
 

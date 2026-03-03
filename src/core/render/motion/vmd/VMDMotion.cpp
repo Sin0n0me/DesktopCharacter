@@ -89,7 +89,7 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     this->frame_manager->update(delta_time);
 
     // 物理シミュレーション通知
-    this->physics->notify_update(delta_time);
+    //this->physics->notify_update(delta_time);
 
     // モーフの適用
     this->morph_key_frame_manager->apply_morph();
@@ -104,7 +104,7 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     this->ik_key_frame_manager->apply_ik();
 
     // 物理演算適用
-    this->physics->apply_physics();
+    //this->physics->apply_physics();
 
     // スキニング用のグローバル行列の確定
     this->bone_key_frame_manager->apply_skinning();

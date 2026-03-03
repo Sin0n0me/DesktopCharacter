@@ -45,8 +45,8 @@ void BoneNode::update_local(void) {
     const auto anim_translate = MMDMatrix::make_translation_from_vector(this->translate);
     const auto translate_matrix = this->bind_bone.local * anim_translate;
     const auto rotate = DirectX::XMQuaternionMultiply(
-        this->animation_rotate,
-        this->ik_rotate
+        this->ik_rotate,
+        this->animation_rotate
     );
     const auto rotate_matrix = MMDMatrix::make_rotation_from_quaternion(rotate);
 
@@ -59,7 +59,7 @@ void BoneNode::update_local(void) {
 
 void BoneNode::update_global(void) {
     if(const auto parent_node = this->parent.lock()) {
-        this->global = this->local * parent_node->global;
+        this->global = parent_node->global * this->local;
     } else {
         this->global = this->local;
     }

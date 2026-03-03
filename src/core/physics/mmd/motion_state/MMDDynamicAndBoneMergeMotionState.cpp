@@ -22,18 +22,17 @@ void MMDDynamicAndBoneMergeMotionState::setWorldTransform(const btTransform& wor
 }
 
 void MMDDynamicAndBoneMergeMotionState::reset(void) {
-    // mmdの世界でオフセット適用後にbulletの世界に変換
-    const MMDMatrix& offset_matrix = this->offset * this->bone_node->get_global();
-    this->transform = matrix_to_transform(offset_matrix.to_bullet());
+    // mmdの世界からbulletの世界に変換しオフセット適用
+    const MMDMatrix global = this->bone_node->get_global();
+    const MMDMatrix offset_matrix = this->offset * global;
+    this->transform = matrix_to_transform(offset_matrix);
 }
 
 void MMDDynamicAndBoneMergeMotionState::reflect_global_transform(void) {
-    // MMDの世界に変換
-    const MMDMatrix matrix = transform_to_matrix(this->transform).to_mmd();
-
     // 中心とのoffsetが掛かっているので
     // offsetの逆行列を掛けることでボーン空間に戻す
-    MMDMatrix global = this->inverse_offset * matrix;
+    MMDMatrix global = this->inverse_offset * transform_to_matrix(this->transform);
+
     global.set_translation(this->bone_node->get_global_position());
 
     this->bone_node->set_global(global);

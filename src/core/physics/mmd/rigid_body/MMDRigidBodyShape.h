@@ -4,21 +4,7 @@
 using RigidBodyShapeTypeBase = decltype(PMDRigidBody::shape_type);
 
 enum class MMDRigidBodyShape : RigidBodyShapeTypeBase {
-    Sphere,
-    Box,
-    Capsule,
-    Unknown,
+    Sphere = 0,
+    Box = 1,
+    Capsule = 2,
 };
-
-MMDRigidBodyShape get_mmd_rigid_body_shape(const RigidBodyShapeTypeBase& rigid_body_type) {
-    switch(rigid_body_type) {
-    case 0:
-        return MMDRigidBodyShape::Sphere;
-    case 1:
-        return MMDRigidBodyShape::Box;
-    case 2:
-        return MMDRigidBodyShape::Capsule;
-    default:
-        return MMDRigidBodyShape::Unknown;
-    }
-}

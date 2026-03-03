@@ -6,9 +6,9 @@ class BoneNode;
 
 class MMDDynamicAndBoneMergeMotionState : public MMDMotionState {
 private:
-    std::shared_ptr<BoneNode> bone_node;
-    MMDMatrix inverse_offset;
-    MMDMatrix offset;
+    const std::shared_ptr<BoneNode> bone_node;
+    const MMDMatrix inverse_offset;
+    const MMDMatrix offset;
     btTransform	transform;
 
 public:

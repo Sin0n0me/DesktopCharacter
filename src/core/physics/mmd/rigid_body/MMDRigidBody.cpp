@@ -1,7 +1,6 @@
 #include "../../../log/Logger.h"
 #include "../../../render/model/pmd/bone/BoneNode.h"
 #include "../../../utility/Hash.h"
-#include "../MMDPhysics.h"
 #include "../motion_state/MMDDynamicAndBoneMergeMotionState.h"
 #include "../motion_state/MMDDynamicMotionState.h"
 #include "../motion_state/MMDKinematicMotionState.h"
@@ -18,7 +17,7 @@ MMDRigidBody::MMDRigidBody(
     node(node),
     group(rigid_body.group_index),
     group_mask(rigid_body.group_target),
-    rigid_body_type(get_mmd_rigid_body_type(rigid_body.rigid_body_type)),
+    rigid_body_type(static_cast<MMDRigidBodyType>(rigid_body.rigid_body_type)),
     name_hash(hash_u32(rigid_body.name)),
     shape(MMDRigidBody::make_shape(rigid_body)),
     active_motion_state(),
@@ -27,7 +26,7 @@ MMDRigidBody::MMDRigidBody(
 }
 
 std::unique_ptr<btCollisionShape> MMDRigidBody::make_shape(const PMDRigidBody& rigid_body) {
-    switch(get_mmd_rigid_body_shape(rigid_body.shape_type)) {
+    switch(static_cast<MMDRigidBodyShape>(rigid_body.shape_type)) {
     case MMDRigidBodyShape::Sphere:
         return std::make_unique<btSphereShape>(
             rigid_body.shape_size[0]
@@ -54,6 +53,8 @@ std::unique_ptr<btCollisionShape> MMDRigidBody::make_shape(const PMDRigidBody& r
 
 // 剛体中心とのオフセットは以下で求める(列優先の場合)
 // Inverse(global) * InvZ(InvZ(global) * T * R)
+// 行優先なので
+// R * T * Inverse(global)
 MMDMatrix MMDRigidBody::make_offset(
     const PMDRigidBody& rigid_body,
     const BoneNode* node
@@ -62,21 +63,20 @@ MMDMatrix MMDRigidBody::make_offset(
     // pitch, yaw, rollの順序で格納されている(Z->X->Yの順序になるよう)
     // 引数はroll, pitch, yawの順序
     const MMDMatrix global = node->get_global();
-    const BulletMatrix rotate_matrix = BulletMatrix::make_rotation_from_roll_pitch_yaw(
+    const MMDMatrix rotate_matrix = MMDMatrix::make_rotation_from_roll_pitch_yaw(
         Radian(rigid_body.rotation[2]),
         Radian(rigid_body.rotation[0]),
         Radian(rigid_body.rotation[1])
     );
-    const BulletMatrix translate_matrix = BulletMatrix::make_translation(
+    const MMDMatrix translate_matrix = MMDMatrix::make_translation(
         rigid_body.position[0],
         rigid_body.position[1],
         rigid_body.position[2]
     );
-    const BulletMatrix transform = translate_matrix * rotate_matrix;
-    const BulletMatrix world_transform = global.to_bullet() * transform;
+    const MMDMatrix transform = rotate_matrix * translate_matrix;
+    const MMDMatrix offset = transform * node->bind_bone.global_inverse;
 
-    // to_mmd()で行優先へ転置し右手系から左手系へ変換
-    return world_transform.to_mmd() * global.inverse();
+    return offset;
 }
 
 bool MMDRigidBody::make_rigid_body(const PMDRigidBody& rigid_body) {
@@ -84,7 +84,7 @@ bool MMDRigidBody::make_rigid_body(const PMDRigidBody& rigid_body) {
         return false;
     }
 
-    const bool is_static = this->rigid_body_type == MMDRigidBodyType::Static;
+    const bool is_static = this->rigid_body_type == MMDRigidBodyType::Kinematic;
     const btScalar mass = is_static ? 0.0f : rigid_body.mass;
     btVector3 local_interia(0, 0, 0);
 
@@ -129,7 +129,7 @@ bool MMDRigidBody::make_motion_state(const PMDRigidBody& rigid_body) {
     const MMDMatrix offset = this->make_offset(rigid_body, this->node.get());
 
     switch(this->rigid_body_type) {
-    case MMDRigidBodyType::Static:
+    case MMDRigidBodyType::Kinematic:
         this->kinematic_motion_state = std::make_unique<MMDKinematicMotionState>(
             this->node,
             offset
@@ -190,12 +190,14 @@ btRigidBody* MMDRigidBody::get_rigid_body(void) const {
 
 void MMDRigidBody::set_active(const bool active_flag) {
     const auto current_flag = this->rigid_body->getCollisionFlags();
-    if(this->rigid_body_type != MMDRigidBodyType::Static) {
+    if(this->rigid_body_type != MMDRigidBodyType::Kinematic) {
         const auto motion_state = active_flag ?
             this->active_motion_state.get() :
             this->kinematic_motion_state.get();
+        const auto flag = active_flag ?
+            current_flag & ~btCollisionObject::CF_KINEMATIC_OBJECT :
+            current_flag | btCollisionObject::CF_KINEMATIC_OBJECT;
 
-        const auto flag = current_flag & ~btCollisionObject::CF_KINEMATIC_OBJECT;
         this->rigid_body->setCollisionFlags(flag);
         this->rigid_body->setMotionState(motion_state);
     } else {

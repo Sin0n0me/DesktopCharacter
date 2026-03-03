@@ -7,8 +7,8 @@ class BoneNode;
 
 class MMDKinematicMotionState : public MMDMotionState {
 private:
-    std::shared_ptr<BoneNode> bone_node;
-    MMDMatrix offset;
+    const std::shared_ptr<BoneNode> bone_node;
+    const MMDMatrix offset;
     btTransform	transform;
 
 public:

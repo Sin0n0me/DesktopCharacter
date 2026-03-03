@@ -54,16 +54,16 @@ PhysicsWorld::~PhysicsWorld(void) noexcept {
     }
 }
 
-void PhysicsWorld::notify_finish(void) {
-    this->is_running.store(false);
-    this->simulate_condition.notify_all();
-    this->state_condition.notify_all();
-}
-
 void PhysicsWorld::set_synchronous(const bool flag) {
     std::lock_guard lock(this->simulation_mutex);
     this->is_synchronous.store(flag);
     this->simulate_condition.notify_all();
+}
+
+void PhysicsWorld::notify_finish(void) {
+    this->is_running.store(false);
+    this->simulate_condition.notify_all();
+    this->state_condition.notify_all();
 }
 
 void PhysicsWorld::notify_update(const DeltaTime& delta_time) {

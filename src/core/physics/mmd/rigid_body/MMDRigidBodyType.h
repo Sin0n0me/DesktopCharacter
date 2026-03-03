@@ -4,10 +4,7 @@
 using RigidBodyTypeBase = decltype(PMDRigidBody::rigid_body_type);
 
 enum class MMDRigidBodyType : RigidBodyTypeBase {
-    Static,
-    Dynamic,
-    DynamicAdjustBone,
-    Unknown,
+    Kinematic = 0,          // ボーン追従
+    Dynamic = 1,            //
+    DynamicAdjustBone = 2,  //
 };
-
-MMDRigidBodyType get_mmd_rigid_body_type(const RigidBodyTypeBase& rigid_body_type);

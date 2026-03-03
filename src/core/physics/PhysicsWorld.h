@@ -54,10 +54,6 @@ private:
     void simulation_update(void);
 
 protected:
-    /**
-     * @brief 物理シミュレート用スレッドを終了させる
-     */
-    void notify_finish(void);
 
     /**
      * @brief 物理シミュレートを同期させるかどうかのフラグをセットする
@@ -71,7 +67,17 @@ public:
     );
     virtual ~PhysicsWorld(void) noexcept;
 
+    /**
+     * @brief 物理シミュレート用スレッドを終了通知を送る
+     */
+    void notify_finish(void);
+
+    /**
+     * @brief 物理シミュレート用スレッドに更新通知を送る
+     * @param delta_time デルタタイム
+     */
     void notify_update(const DeltaTime& delta_time);
+
     void submit(const Func& func);
     void reset_physics(void);
     void apply_physics(void);

@@ -1,6 +1,7 @@
 #include "../../log/Logger.h"
 #include "../../render/model/pmd/bone/BoneNode.h"
 #include "../PhysicsSettings.h"
+#include "../TransformConverter.h"
 #include "joint/MMDJoint.h"
 #include "MMDPhysicsWorld.h"
 #include "motion_state/MMDMotionState.h"
@@ -46,7 +47,20 @@ void MMDPhysicsWorld::finished_simulation(void) {
 
 void MMDPhysicsWorld::reset_physics(btDiscreteDynamicsWorld* const world) {
     for(auto& rb : this->rigid_bodies) {
+        rb->set_active(false);
         rb->reset_transform();
+    }
+    for(auto& rb : this->rigid_bodies) {
+        rb->apply_global_transform();
+    }
+    for(auto& rb : this->rigid_bodies) {
+        rb->apply_local_transform();
+    }
+    for(auto& node : this->root_nodes) {
+        node->update_global();
+    }
+    for(auto& rb : this->rigid_bodies) {
+        rb->reset(world);
     }
 }
 
@@ -68,7 +82,6 @@ bool MMDPhysicsWorld::add_rigid_body(
 ) {
     auto mmd_rigid_body = MMDRigidBody::make_ptr(rigid_body, node);
     if(!bool(mmd_rigid_body)) {
-        this->notify_finish();
         return false;
     }
 
@@ -96,7 +109,6 @@ bool MMDPhysicsWorld::add_joint(const PMDPhysicsJoint& joint) {
     const auto size = this->rigid_bodies.size();
     // 0 index
     if(size < joint.rigid_body_a || size < joint.rigid_body_b) {
-        this->notify_finish();
         return false;
     }
 

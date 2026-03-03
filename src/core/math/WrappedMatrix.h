@@ -75,7 +75,7 @@ public:
 #endif // USE_GLM
         ) {
     }
-    constexpr WrappedMatrix(const WrappedMatrix& matrix) :
+    constexpr WrappedMatrix(const WrappedMatrix& matrix) noexcept :
         matrix(matrix.matrix) {
     }
     constexpr explicit WrappedMatrix(const Matrix4x4& matrix) noexcept : matrix(matrix) {}
@@ -93,7 +93,7 @@ public:
         ) {
     }
 
-    constexpr explicit WrappedMatrix(const std::array<float, 16>& array) :
+    constexpr explicit WrappedMatrix(const std::array<float, 16>& array) noexcept :
         matrix(
 #ifdef USE_GLM
             // TODO:
@@ -116,7 +116,7 @@ public:
         ) {
     }
     template <bool InputHand, bool InputMajor>
-    constexpr explicit WrappedMatrix(const WrappedMatrix<InputHand, InputMajor>& matrix) :
+    constexpr explicit WrappedMatrix(const WrappedMatrix<InputHand, InputMajor>& matrix) noexcept :
         matrix(matrix.to<WrappedMatrix>().matrix) {
     }
 
@@ -126,7 +126,7 @@ public:
      * @brief unwrapされた行列を取得する
      * @return unwrapした行列の参照
      */
-    [[nodiscard]] constexpr const Matrix4x4& get(void) const {
+    [[nodiscard]] constexpr const Matrix4x4& get(void) const noexcept {
         return this->matrix;
     }
 
@@ -134,7 +134,7 @@ public:
      * @brief 行列内の平行移動成分を取得する
      * @return 行列内の平行移動成分
      */
-    [[nodiscard]] constexpr Vector4 get_translation(void) const {
+    [[nodiscard]] constexpr Vector4 get_translation(void) const noexcept {
 #ifdef USE_GLM
         // TODO:
         static_assert(false);
@@ -171,11 +171,9 @@ public:
         // TODO: glmは転置する必要がある
         static_assert(false);
 #else
-        DirectX::XMStoreFloat4x4(
-            reinterpret_cast<DirectX::XMFLOAT4X4*>(result.data()),
-            this->matrix
-        );
-
+        DirectX::XMFLOAT4X4 tmp;
+        DirectX::XMStoreFloat4x4(&tmp, this->matrix);
+        std::memcpy(result.data(), &tmp, sizeof(tmp));
 #endif // USE_GLM
 
         return result;
@@ -192,10 +190,9 @@ public:
         // TODO: glmは転置するはない
         static_assert(false);
 #else
-        DirectX::XMStoreFloat4x4(
-            reinterpret_cast<DirectX::XMFLOAT4X4*>(result.data()),
-            DirectX::XMMatrixTranspose(this->matrix)
-        );
+        DirectX::XMFLOAT4X4 tmp;
+        DirectX::XMStoreFloat4x4(&tmp, DirectX::XMMatrixTranspose(this->matrix));
+        std::memcpy(result.data(), &tmp, sizeof(tmp));
 
 #endif // USE_GLM
 
@@ -427,13 +424,17 @@ public:
     }
 
 public:
-    constexpr void operator=(const WrappedMatrix& input) {
-        this->matrix = input.matrix;
+    constexpr WrappedMatrix& operator=(const WrappedMatrix& input) noexcept {
+        if(this != &input) {
+            this->matrix = input.matrix;
+        }
+        return *this;
     }
-    constexpr void operator*=(const WrappedMatrix& input) {
+    constexpr WrappedMatrix& operator*=(const WrappedMatrix& input) noexcept {
         this->matrix *= input.matrix;
+        return *this;
     }
-    constexpr WrappedMatrix operator*(const WrappedMatrix& input) const {
+    constexpr WrappedMatrix operator*(const WrappedMatrix& input) const noexcept {
         return WrappedMatrix(this->matrix * input.matrix);
     }
 
@@ -491,7 +492,7 @@ public:
             if constexpr(is_same_major) {
                 return matrix.inverse_z();
             } else {
-                return matrix.transpose().inverse_z();
+                return matrix.inverse_z().transpose();
             }
         }
     }
@@ -605,7 +606,7 @@ public:
      * @param projection
      * @return
      */
-    [[nodiscard]] static constexpr WrappedMatrix make_camera_matrix(
+    [[nodiscard]] static constexpr WrappedMatrix make_model_view_projection_matrix(
         const WrappedMatrix& model,
         const WrappedMatrix& view,
         const WrappedMatrix& projection

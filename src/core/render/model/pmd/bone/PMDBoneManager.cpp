@@ -13,7 +13,7 @@
 PMDBoneManager::PMDBoneManager(
     const std::shared_ptr<const PMDBones>& bones
 ) noexcept :
-    bones(new Bones()),
+    bones(std::make_shared<Bones>()),
     bone_nodes() {
     const auto bone_count = bones->size;
     std::map<BoneIndex, BindBone> bind_bone_map;
@@ -48,7 +48,7 @@ PMDBoneManager::PMDBoneManager(
         );
 
         this->bone_name_map.emplace(
-            hash_u32(bone.name),
+            std::string(bone.name),
             BoneNameProfile{
                 .name = bone.name,
                 .index = index,
@@ -127,6 +127,8 @@ bool PMDBoneManager::init(ID3D11Device* const device) {
 void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
     const auto size = this->bone_nodes.size();
     for(size_t i = 0; i < size; ++i) {
+        const auto& bone = this->bone_nodes.at(i)->bind_bone;
+
         this->bones->bone_matrices[i] = this->bone_nodes.at(i)->get_global();
     }
 
@@ -160,7 +162,7 @@ BoneNodePtr PMDBoneManager::get_bone_node(const BoneIndex& index) const {
 }
 
 std::optional<BoneIndex> PMDBoneManager::get_bone_index(const std::string& name) const {
-    const auto& iter = this->bone_name_map.find(hash_u32(name.c_str()));
+    const auto& iter = this->bone_name_map.find(name);
     if(iter == this->bone_name_map.end()) {
         return std::nullopt;
     }
@@ -178,4 +180,14 @@ std::vector<BoneNodePtr> PMDBoneManager::get_root_bones(void) const {
     }
 
     return vec;
+}
+
+std::string PMDBoneManager::get_bone_name(const BoneIndex& index) const {
+    for(const auto& [_, profile] : this->bone_name_map) {
+        if(profile.index == index) {
+            return profile.name;
+        }
+    }
+
+    return std::string();
 }

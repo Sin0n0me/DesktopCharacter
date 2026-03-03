@@ -22,7 +22,7 @@ private:
     std::shared_ptr<PMDMorphManager> morph_manager;
     std::shared_ptr<PMDModelLoader> model_loader;
     std::shared_ptr<VMDMotionManager> motion_manager;
-    std::shared_ptr<IKSolver> ik_soulver;
+    std::shared_ptr<IKSolver> ik_solver;
     std::vector<PMDMaterialData> materials;
     std::vector<Texture> toon_textures;
     Microsoft::WRL::ComPtr<ID3D11BlendState> blend_state;

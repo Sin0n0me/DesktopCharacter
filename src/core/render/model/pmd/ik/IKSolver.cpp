@@ -15,15 +15,12 @@ IKSolver::IKSolver(
 ) noexcept :
     bone_accessor(bone_accessor),
     ik_map(),
-    hinge_set() {
+    hinge_map() {
     for(const auto& ik : iks->iks) {
-        this->ik_map[ik.ik_bone] = ik;
-        this->ik_quaternion_map[ik.ik_bone] = DirectX::XMQuaternionIdentity();
+        const auto ik_bone = ik.ik_bone;
+        this->ik_map[ik_bone] = ik;
+        this->ik_quaternion_map[ik_bone] = DirectX::XMQuaternionIdentity();
     }
-
-    // TODO: 削除
-    this->hinge_set.insert(5);
-    this->hinge_set.insert(8);
 }
 
 void IKSolver::apply_ik(const BoneIndex& bone_index) {
@@ -51,11 +48,11 @@ void IKSolver::apply_ik(const BoneIndex& bone_index) {
         for(const auto& index : ik.chain) {
             const auto bone_node = this->bone_accessor->get_bone_node(index).get();
             this->solve_ik_bone(
+                index,
                 bone_node,
                 ik_node,
                 target_node,
-                Radian(ik.limit),
-                this->hinge_set.contains(index)
+                Radian(ik.limit)
             );
         }
 
@@ -87,12 +84,24 @@ void IKSolver::apply_ik(const BoneIndex& bone_index) {
     }
 }
 
+void IKSolver::add_knee(const BoneIndex& index) {
+    this->hinge_map[index] = DirectX::XMVector3Normalize(
+        DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f) // X軸固定
+    );
+}
+
+void IKSolver::add_hinge(const BoneIndex& index, const Vector4& axis) {
+    this->hinge_map[index] = DirectX::XMVector3Normalize(
+        axis
+    );
+}
+
 void IKSolver::solve_ik_bone(
+    const BoneIndex& index,
     BoneNode* const bone_node,
     const BoneNode* ik_bone_node,
     const BoneNode* target_bone_node,
-    const Radian<float>& ik_limit,
-    const bool use_hinge
+    const Radian<float>& ik_limit
 ) const {
     const MMDMatrix inv_bone = bone_node->get_global().inverse(); // inverse用
     const Vector4 bone_pos = bone_node->get_global_position();
@@ -159,11 +168,9 @@ void IKSolver::solve_ik_bone(
 
     // 制限ありCCD IK
     // スイング・ツイスト分解によるクオータニオンを分解してから制限をかけるのでCCD IK適用後に行う
-    if(use_hinge) {
-        // TODO: 任意の軸制限
-        const Vector4 twist_axis = DirectX::XMVector3Normalize(
-            DirectX::XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f) // X軸固定
-        );
+    const auto& iter = this->hinge_map.find(index);
+    if(iter != this->hinge_map.end()) {
+        const Vector4 twist_axis = iter->second;
 
         // 回転の適用
         bone_node->set_ik_rotate(

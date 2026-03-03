@@ -24,4 +24,6 @@ public:
     ) const = 0;
 
     virtual std::vector<BoneNodePtr> get_root_bones(void) const = 0;
+
+    virtual std::string get_bone_name(const BoneIndex& index) const = 0;
 };

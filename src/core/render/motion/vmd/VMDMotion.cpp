@@ -1,3 +1,4 @@
+#include "../../../log/Logger.h"
 #include "../../../physics/mmd/MMDPhysics.h"
 #include "../../../timer/DeltaTime.h"
 #include "../../model/pmd/bone/IBoneAccessor.h"
@@ -35,11 +36,11 @@ VMDMotion::VMDMotion(
 bool VMDMotion::init_motion(void) {
     this->frame_manager->set_frame(0);
     this->morph_key_frame_manager->apply_morph();
-    this->ik_key_frame_manager->apply_ik();
     this->bone_key_frame_manager->update_local_matricies();
     this->bone_key_frame_manager->update_global_matricies();
+    this->ik_key_frame_manager->apply_ik();
+    this->physics->reset_physics();
     this->bone_key_frame_manager->apply_skinning();
-    this->physics->apply_physics();
 
     return true;
 }
@@ -77,6 +78,8 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
     this->frame_manager->set_max_frame(
         *std::max_element(last_frames.begin(), last_frames.end())
     );
+
+    this->physics->reset_physics();
 
     return true;
 }

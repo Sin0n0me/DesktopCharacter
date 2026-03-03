@@ -15,7 +15,7 @@ private:
     const std::shared_ptr<const IBoneAccessor> bone_accessor;
     std::unordered_map<BoneIndex, PMDIK> ik_map; // first: index, second: ik
     std::unordered_map<BoneIndex, Vector4> ik_quaternion_map; // first: index, second: ik(quaternion)
-    std::set<BoneIndex> hinge_set; //膝などヒンジ関節である場合
+    std::unordered_map<BoneIndex, Vector4> hinge_map; // first: index, second: ヒンジ軸 膝などヒンジ関節用
 
 protected:
     static Vector4 decompose_swing_twist(
@@ -39,11 +39,11 @@ protected:
 
 protected:
     void solve_ik_bone(
+        const BoneIndex& index,
         BoneNode* const bone_node,
         const BoneNode* ik_bone_node,
         const BoneNode* target_bone_node,
-        const Radian<float>& ik_limit,
-        const bool use_hinge
+        const Radian<float>& ik_limit
     ) const;
 
 public:
@@ -54,4 +54,9 @@ public:
     ) noexcept;
 
     void apply_ik(const BoneIndex& index);
+
+    // 膝
+    void add_knee(const BoneIndex& index);
+    // 任意軸(内部で正規化される)
+    void add_hinge(const BoneIndex& index, const Vector4& axis);
 };

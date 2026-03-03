@@ -64,20 +64,14 @@ void BoneNode::update_global(void) {
         this->global = this->local;
     }
 
-    this->update_children_global();
+    for(const auto& child : this->children) {
+        child->update_global();
+    }
 }
 
 void BoneNode::update_children_global(void) {
     for(const auto& child : this->children) {
-        if(const auto node = child.lock()) {
-            if(const auto parent_node = node->parent.lock()) {
-                node->global = node->local * parent_node->global;
-            } else {
-                node->global = node->local;
-            }
-
-            node->update_children_global();
-        }
+        child->update_global();
     }
 }
 
@@ -86,7 +80,7 @@ void BoneNode::set_translate(const Vector4& translate) noexcept {
 }
 
 void BoneNode::set_animation_rotate(const Vector4& rotate) noexcept {
-    this->animation_rotate = rotate;
+    this->animation_rotate = DirectX::XMQuaternionNormalize(rotate);
 }
 
 void BoneNode::set_ik_rotate(const Vector4& rotate) noexcept {

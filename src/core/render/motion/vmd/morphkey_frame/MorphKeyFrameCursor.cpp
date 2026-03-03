@@ -26,14 +26,18 @@ void MorphKeyFrameCursor::apply_offset(
     const auto opt_previous = this->get_previous_key_frame();
 
     // 線形補完
-    const auto current_frame = current.frame;
-    const auto previous_frame = opt_previous.has_value() ? opt_previous.value().frame : 0;
-    const auto& current_weight = current.weight;
-    const auto& previous_weight = opt_previous.has_value() ? opt_previous.value().weight : 0.0f;
+    const auto manager = this->frame_manager.lock();
+    if(!bool(manager)) {
+        return;
+    }
+    const auto current_frame = current.get().frame;
+    const auto previous_frame = opt_previous.has_value() ? opt_previous.value().get().frame : 0;
+    const auto& current_weight = current.get().weight;
+    const auto& previous_weight = opt_previous.has_value() ? opt_previous.value().get().weight : 0.0f;
     const float weight = std::lerp(
         previous_weight,
         current_weight,
-        this->frame_manager->progress(
+        manager->progress(
             previous_frame,
             current_frame
         )

@@ -16,13 +16,13 @@ bool IKKeyFrameCursor::is_apply_ik(void) {
     const auto& opt_previous = this->get_previous_key_frame();
     if(opt_previous.has_value()) {
         const auto& previous = opt_previous.value();
-        return previous.show_flag;
+        return previous.get().show_flag;
     }
 
     const auto& opt_current = this->get_current_key_frame();
     if(opt_current.has_value()) {
         const auto& current = opt_current.value();
-        return current.show_flag;
+        return current.get().show_flag;
     }
 
     return false;
@@ -35,10 +35,15 @@ float IKKeyFrameCursor::progress(void) const {
     if(!opt_cur_key_frame.has_value()) {
         return 1.0f;
     }
-    const auto start_frame = opt_pre_key_frame.has_value() ? opt_pre_key_frame.value().index : 0;
-    const auto end_frame = opt_cur_key_frame.value().index;
+    const auto start_frame = opt_pre_key_frame.has_value() ? opt_pre_key_frame.value().get().index : 0;
+    const auto end_frame = opt_cur_key_frame.value().get().index;
 
-    return this->frame_manager->progress(
+    const auto manager = this->frame_manager.lock();
+    if(!bool(manager)) {
+        return 0.0f;
+    }
+
+    return manager->progress(
         start_frame,
         end_frame
     );

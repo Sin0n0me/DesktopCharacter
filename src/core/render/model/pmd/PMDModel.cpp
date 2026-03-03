@@ -4,6 +4,7 @@
 #include "../../../physics/mmd/MMDPhysicsWorld.h"
 #include "../../../physics/mmd/motion_state/MMDMotionState.h"
 #include "../../../physics/mmd/rigid_body/MMDRigidBody.h"
+#include "../../../utility/Convert.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../motion/vmd/VMDMotion.h"
 #include "../../motion/vmd/VMDMotionManager.h"
@@ -60,12 +61,24 @@ bool PMDModel::init(ID3D11Device* const device) {
     if(!this->physics->init()) {
         return false;
     }
+    Logger::info(u8"物理エンジンの初期化に成功しました");
 
     // IK
-    this->ik_soulver = std::make_unique<IKSolver>(
+    this->ik_solver = std::make_unique<IKSolver>(
         this->bone_manager,
         this->model_loader->get_iks()
     );
+    const auto& bones = this->model_loader->get_bones()->bones;
+    for(int bone_index = 0; bone_index < bones.size(); ++bone_index) {
+        const auto& bone = bones.at(bone_index);
+        const auto opt_bone_name = sjis_to_utf8(bone.name);
+        if(!opt_bone_name.has_value()) {
+            continue;
+        }
+        if(opt_bone_name.value().find(u8"ひざ") != std::string::npos) {
+            this->ik_solver->add_knee(bone_index);
+        }
+    }
 
     // モーフ
     this->morph_manager = std::make_unique<PMDMorphManager>(
@@ -77,7 +90,7 @@ bool PMDModel::init(ID3D11Device* const device) {
     this->motion_manager = std::make_unique<VMDMotionManager>(
         this->bone_manager,
         this->morph_manager,
-        this->ik_soulver,
+        this->ik_solver,
         this->physics
     );
     if(!this->motion_manager->init()) {
@@ -192,7 +205,7 @@ bool PMDModel::is_loaded_model() {
     return bool(this->bone_manager)
         && bool(this->motion_manager)
         && bool(this->morph_manager)
-        && bool(this->ik_soulver)
+        && bool(this->ik_solver)
         && bool(this->physics);
 }
 
@@ -415,6 +428,7 @@ bool PMDModel::make_rigid_body(void) {
             rigid_body,
             node
         )) {
+            world->notify_finish();
             return false;
         }
     }
@@ -430,6 +444,7 @@ bool PMDModel::make_joint(void) {
     const auto world = this->physics->get_mmd_world();
     for(const auto& joint : this->model_loader->get_physics_joints()->physics_joints) {
         if(!world->add_joint(joint)) {
+            world->notify_finish();
             return false;
         }
     }

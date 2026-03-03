@@ -22,7 +22,7 @@ private:
 private:
     std::shared_ptr<Bones> bones; // 更新用
     std::vector<BoneNodePtr> bone_nodes;// 更新用
-    std::unordered_map<uint32_t, BoneNameProfile> bone_name_map;
+    std::unordered_map<std::string, BoneNameProfile> bone_name_map;
     Microsoft::WRL::ComPtr<ID3D11Buffer> bone_buffer;
 
     bool make_constant_buffer(ID3D11Device* const device);
@@ -41,4 +41,5 @@ public:
     BoneNodePtr get_bone_node(const BoneIndex& index) const override;
     std::optional<BoneIndex> get_bone_index(const std::string& name) const override;
     std::vector<BoneNodePtr> get_root_bones(void) const override;
+    std::string get_bone_name(const BoneIndex& index) const override;
 };

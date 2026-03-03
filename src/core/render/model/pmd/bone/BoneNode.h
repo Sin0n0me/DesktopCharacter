@@ -5,7 +5,7 @@
 
 class BoneNode {
 protected:
-    std::vector<std::weak_ptr<BoneNode>> children;
+    std::vector<std::shared_ptr<BoneNode>> children;
     Vector4 translate;
     Vector4 animation_rotate; // 四元数
     Vector4 ik_rotate;        // 四元数

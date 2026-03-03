@@ -72,7 +72,7 @@ KeyFrame MorphKeyFrameManager::get_last_frame(void) const noexcept {
     for(const auto& [_, cursor] : this->morph_key_frames) {
         const auto& opt_last = cursor->get_last_key_frame();
         if(opt_last.has_value()) {
-            const auto& last = opt_last.value().frame;
+            const auto& last = opt_last.value().get().frame;
             last_frame = last_frame < last ? last : last_frame;
         }
     }

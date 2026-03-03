@@ -24,10 +24,10 @@ BoneKeyFrameManager::BoneKeyFrameManager(
         if(!opt_bone_index.has_value()) {
             Logger::warning(
                 Logger::make_message(
-                    u8"Bone: 解決できない不明なボーン名: ",
+                    u8"Bone: モデルにないボーン: ",
                     sjis_to_utf8(bone_key_frame.bone_name).value_or(
                         Logger::make_message(
-                            u8"<UTF8に変換できない文字が含まれています\n",
+                            u8"<UTF8に変換できない文字が含まれています>\n",
                             u8"元のボーン名: ",
                             std::u8string(
                                 reinterpret_cast<const char8_t*>(bone_key_frame.bone_name),
@@ -94,7 +94,7 @@ KeyFrame BoneKeyFrameManager::get_last_frame(void) const noexcept {
     for(const auto& [_, cursor] : this->bone_key_frame_map) {
         const auto& opt_last = cursor->get_last_key_frame();
         if(opt_last.has_value()) {
-            const auto& last = opt_last.value().frame;
+            const auto& last = opt_last.value().get().frame;
             last_frame = last_frame < last ? last : last_frame;
         }
     }

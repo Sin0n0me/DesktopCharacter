@@ -15,28 +15,23 @@
 decltype(Engine::instance) Engine::instance;
 
 Engine::Engine(const HINSTANCE& hinstance, const LPWSTR& cmd_line) noexcept :
-    common_resouce(new CommonResource()),
-    d3d11(new D3D11()),
-    mouse_state(new MouseState()) {
-    this->models.reset(new ModelManager(this->common_resouce));
-    this->scene.reset(new Scene(this->common_resouce));
-    this->render_pipeline.reset(
-        new RenderPipeline(
-            this->d3d11,
-            this->common_resouce)
+    common_resouce(std::make_shared<CommonResource>()),
+    d3d11(std::make_shared<D3D11>()),
+    mouse_state(std::make_shared<MouseState>()) {
+    this->models = std::make_shared<ModelManager>(this->common_resouce);
+    this->scene = std::make_unique<Scene>(this->common_resouce);
+    this->render_pipeline = std::make_unique<RenderPipeline>(
+        this->d3d11,
+        this->common_resouce
     );
-    this->collider.reset(
-        new Collider(
-            this->scene->get_camera(),
-            this->models
-        )
+    this->collider = std::make_unique<Collider>(
+        this->scene->get_camera(),
+        this->models
     );
-    this->window_manager.reset(
-        new WindowManager(
-            hinstance,
-            cmd_line,
-            this->mouse_state
-        )
+    this->window_manager = std::make_unique<WindowManager>(
+        hinstance,
+        cmd_line,
+        this->mouse_state
     );
 }
 

@@ -1,31 +1,29 @@
 #pragma once
-#include "../../../model/bone/Bone.h"
-#include "../bone_key_frame/BoneNode.h"
+#include "../../../model/pmd/bone/Bone.h"
 #include "../VMDFileStruct.h"
+#include <map>
 #include <memory>
-#include <unordered_map>
 #include <vector>
-#include <set>
-#include <string>
 
 class IKSolver;
+class KeyFrameTimer;
+class IBoneAccessor;
+class IKKeyFrameCursor;
 
 class IKKeyFrameManager {
 private:
-	std::shared_ptr<const IKSolver> ik_solver;
-	std::unordered_map<uint32_t, std::vector<BoneIndex>> ik_frame_map; // first: frame
-	std::set<BoneIndex> apply_bones;
+    const std::shared_ptr<const IBoneAccessor> bone_accessor;
+    const std::shared_ptr<const KeyFrameTimer> frame_manager;
+    const std::shared_ptr<IKSolver> ik_solver;
+    std::map<BoneIndex, std::unique_ptr<IKKeyFrameCursor>> ik_frame_map; // first: frame
 
 public:
-	explicit IKKeyFrameManager(const std::shared_ptr<const IKSolver>& ik_soulver);
+    explicit IKKeyFrameManager(
+        const std::shared_ptr<IBoneAccessor>& bone_accessor,
+        const std::shared_ptr<KeyFrameTimer>& frame_manager,
+        const std::shared_ptr<IKSolver>& ik_solver,
+        const std::vector<VMDIK>& iks
+    );
 
-	void apply_ik(
-		std::unordered_map<BoneIndex, BoneNode>& bone_matrix_map,
-		const uint32_t& frame
-	);
-
-	bool resolve_bones(
-		const std::vector<VMDIK>& iks,
-		const std::unordered_map<std::string, BoneIndex>& bone_name_map
-	);
+    void apply_ik(void);
 };

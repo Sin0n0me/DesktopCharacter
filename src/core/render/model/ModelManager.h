@@ -1,35 +1,39 @@
 #pragma once
 
-#include "Model.h"
+#include "../../collider/IOBBMapGetter.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 struct CommonResource;
+class DeltaTime;
+class Model;
+
 using ModelLoaderFunc = std::shared_ptr<Model>(*)(const std::filesystem::path&);
 
-class ModelManager {
+class ModelManager : public IOBBMapGetter {
 private:
-	std::unordered_map<std::u8string, std::shared_ptr<Model>> models; // firlst: name second: model
-	std::u8string current_model;
-	std::unordered_map<std::string, ModelLoaderFunc> support_extensions;
-	std::unordered_map<std::u8string, OBBMap> model_obb_map;
+    std::unordered_map<std::u8string, std::shared_ptr<Model>> models; // firlst: name second: model
+    std::u8string current_model;
+    std::unordered_map<std::string, ModelLoaderFunc> support_extensions;
+    std::unordered_map<std::u8string, OBBMap> model_obb_map;
 
-	std::shared_ptr<CommonResource> resource;
+    std::shared_ptr<CommonResource> resource;
 
 public:
-	ModelManager(const std::shared_ptr<CommonResource>& common_resource);
+    explicit ModelManager(const std::shared_ptr<CommonResource>& common_resource);
 
-	bool init(void);
-	bool add_model(std::shared_ptr<Model> model);
+    bool init(void);
+    bool add_model(std::shared_ptr<Model> model);
 
-	void set_model(const std::u8string& model_name);
-	const std::shared_ptr<Model> get_current_model(void) const;
-	const OBBMap& get_obb_map(void) const;
+    void set_model(const std::u8string& model_name);
+    const std::shared_ptr<Model> get_current_model(void) const;
 
-	bool load_current_model(ID3D11Device* const device);
-	void unload_model(const std::u8string& model_name);
+    bool load_current_model(ID3D11Device* const device);
+    void unload_model(const std::u8string& model_name);
 
-	void update(const int64_t delta_time);
-	void update_render(ID3D11DeviceContext* const context);
+    void update(const DeltaTime& delta_time);
+    void update_render(ID3D11DeviceContext* const context);
+
+    const OBBMap& get_obb_map(void) const override;
 };

@@ -3,44 +3,74 @@
 
 Texture2D model_texture;
 Texture2D sphere_texture;
+Texture2D toon_texture;
 SamplerState model_sampler;
 SamplerState sphere_sampler;
+SamplerState toon_sampler;
 
-float2 calc_sphere_uv(
-    const float3 position_vs,
-    const float3 normal_vs
+
+float4 apply_sphere(
+    const float4 color,
+    const float3 position,
+    const float3 normal
 ) {
-    const float3 view_dir = normalize(-position_vs);
-    const float3 reflect_dir = reflect(-view_dir, normalize(normal_vs));
-    const float dot_reflect = dot(reflect_dir.xy, reflect_dir.xy);
-    const float pow_reflect = (reflect_dir.z + 1.0f) * (reflect_dir.z + 1.0f);
-    const float m = 2.0f * sqrt(dot_reflect + pow_reflect);
-    const float inv_m = rcp(max(m, 1e-5f));
+    const float2 sphere_uv = calc_sphere_uv(position, normal);
+    const float3 sphere_color = sphere_texture.Sample(sphere_sampler, sphere_uv).rgb;
+    
+    return apply_sphere_map(color, sphere_color);
+}
 
-    return float2(
-        reflect_dir.x * inv_m + 0.5f,
-        -reflect_dir.y * inv_m + 0.5f
+float4 apply_toon(
+    const float4 color,
+    const float3 normal,
+    const float3 light_direction
+) {
+    const float dot_nl = saturate(dot(normalize(normal), light_direction));
+    const float2 toon_uv = float2(dot_nl, 0.0f);
+    const float3 toon_color = toon_texture.Sample(toon_sampler, toon_uv).rgb;
+
+    return color * float4(toon_color, 1.0);
+}
+
+float4 main(const PSInput input) : SV_TARGET {    
+    const float4 base_color = model_texture.Sample(model_sampler, input.uv);
+    
+    // 光の適用
+    // TODO: 光源位置や色を定数バッファで指定できるように
+    const float3 light_direction = normalize(
+        float3(0.0f, 0.0f, -10.0f)
+    ); 
+    const float3 light_color = float3(1.0, 1.0, 1.0);
+    const float4 lighting_color = apply_lighting(
+        base_color,
+        light_color,
+        light_direction,
+        input.normal
     );
-}
-
-// IFによる分岐を減らすために以下のような回りくどい計算をしている
-float4 apply_sphere_map_branchless(
-    const float4 base_color,
-    const float4 sphere_color
-) {
-    const float4 mul_case = (base_color * sphere_mul) * (sphere_color * sphere_mul);
-    const float4 add_case = (base_color * sphere_add) + (sphere_color * sphere_add);
-    const float no_case = 1.0 - (sphere_mul + sphere_add); // 適用なしの場合
-    const float4 result = base_color * no_case + add_case * sphere_add + mul_case * sphere_mul;
-    return result; 
-}
-
-
-float4 main(const PSInput input) : SV_TARGET {
-    const float4 sample_color = model_texture.Sample(model_sampler, input.uv);
-    const float4 base_color = sample_color * diffuse;
-    const float2 sphere_uv = calc_sphere_uv(input.position.xyz, input.normal);
-    const float4 sphere_color = sphere_texture.Sample(sphere_sampler, sphere_uv);
-    const float4 final_color = apply_sphere_map_branchless(base_color, sphere_color);    
+    
+    // スフィアの適用
+    const float4 sphere_color = apply_sphere(
+        lighting_color,
+        input.position.xyz,
+        input.normal
+    );
+    
+    // トゥーンの適用
+    const float4 toon_color = apply_toon(
+        sphere_color,
+        input.normal,
+        light_direction
+    );
+    
+    // スペキュラー反射の適用
+    const float4 specular_color = apply_specular(
+        toon_color,
+        input.position.xyz,
+        light_direction,
+        input.normal    
+    );
+    
+    const float4 final_color = specular_color;
+    
     return final_color;
 }

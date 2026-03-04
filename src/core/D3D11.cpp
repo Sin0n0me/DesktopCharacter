@@ -1,11 +1,11 @@
 #include "../Application.h"
 #include "Core.h"
 #include "D3D11.h"
+#include "log/Logger.h"
 #include <d3d11.h>
 #include <dcomp.h>
 #include <dxgi.h>
 #include <dxgi1_2.h>
-#include <iostream>
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "dcomp.lib")
@@ -31,15 +31,7 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
         return false;
     }
 
-    if(!this->make_render_target_view()) {
-        return false;
-    }
-
     if(!this->make_target(hwnd)) {
-        return false;
-    }
-
-    if(!this->make_rasterizer()) {
         return false;
     }
 
@@ -51,6 +43,8 @@ bool D3D11::init_d3d11(const HWND hwnd, const UINT width, const UINT height) {
         return false;
     }
 
+    Logger::info(u8"D3D11の初期化に成功しました");
+
     return true;
 }
 
@@ -61,20 +55,21 @@ bool D3D11::make_device(void) {
         D3D_DRIVER_TYPE_HARDWARE,
         nullptr,
         D3D11_CREATE_DEVICE_BGRA_SUPPORT | (IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0),
-        nullptr, 0,
+        nullptr,
+        0,
         D3D11_SDK_VERSION,
         this->device.GetAddressOf(),
         nullptr,
         this->context.GetAddressOf()
     );
     if(FAILED(result_device)) {
-        std::cerr << "Failed make D3D11Device" << std::endl;
+        Logger::error(u8"D3D11デバイスの作成に失敗しました");
         return false;
     }
 
     const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
-    if(FAILED(result_device)) {
-        std::cerr << "Failed make DXGIDevice" << std::endl;
+    if(FAILED(result_dxgi_device)) {
+        Logger::error(u8"DXGIデバイスの作成に失敗しました");
         return false;
     }
 
@@ -83,15 +78,15 @@ bool D3D11::make_device(void) {
         __uuidof(this->dcomp_device),
         reinterpret_cast<void**>(this->dcomp_device.GetAddressOf())
     );
-    if(FAILED(result_device)) {
-        std::cerr << "Failed make DCompositionDevice" << std::endl;
+    if(FAILED(result_dcom_device)) {
+        Logger::error(u8"DCompositionデバイスの作成に失敗しました");
         return false;
     }
 
     return true;
 }
 
-// DXGIデバイスとFactory取得
+// DXGIFactoryの作成
 bool D3D11::make_factory(void) {
     const HRESULT result_factory = CreateDXGIFactory2(
         DXGI_CREATE_FACTORY_DEBUG,
@@ -99,7 +94,23 @@ bool D3D11::make_factory(void) {
         reinterpret_cast<void**>(this->dxgi_factory.GetAddressOf())
     );
     if(FAILED(result_factory)) {
-        std::cerr << "Failed make Factory" << std::endl;
+        Logger::error(u8"DXGIFactoryの作成に失敗しました");
+        return false;
+    }
+
+    return true;
+}
+
+bool D3D11::make_surface(void) {
+    const HRESULT result = this->dcomp_device->CreateSurface(
+        WIDTH,
+        HEIGHT,
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        DXGI_ALPHA_MODE_PREMULTIPLIED,
+        this->dcomp_surface.GetAddressOf()
+    );
+    if(FAILED(result)) {
+        Logger::error(u8"Surface(Composition)の作成に失敗しました");
         return false;
     }
 
@@ -129,110 +140,7 @@ bool D3D11::make_swap_chain(const UINT width, const UINT height) {
     );
 
     if(FAILED(result_swap_chain)) {
-        std::cerr << "Failed make SwapChain" << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
-// RenderTargetView作成
-bool D3D11::make_render_target_view(void) {
-    {
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
-        {
-            constexpr DXGI_SAMPLE_DESC sample{
-                .Count = 1
-            };
-            constexpr D3D11_TEXTURE2D_DESC desc{
-                .Width = WIDTH,
-                .Height = HEIGHT,
-                .MipLevels = 1,
-                .ArraySize = 1,
-                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-                .SampleDesc = sample,
-                .Usage = D3D11_USAGE_DEFAULT,
-                .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
-            };
-
-            const HRESULT hr = this->device->CreateTexture2D(
-                &desc,
-                nullptr,
-                texture.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                std::cerr << "Failed make RenderTargetView" << std::endl;
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateRenderTargetView(
-                texture.Get(),
-                nullptr,
-                this->render_target_view.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                std::cerr << "Failed make RenderTargetView" << std::endl;
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateShaderResourceView(
-                texture.Get(),
-                nullptr,
-                this->shader_resouce_view.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                std::cerr << "Failed make RenderTargetView" << std::endl;
-                return false;
-            }
-        }
-    }
-
-    {
-        // バックバッファ取得
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
-        {
-            const HRESULT hr = this->dxgi_swap_chain->GetBuffer(
-                0,
-                IID_PPV_ARGS(back_buffer.GetAddressOf())
-            );
-            if(FAILED(hr)) {
-                std::cerr << "Failed make RenderTargetView" << std::endl;
-                return false;
-            }
-        }
-
-        {
-            const HRESULT hr = this->device->CreateRenderTargetView(
-                back_buffer.Get(),
-                nullptr,
-                this->render_target_view_back.GetAddressOf()
-            );
-            if(FAILED(hr)) {
-                std::cerr << "Failed make RenderTargetView" << std::endl;
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-// ラスタライザの作成
-bool D3D11::make_rasterizer(void) {
-    constexpr D3D11_RASTERIZER_DESC desc{
-        .FillMode = D3D11_FILL_SOLID,
-        .CullMode = D3D11_CULL_BACK,
-        .FrontCounterClockwise = FALSE,
-        .DepthBias = 0,
-        .SlopeScaledDepthBias = 0.5f,
-        .DepthClipEnable = TRUE,
-    };
-
-    if(FAILED(this->device->CreateRasterizerState(&desc, this->rasterizer_cull_back.GetAddressOf()))) {
+        Logger::error(u8"SwapChain(Composition)の作成に失敗しました");
         return false;
     }
 
@@ -247,7 +155,7 @@ bool D3D11::make_target(const HWND hwnd) {
     );
 
     if(FAILED(hr)) {
-        std::cerr << "Failed make Target" << std::endl;
+        Logger::error(u8"Target(Composition)の作成に失敗しました");
         return false;
     }
 
@@ -257,7 +165,7 @@ bool D3D11::make_target(const HWND hwnd) {
 bool D3D11::make_visual(void) {
     const HRESULT hr = this->dcomp_device->CreateVisual(this->dcomp_visual.GetAddressOf());
     if(FAILED(hr)) {
-        std::cerr << "Failed make Visual" << std::endl;
+        Logger::error(u8"Visual(Composition)の作成に失敗しました");
         return false;
     }
 
@@ -267,20 +175,20 @@ bool D3D11::make_visual(void) {
 bool D3D11::commit(void) {
     const HRESULT result_set_context = this->dcomp_visual->SetContent(this->dxgi_swap_chain.Get());
     if(FAILED(result_set_context)) {
-        std::cerr << "Failed Set Context" << std::endl;
+        Logger::error(u8"SwapChain(Composition)のセットに失敗しました");
         return false;
     }
 
     const HRESULT result_set_root = this->dcomp_target->SetRoot(this->dcomp_visual.Get());
     if(FAILED(result_set_root)) {
-        std::cerr << "Failed Set Root" << std::endl;
+        Logger::error(u8"Visual(Composition)のセットに失敗しました");
         return false;
     }
 
     // 合成エンジンに完了を通知
     const HRESULT result_commit = this->dcomp_device->Commit();
     if(FAILED(result_commit)) {
-        std::cerr << "Failed Set Root" << std::endl;
+        Logger::error(u8"Commitに失敗しました");
         return false;
     }
 

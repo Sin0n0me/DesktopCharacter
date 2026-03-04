@@ -16,7 +16,10 @@ WallRenderPass::WallRenderPass(const std::shared_ptr<CommonResource>& common_res
     this->wall_object = std::make_unique<WallObject>();
 }
 
-bool WallRenderPass::init(ID3D11Device* const device) {
+bool WallRenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_blend_state(device)) {
         return false;
     }
@@ -114,6 +117,10 @@ void WallRenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
     );
 }
 
+bool WallRenderPass::should_reset_state(void) const {
+    return true;
+}
+
 void WallRenderPass::render(ID3D11DeviceContext* const context) const {
     this->wall_object->render(context, this->binding_slots.get());
 }
@@ -196,6 +203,10 @@ bool WallRenderPass::make_depth_state(ID3D11Device* const device) {
     }
 
     return true;
+}
+
+RasterizerKind WallRenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullBack;
 }
 
 void WallRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {

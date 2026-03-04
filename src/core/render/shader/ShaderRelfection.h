@@ -1,4 +1,5 @@
 #pragma once
+#include "InputElements.h"
 #include <d3d11.h>
 #include <d3d11shader.h>
 #include <functional>
@@ -55,7 +56,18 @@ public:
         const std::string& name
     );
 
-    static std::optional<std::vector<D3D11_INPUT_ELEMENT_DESC>> get_input_elements(
+    static std::optional<uint32_t> get_unordered_access_view_slot(
+        void* const data,
+        const uint32_t size,
+        const std::string& name
+    );
+
+    static std::optional<uint32_t> get_unordered_access_view_slot(
+        const std::vector<uint8_t>& data,
+        const std::string& name
+    );
+
+    static std::optional<InputElements> get_input_elements(
         const std::vector<uint8_t>& data,
         const uint32_t& input_slot
     );

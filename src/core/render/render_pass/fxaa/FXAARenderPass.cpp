@@ -123,7 +123,10 @@ bool FXAARenderPass::make_depth_stencil(ID3D11Device* const device) {
     return true;
 }
 
-bool FXAARenderPass::init(ID3D11Device* const device) {
+bool FXAARenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_constant_buffer(device)) {
         return false;
     }
@@ -188,6 +191,10 @@ void FXAARenderPass::render_set(ID3D11DeviceContext* const context, ID3D11Render
     );
 }
 
+bool FXAARenderPass::should_reset_state(void) const {
+    return true;
+}
+
 void FXAARenderPass::render(ID3D11DeviceContext* const context) const {
     this->quad_object->render(context, this->binding_slots.get());
 }
@@ -222,4 +229,8 @@ void FXAARenderPass::back_buffer_resouce(
         1,
         this->resource->sampler_state.at(Pattern::FXAA).GetAddressOf()
     );
+}
+
+RasterizerKind FXAARenderPass::rasterizer_kind(void) const {
+    return RasterizerKind::CullBack;
 }

@@ -1,31 +1,32 @@
-#include "../../../utility/Algorithm.h"
-#include "../../../utility/BinaryReader.h"
+#include "../../../log/Logger.h"
+#include "../../../physics/mmd/joint/MMDJoint.h"
+#include "../../../physics/mmd/MMDPhysics.h"
+#include "../../../physics/mmd/MMDPhysicsWorld.h"
+#include "../../../physics/mmd/motion_state/MMDMotionState.h"
+#include "../../../physics/mmd/rigid_body/MMDRigidBody.h"
+#include "../../../utility/Convert.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
-#include "../../constant_buffer/Material.h"
 #include "../../motion/vmd/VMDMotion.h"
+#include "../../motion/vmd/VMDMotionManager.h"
 #include "../../shader/Shader.h"
 #include "../../shader/ShaderBindingSlots.h"
+#include "../../texrure/TextureNames.h"
+#include "bone/PMDBoneManager.h"
+#include "ik/IKSolver.h"
+#include "morph/PMDMorphManager.h"
 #include "PMDModel.h"
 #include "PMDModelLoader.h"
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <d3d11.h>
 
 constexpr float WEIGHT_THRESHOLD = 0.3f;
+constexpr float BLEND_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-struct Vertex {
-    float position[3];
-    float normal[3];
-    float uv[2];
-    uint16_t bone_index[2];	// ボーン番号(GPU上では32bitのuint扱い)
-    float bone_weight[2]; // 0-1
-};
-
-PMDModel::PMDModel(const std::filesystem::path& path) : Model(path) {
-    this->model_loader = std::make_shared<PMDModelLoader>(path);
-}
-
-Model::Model(const std::filesystem::path& path) : path(path) {}
-
-void PMDModel::on_clicked(const short obb_index) {
+PMDModel::PMDModel(const std::filesystem::path& path) :
+    Model(path),
+    model_loader(new PMDModelLoader(path)),
+    vertices(new std::vector<PMDVertexData>()) {
 }
 
 bool PMDModel::init(ID3D11Device* const device) {
@@ -44,17 +45,68 @@ bool PMDModel::init(ID3D11Device* const device) {
     }
 
     // ボーン名の解決
-    this->bone_manager = std::make_shared<PMDBoneManager>(
-        this->model_loader->get_bones(),
-        this->model_loader->get_iks()
+    this->bone_manager = std::make_unique<PMDBoneManager>(
+        this->model_loader->get_bones()
     );
     if(!this->bone_manager->init(device)) {
         return false;
     }
 
-    //
-    this->motion_manager = std::make_shared<VMDMotionManager>(this->bone_manager);
+    // 物理エンジンの初期化
+    this->physics = std::make_unique<MMDPhysics>(
+        std::make_shared<MMDPhysicsWorld>(
+            this->bone_manager->get_root_bones()
+        )
+    );
+    if(!this->physics->init()) {
+        return false;
+    }
+    Logger::info(u8"物理エンジンの初期化に成功しました");
+
+    // IK
+    this->ik_solver = std::make_unique<IKSolver>(
+        this->bone_manager,
+        this->model_loader->get_iks()
+    );
+    const auto& bones = this->model_loader->get_bones()->bones;
+    for(int bone_index = 0; bone_index < bones.size(); ++bone_index) {
+        const auto& bone = bones.at(bone_index);
+        const auto opt_bone_name = sjis_to_utf8(bone.name);
+        if(!opt_bone_name.has_value()) {
+            continue;
+        }
+        if(opt_bone_name.value().find(u8"ひざ") != std::string::npos) {
+            this->ik_solver->add_knee(bone_index);
+        }
+    }
+
+    // モーフ
+    this->morph_manager = std::make_unique<PMDMorphManager>(
+        this->model_loader->get_morphs(),
+        this->vertices
+    );
+
+    // モーション
+    this->motion_manager = std::make_unique<VMDMotionManager>(
+        this->bone_manager,
+        this->morph_manager,
+        this->ik_solver,
+        this->physics
+    );
     if(!this->motion_manager->init()) {
+        return false;
+    }
+
+    if(!this->make_blend_state(device)) {
+        return false;
+    }
+
+    // 剛体
+    if(!this->make_rigid_body()) {
+        return false;
+    }
+
+    if(!this->make_joint()) {
         return false;
     }
 
@@ -63,6 +115,21 @@ bool PMDModel::init(ID3D11Device* const device) {
 
 void PMDModel::render_update(ID3D11DeviceContext* const context) {
     this->bone_manager->render_update(context);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    context->Map(
+        this->vertex_buffer.Get(),
+        0,
+        D3D11_MAP_WRITE_DISCARD,
+        0,
+        &mapped
+    );
+    memcpy(
+        mapped.pData,
+        this->vertices->data(),
+        sizeof(PMDVertexData) * this->vertices->size()
+    );
+    context->Unmap(this->vertex_buffer.Get(), 0);
 }
 
 void PMDModel::render(
@@ -71,7 +138,7 @@ void PMDModel::render(
 ) const {
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    const UINT stride = sizeof(Vertex);
+    const UINT stride = sizeof(PMDVertexData);
     const UINT offset = 0;
     context->IASetVertexBuffers(
         0,
@@ -86,12 +153,31 @@ void PMDModel::render(
         0
     );
 
+    context->OMSetBlendState(
+        this->blend_state.Get(),
+        BLEND_COLOR,
+        0xFFFFFFFF
+    );
+
     this->bone_manager->render(context, slots);
 
     uint32_t index_offset = 0;
     for(const auto& material : this->materials) {
-        material.texture.render_set_resource(context, slots);
-        material.sphere.render_set_resource(context, slots);
+        material.texture.set_resource(context, slots);
+        material.sphere.set_resource(context, slots);
+
+        if(material.toon_index < this->toon_textures.size()) {
+            this->toon_textures
+                .at(material.toon_index)
+                .set_resource(context, slots);
+        } else {
+            Texture::set_dummy_resouce(
+                context,
+                slots,
+                static_cast<uint32_t>(TextureName::Toon),
+                static_cast<uint32_t>(SamplerStateName::Toon)
+            );
+        }
 
         // シャドウマップなどで使用しない場合もある
         const BindingSlotKey key = BindingSlotKey{
@@ -116,14 +202,18 @@ void PMDModel::unload_model() {
 }
 
 bool PMDModel::is_loaded_model() {
-    return bool(this->bone_manager) && bool(this->motion_manager);
+    return bool(this->bone_manager)
+        && bool(this->motion_manager)
+        && bool(this->morph_manager)
+        && bool(this->ik_solver)
+        && bool(this->physics);
 }
 
 // 主成分分析による最小体積のOBBを作成
 void PMDModel::compute_obb(std::unordered_map<short, OBB>& obb_map) {
     // ボーンが影響する頂点のみを収集
     std::unordered_map<short, std::vector<DirectX::XMFLOAT3>> points_map;
-    for(const auto& vertex : this->model_loader->get_vertices()) {
+    for(const auto& vertex : this->model_loader->get_vertices()->vertices) {
         if(vertex.bone_weight > WEIGHT_THRESHOLD) {
             points_map[vertex.bone_index[0]].emplace_back(vertex.position);
         }
@@ -138,7 +228,10 @@ void PMDModel::compute_obb(std::unordered_map<short, OBB>& obb_map) {
 void PMDModel::update_obb(std::unordered_map<short, OBB>& obb_map) {
 }
 
-void PMDModel::update_motion(const int64_t delta_time) {
+void PMDModel::on_clicked(const short obb_index) {
+}
+
+void PMDModel::update_motion(const DeltaTime& delta_time) {
     this->motion_manager->update_motion(delta_time);
 }
 
@@ -154,7 +247,7 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
     }
 
     // 定数バッファ作成
-    if(!this->make_constant_buffer(device)) {
+    if(!this->make_material_buffer(device)) {
         return false;
     }
 
@@ -163,50 +256,58 @@ bool PMDModel::make_buffers(ID3D11Device* const device) {
 
 bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
     const auto& loaded_vertices = this->model_loader->get_vertices();
-    const auto size = loaded_vertices.size();
-    std::vector<Vertex> vertices(size);
+    const auto size = loaded_vertices->size;
+    this->vertices->resize(size);
     for(size_t i = 0; i < size; ++i) {
+        auto& dst_vertex = this->vertices->at(i);
+        auto& src_vertex = loaded_vertices->vertices.at(i);
+
         memcpy(
-            vertices[i].position,
-            loaded_vertices[i].position,
-            sizeof(decltype(vertices[i].position))
+            dst_vertex.position,
+            src_vertex.position,
+            sizeof(decltype(dst_vertex.position))
         );
         memcpy(
-            vertices[i].normal,
-            loaded_vertices[i].normal,
-            sizeof(decltype(vertices[i].normal))
+            dst_vertex.normal,
+            src_vertex.normal,
+            sizeof(decltype(dst_vertex.normal))
         );
         memcpy(
-            vertices[i].uv,
-            loaded_vertices[i].uv,
-            sizeof(decltype(vertices[i].uv))
+            dst_vertex.uv,
+            src_vertex.uv,
+            sizeof(decltype(dst_vertex.uv))
         );
         memcpy(
-            vertices[i].bone_index,
-            loaded_vertices[i].bone_index,
-            sizeof(decltype(vertices[i].bone_index))
+            dst_vertex.bone_index,
+            src_vertex.bone_index,
+            sizeof(decltype(dst_vertex.bone_index))
         );
 
         // 正規化
-        const float weight = static_cast<float>(loaded_vertices[i].bone_weight) / 100.0f;
+        const float weight = static_cast<float>(src_vertex.bone_weight) / 100.0f;
         const float bone_weight[2] = {
             weight,
             1.0f - weight
         };
         memcpy(
-            vertices[i].bone_weight,
+            dst_vertex.bone_weight,
             bone_weight,
-            sizeof(decltype(vertices[i].bone_weight))
+            sizeof(decltype(dst_vertex.bone_weight))
         );
+
+        // 輪郭エッジフラグ(0-1)
+        // 値が0の場合有効
+        dst_vertex.edge_flag = src_vertex.edge_flag == 0 ? 1.0f : 0.0f;
     }
 
     const D3D11_BUFFER_DESC desc{
-        .ByteWidth = UINT(sizeof(Vertex) * vertices.size()),
-        .Usage = D3D11_USAGE_DEFAULT,
+        .ByteWidth = static_cast<UINT>(sizeof(PMDVertexData) * this->vertices->size()),
+        .Usage = D3D11_USAGE_DYNAMIC,
         .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
     };
     const D3D11_SUBRESOURCE_DATA init_data{
-        .pSysMem = vertices.data(),
+        .pSysMem = this->vertices->data(),
     };
 
     const HRESULT hr = device->CreateBuffer(
@@ -224,12 +325,12 @@ bool PMDModel::make_vertex_buffer(ID3D11Device* const device) {
 bool PMDModel::make_index_buffer(ID3D11Device* const device) {
     const auto& indices = this->model_loader->get_indices();
     const D3D11_BUFFER_DESC desc{
-        .ByteWidth = UINT(sizeof(uint16_t) * indices.size()),
+        .ByteWidth = UINT(sizeof(uint16_t) * indices->size),
         .Usage = D3D11_USAGE_DEFAULT,
         .BindFlags = D3D11_BIND_INDEX_BUFFER,
     };
     const D3D11_SUBRESOURCE_DATA init_data = {
-        .pSysMem = indices.data()
+        .pSysMem = indices->indices.data()
     };
 
     const HRESULT hr = device->CreateBuffer(
@@ -244,92 +345,108 @@ bool PMDModel::make_index_buffer(ID3D11Device* const device) {
     return true;
 }
 
-bool PMDModel::make_constant_buffer(ID3D11Device* const device) {
-    for(const auto& material : this->model_loader->get_materials()) {
-        PMDMaterialData material_data{};
-
-        // index
-        material_data.index_count = material.index_count;
-
-        // スフィアがついている場合があるので分離
-        std::string	texture_path = material.texture_file;
-        const auto pos = texture_path.find('*');
-        if(pos == std::string::npos) {
-            material_data.sphere_mode = SphereMode::None;
-
-            // スフィアがない場合はダミーを作成
-            if(!material_data.sphere.make_dummy_texture(device)) {
-                return false;
-            }
-        } else {
-            std::string sphere = texture_path.substr(pos + 1);
-            texture_path = texture_path.substr(0, pos);
-
-            if(sphere.ends_with(".sph")) {
-                material_data.sphere_mode = SphereMode::Multiply;
-            } else if(sphere.ends_with(".spa")) {
-                material_data.sphere_mode = SphereMode::Add;
-            } else {
-                return false;
-            }
-
-            if(!material_data.sphere.load_texure(
-                device,
-                this->path.parent_path().append(sphere)
-            )) {
-                return false;
-            }
-        }
-
-        if(!material_data.texture.load_texure(
+bool PMDModel::make_material_buffer(ID3D11Device* const device) {
+    for(const auto& material : this->model_loader->get_materials()->materials) {
+        const auto opt_material_data = PMDMaterialData::make(
+            material,
             device,
-            this->path.parent_path().append(texture_path)
-        )) {
-            return false;
-        }
-
-        const D3D11_BUFFER_DESC desc{
-            .ByteWidth = sizeof(Material),
-            .Usage = D3D11_USAGE_DEFAULT,
-            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-        };
-        Material mat{};
-        memcpy(mat.diffuse, material.diffuse, sizeof(float) * 4);
-        memcpy(mat.ambient, material.ambient, sizeof(float) * 3);
-
-        switch(material_data.sphere_mode) {
-        case SphereMode::None:
-            mat.sphere_add = 0.0f;
-            mat.sphere_mul = 0.0f;
-            break;
-        case SphereMode::Multiply:
-            mat.sphere_add = 0.0f;
-            mat.sphere_mul = 1.0f;
-            break;
-        case SphereMode::Add:
-            mat.sphere_add = 1.0f;
-            mat.sphere_mul = 0.0f;
-            break;
-        default:
-            return false;
-        }
-
-        D3D11_SUBRESOURCE_DATA init_data{
-            .pSysMem = &mat,
-            .SysMemPitch = 0,
-            .SysMemSlicePitch = sizeof(Material),
-        };
-
-        const HRESULT hr = device->CreateBuffer(
-            &desc,
-            &init_data,
-            material_data.buffer.GetAddressOf()
+            this->path
         );
-        if FAILED(hr) {
+        if(!opt_material_data.has_value()) {
             return false;
         }
 
-        this->materials.emplace_back(material_data);
+        this->materials.emplace_back(opt_material_data.value());
+    }
+
+    for(const std::string& file_name : this->model_loader->get_toon_textures()->file_names) {
+        const auto& file_path = this->path.parent_path() / file_name;
+        Texture texture = Texture{
+            static_cast<uint32_t>(TextureName::Toon),
+            static_cast<uint32_t>(SamplerStateName::Toon)
+        };
+
+        if(!texture.load_texure(device, file_path)) {
+            Logger::error(
+                Logger::make_message(
+                    u8"トゥーンテクスチャを読み込めませんでした\n",
+                    u8"ファイル名: ",
+                    file_path.u8string()
+                )
+            );
+        }
+
+        this->toon_textures.emplace_back(texture);
+    }
+
+    return true;
+}
+
+bool PMDModel::make_blend_state(ID3D11Device* const device) {
+    constexpr D3D11_BLEND_DESC desc{
+        .RenderTarget = {
+            {
+                .BlendEnable = TRUE,
+                .SrcBlend = D3D11_BLEND_SRC_ALPHA,
+                .DestBlend = D3D11_BLEND_INV_SRC_ALPHA,
+                .BlendOp = D3D11_BLEND_OP_ADD,
+                .SrcBlendAlpha = D3D11_BLEND_ONE,
+                .DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA,
+                .BlendOpAlpha = D3D11_BLEND_OP_ADD,
+                .RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL,
+            }
+    }
+    };
+
+    const HRESULT hr = device->CreateBlendState(
+        &desc,
+        this->blend_state.GetAddressOf()
+    );
+    if(FAILED(hr)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool PMDModel::make_rigid_body(void) {
+    if(!this->physics->is_initialized()) {
+        return false;
+    }
+
+    const auto world = this->physics->get_mmd_world();
+    for(const auto& rigid_body : this->model_loader->get_rigid_bodies()->rigid_bodies) {
+        if(rigid_body.relate_bone_index == 0xFFFF) {
+            continue;
+        }
+
+        const auto node = this->bone_manager->get_bone_node(
+            rigid_body.relate_bone_index
+        );
+
+        if(!world->add_rigid_body(
+            rigid_body,
+            node
+        )) {
+            world->notify_finish();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool PMDModel::make_joint(void) {
+    if(!this->physics->is_initialized()) {
+        return false;
+    }
+
+    const auto world = this->physics->get_mmd_world();
+    for(const auto& joint : this->model_loader->get_physics_joints()->physics_joints) {
+        if(!world->add_joint(joint)) {
+            world->notify_finish();
+            return false;
+        }
     }
 
     return true;

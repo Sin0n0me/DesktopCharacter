@@ -1,8 +1,7 @@
 #pragma once
-#include <DirectXMath.h>
-
-constexpr int MAX_MATRIX_SIZE = 256;
+#include "../../math/HLSLMatrix.h"
 
 struct alignas(16) Bones {
-	DirectX::XMMATRIX bone_matrices[MAX_MATRIX_SIZE];
+    static constexpr int MAX_MATRIX_SIZE = 512;
+    HLSLMatrix bone_matrices[MAX_MATRIX_SIZE];
 };

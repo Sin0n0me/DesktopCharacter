@@ -1,32 +1,36 @@
 #pragma once
 
 #include "../IMotionHandler.h"
-#include "bone_key_frame/BoneKeyFrameManager.h"
-#include "bone_key_frame/BoneNode.h"
-#include "ik_key_frame/IKKeyFrameManager.h"
-#include <vector>
 
-class IKSolver;
+class KeyFrameTimer;
 class IBoneAccessor;
-struct Bones;
+class IMorphAccessor;
+class MorphKeyFrameManager;
+class IKKeyFrameManager;
+class BoneKeyFrameManager;
+class IKSolver;
+class MMDPhysics;
 
 class VMDMotion : public IMotionHandler {
 private:
-	std::shared_ptr<IBoneAccessor> bone_accessor;
-	std::unique_ptr<IKKeyFrameManager> ik;
-
-	std::vector<BoneIndex> sorted_bones;
-	std::unordered_map<BoneIndex, BoneKeyFrameManager> bone_key_frame_map;
-	std::unordered_map<BoneIndex, BoneNode> bone_matrix_map;
-
-	int64_t elapsed_time;
-	uint32_t current_frame;
-	uint32_t last_frame;
+    const std::shared_ptr<KeyFrameTimer> frame_manager;
+    const std::shared_ptr<IBoneAccessor> bone_accessor;
+    const std::shared_ptr<IMorphAccessor> morph_accessor;
+    const std::shared_ptr<IKSolver> ik_solver;
+    const std::shared_ptr<MMDPhysics> physics;
+    std::unique_ptr<IKKeyFrameManager> ik_key_frame_manager;
+    std::unique_ptr<MorphKeyFrameManager> morph_key_frame_manager;
+    std::unique_ptr<BoneKeyFrameManager> bone_key_frame_manager;
 
 public:
-	explicit VMDMotion(const std::shared_ptr<IBoneAccessor>& bone_accessor);
+    explicit VMDMotion(
+        const std::shared_ptr<IBoneAccessor>& bone_accessor,
+        const std::shared_ptr<IMorphAccessor>& morph_accessor,
+        const std::shared_ptr<IKSolver>& ik_solver,
+        const std::shared_ptr<MMDPhysics>& physics
+    );
 
-	bool init_motion(void) override;
-	bool load_motion_file(const std::filesystem::path& path) override;
-	void update_motion(const int64_t delta_time) override;
+    bool init_motion(void) override;
+    bool load_motion_file(const std::filesystem::path& path) override;
+    void update_motion(const DeltaTime& delta_time) override;
 };

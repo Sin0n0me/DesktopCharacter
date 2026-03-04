@@ -1,25 +1,50 @@
 #include "BoneKeyFrame.h"
 
-BoneKeyFrame BoneKeyFrame::make(const VMDBoneKeyFrame& key_frame) {
-    BoneKeyFrame frame{};
-    frame.frame_index = key_frame.frame;
-    frame.translation = DirectX::XMVectorSet(
-        key_frame.translation[0],
-        key_frame.translation[1],
-        key_frame.translation[2],
-        0.0f
-    );
-    frame.rotation = DirectX::XMVectorSet(
-        key_frame.rotation[0],
-        key_frame.rotation[1],
-        key_frame.rotation[2],
-        key_frame.rotation[3]
-    );
+BoneKeyFrame::BoneKeyFrame(const VMDBoneKeyFrame& key_frame) :
+    frame(key_frame.frame),
+    translation(
+        DirectX::XMVectorSet(
+            key_frame.translation[0],
+            key_frame.translation[1],
+            key_frame.translation[2],
+            0.0f
+        )
+    ),
+    rotation(
+        DirectX::XMVectorSet(
+            key_frame.rotation[0],
+            key_frame.rotation[1],
+            key_frame.rotation[2],
+            key_frame.rotation[3]
+        )
+    ),
+    bezier(
+        VMDAnimationBezier(
+            [&key_frame](void) -> std::array<std::uint8_t, 64> {
+                std::array<std::uint8_t, 64> arr{};
+                for(size_t i = 0; i < arr.size(); ++i) {
+                    arr[i] = key_frame.interpolation[i];
+                }
+                return arr;
+            } ()
+                )
+    ) {
+}
 
-    const float length = DirectX::XMVectorGetX(DirectX::XMVector4Length(frame.rotation));
+BoneKeyFrame::BoneKeyFrame(const BoneKeyFrame& key_frame) :
+    frame(key_frame.frame),
+    translation(key_frame.translation),
+    rotation(key_frame.rotation),
+    bezier(key_frame.bezier) {
+}
 
-    for(int i = 0; i < 64; ++i) {
-        frame.interpolation[i] = key_frame.interpolation[i];
-    }
-    return frame;
+BoneKeyFrame::BoneKeyFrame(const BoneKeyFrame&& key_frame) :
+    frame(key_frame.frame),
+    translation(key_frame.translation),
+    rotation(key_frame.rotation),
+    bezier(key_frame.bezier) {
+}
+
+bool BoneKeyFrame::operator<(const BoneKeyFrame& other) const {
+    return this->frame < other.frame;
 }

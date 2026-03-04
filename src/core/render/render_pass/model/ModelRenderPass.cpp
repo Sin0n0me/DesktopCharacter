@@ -1,4 +1,5 @@
 #include "../../../../Application.h"
+#include "../../../log/Logger.h"
 #include "../../CommonResource.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../shader/model/PMDModelPixelShader.h"
@@ -9,7 +10,10 @@
 
 ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {}
 
-bool ModelRenderPass::init(ID3D11Device* const device) {
+bool ModelRenderPass::init(
+    ID3D11Device* const device,
+    ID3D11RenderTargetView* const render_target_view
+) {
     if(!this->make_depth_stencil(device)) {
         return false;
     }
@@ -49,6 +53,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->depth_texture.GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシル用のテクスチャ作成に失敗しました");
             return false;
         }
     }
@@ -60,6 +65,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->resource->depth_stencil_view[Pattern::Model].GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシルビューの作成に失敗しました");
             return false;
         }
     }
@@ -76,6 +82,7 @@ bool ModelRenderPass::make_depth_stencil(ID3D11Device* const device) {
             this->resource->depth_stencil_state[Pattern::Model].GetAddressOf()
         );
         if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシルステートの作成に失敗しました");
             return false;
         }
     }
@@ -113,6 +120,12 @@ bool ModelRenderPass::make_shader(ID3D11Device* const device) {
     this->binding_slots->merge(pixel_shader);
 
     return true;
+}
+
+RasterizerKind ModelRenderPass::rasterizer_kind(void) const {
+    // MMDはポリゴンの両面を使用している
+    // なので背面カリングすると表示がおかしくなる
+    return RasterizerKind::CullNone;
 }
 
 void ModelRenderPass::back_buffer_resouce(ID3D11DeviceContext* const context, ID3D11ShaderResourceView* const shader_resouce_view) const {
@@ -165,6 +178,10 @@ void ModelRenderPass::render_set(
         1,
         this->resource->constant_buffers.at(ConstantBuffer::Camera).GetAddressOf()
     );
+}
+
+bool ModelRenderPass::should_reset_state(void) const {
+    return true;
 }
 
 bool ModelRenderPass::is_render_model(void) const {

@@ -2,7 +2,8 @@
 #include <cstdint>
 
 enum class BindingSlotKind : uint16_t {
-	ConstantBuffer,
-	SamplerState,
-	Texture,
+    ConstantBuffer,
+    SamplerState,
+    Texture, // ShaderResouceView
+    UnorderedAccessView,
 };

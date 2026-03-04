@@ -1,11 +1,11 @@
 #pragma once
-#include <cstdint>
+#include "../../timer/Timer.h"
 
 class IMotion {
 public:
-	virtual ~IMotion(void) = default;
+    virtual ~IMotion(void) = default;
 
-	//virtual void on_chaged_motion();
+    //virtual void on_chaged_motion();
 
-	virtual void update_motion(const int64_t delta_time) = 0;
+    virtual void update_motion(const DeltaTime& delta_time) = 0;
 };

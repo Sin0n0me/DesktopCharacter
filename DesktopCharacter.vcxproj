@@ -188,6 +188,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\math\ShaderMatrix.h" />
+    <ClInclude Include="src\core\math\GLSLMatrix.h" />
+    <ClInclude Include="src\core\math\HLSLMatrix.h" />
     <ClInclude Include="src\core\render\model\pmd\bone\BoneType.h" />
     <ClInclude Include="src\core\render\shader\InputElements.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.h" />
@@ -298,7 +301,6 @@
     <ClInclude Include="src\core\collider\OBB.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDFileStruct.h" />
     <ClInclude Include="src\core\scene\Scene.h" />
-    <ClInclude Include="src\core\scene\light\Light.h" />
     <ClInclude Include="src\core\render\model\pmd\PMDFileStruct.h" />
     <ClInclude Include="src\core\render\CommonResource.h" />
     <ClInclude Include="src\core\render\render_pass\shadow\ShadowRenderPass.h" />
@@ -331,6 +333,7 @@
     <ClInclude Include="src\core\physics\TransformConverter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\render\constant_buffer\Shadow.cpp" />
     <ClCompile Include="src\core\render\shader\InputElements.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\Bezier.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDPhysicsWorld.cpp" />
@@ -401,7 +404,6 @@
     <ClCompile Include="src\core\collider\OBB.cpp" />
     <ClCompile Include="src\core\event\WindowEvent.cpp" />
     <ClCompile Include="src\core\scene\Scene.cpp" />
-    <ClCompile Include="src\core\scene\light\Light.cpp" />
     <ClCompile Include="src\core\render\render_pass\shadow\ShadowRenderPass.cpp" />
     <ClCompile Include="src\core\render\render_pass\model\ModelRenderPass.cpp" />
     <ClCompile Include="src\core\collider\Collider.cpp" />

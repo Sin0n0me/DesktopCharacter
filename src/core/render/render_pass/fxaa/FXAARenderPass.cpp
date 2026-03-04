@@ -11,8 +11,8 @@
 #include "FXAARenderPass.h"
 #include <d3d11.h>
 
-FXAARenderPass::FXAARenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept :
-    RenderPass(common_resouce) {
+FXAARenderPass::FXAARenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept :
+    RenderPass(common_resource) {
     this->quad_object = std::make_unique<FullScreenQuad>();
 }
 

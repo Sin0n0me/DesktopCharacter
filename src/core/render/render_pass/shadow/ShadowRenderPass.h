@@ -9,7 +9,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> shadow_texture;
 
 public:
-    explicit ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
+    explicit ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept;
 
 public:
 

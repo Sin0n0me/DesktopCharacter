@@ -12,7 +12,7 @@
 constexpr std::uint32_t BUFFER_SIZE = WIDTH * HEIGHT;
 constexpr float ALPHA_THRESHOLD = 0.25f;
 
-AlphaMaskRenderPass::AlphaMaskRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {
+AlphaMaskRenderPass::AlphaMaskRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept : RenderPass(common_resource) {
     this->screen_alpha_buffers.resize(2);
     for(auto& buffer : this->screen_alpha_buffers) {
         buffer.resize(BUFFER_SIZE);

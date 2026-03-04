@@ -9,7 +9,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> depth_texture;
 
 public:
-    explicit ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
+    explicit ModelRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept;
 
 public:
     bool init(ID3D11Device* const device, ID3D11RenderTargetView* const render_target_view) override;

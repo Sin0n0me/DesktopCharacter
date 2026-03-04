@@ -58,15 +58,15 @@ MMDMatrix MMDRigidBody::make_offset(
     const BoneNode* node
 ) {
     const BulletMatrix rx = BulletMatrix::make_rotate_from_axis_angle(
-        DirectX::XMVectorSet(1, 0, 0, 1),
+        DirectX::XMVectorSet(1, 0, 0, 0),
         Radian(rigid_body.rotation[0])
     );
     const BulletMatrix ry = BulletMatrix::make_rotate_from_axis_angle(
-        DirectX::XMVectorSet(0, 1, 0, 1),
+        DirectX::XMVectorSet(0, 1, 0, 0),
         Radian(rigid_body.rotation[1])
     );
     const BulletMatrix rz = BulletMatrix::make_rotate_from_axis_angle(
-        DirectX::XMVectorSet(0, 0, 1, 1),
+        DirectX::XMVectorSet(0, 0, 1, 0),
         Radian(rigid_body.rotation[2])
     );
     const BulletMatrix rotate_matrix = ry * rx * rz;

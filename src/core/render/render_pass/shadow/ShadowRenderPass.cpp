@@ -7,7 +7,7 @@
 
 constexpr UINT SHADOW_MAP_SIZE = 2048;
 
-ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {
+ShadowRenderPass::ShadowRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept : RenderPass(common_resource) {
 }
 
 bool ShadowRenderPass::init(

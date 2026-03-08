@@ -436,15 +436,8 @@ public:
         return *this;
     }
     constexpr WrappedMatrix operator*(const WrappedMatrix& input) const noexcept {
-        /*
-        if constexpr(WrappedMatrix::IS_ROW_MAJOR) {
-            return WrappedMatrix(input.matrix * this->matrix);
-        } else {
-            return WrappedMatrix(this->matrix * input.matrix);
-        }
-        */
         WrappedMatrix output;
-        output.matrix = this->matrix * input.matrix;
+        output.matrix = DirectX::XMMatrixMultiply(this->matrix, input.matrix);
         return output;
     }
 

@@ -1,20 +1,14 @@
 #include "MMDFilterCallback.h"
-#include <algorithm>
 
 void MMDFilterCallback::add_proxy(btBroadphaseProxy* const proxy) {
-    this->non_filter_proxy.push_back(proxy);
+    this->always_collide_proxies.insert(proxy);
 }
 
 bool MMDFilterCallback::needBroadphaseCollision(
     btBroadphaseProxy* proxy0,
     btBroadphaseProxy* proxy1
 ) const {
-    const auto find_iter = std::find_if(
-        this->non_filter_proxy.begin(),
-        this->non_filter_proxy.end(),
-        [proxy0, proxy1](const auto& x) {return x == proxy0 || x == proxy1; }
-    );
-    if(find_iter != this->non_filter_proxy.end()) {
+    if(this->always_collide_proxies.contains(proxy0) || this->always_collide_proxies.contains(proxy1)) {
         return true;
     }
 

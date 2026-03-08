@@ -23,7 +23,7 @@ MMDJoint::MMDJoint(
         btVector3(
             joint.position[0],
             joint.position[1],
-            joint.position[2]
+            -joint.position[2] // Bulletに合わせる
         )
     );
     transform.setBasis(rotate_matrix);
@@ -79,7 +79,7 @@ MMDJoint::MMDJoint(
     }
     if(joint.spring_position[2] != 0) {
         constraint->enableSpring(2, true);
-        constraint->setStiffness(2, -joint.spring_position[2]);
+        constraint->setStiffness(2, -joint.spring_position[2]); // Bulletに合わせる
     }
     if(joint.spring_rotation[0] != 0) {
         constraint->enableSpring(3, true);

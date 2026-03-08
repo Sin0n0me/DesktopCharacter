@@ -1,11 +1,11 @@
 #pragma once
 
 #include <BulletCollision/BroadphaseCollision/btOverlappingPairCache.h>
-#include <vector>
+#include <unordered_set>
 
 class MMDFilterCallback : public btOverlapFilterCallback {
 protected:
-    std::vector<btBroadphaseProxy*> non_filter_proxy;
+    std::unordered_set<btBroadphaseProxy*> always_collide_proxies;
 
 public:
     explicit MMDFilterCallback(void) = default;

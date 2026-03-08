@@ -1,5 +1,7 @@
 #include "../../../log/Logger.h"
 #include "../../../render/model/pmd/bone/BoneNode.h"
+#include "../../../render/model/pmd/bone/IBoneAccessor.h"
+#include "../../../render/model/pmd/PMDFileStruct.h"
 #include "../../../utility/Hash.h"
 #include "../motion_state/MMDDynamicAndBoneMergeMotionState.h"
 #include "../motion_state/MMDDynamicMotionState.h"
@@ -51,62 +53,66 @@ std::unique_ptr<btCollisionShape> MMDRigidBody::make_shape(const PMDRigidBody& r
     return std::unique_ptr<btCollisionShape>();
 }
 
-// 剛体中心とのオフセットは以下で求める(列優先の場合)
-// Inverse(global) * InvZ(InvZ(global) * T * R)
-MMDMatrix MMDRigidBody::make_offset(
+// PMDはボーンとの相対座標なので剛体中心とのオフセットは以下で求める(列優先の場合)
+// Offset = T * R
+// PMXの場合はモデル座標での数値なので以下で求める(列優先の場合)
+// Offset = Inverse(global) * T * R
+MMDMatrix MMDRigidBody::make_offset_from_pmd(
     const PMDRigidBody& rigid_body,
-    const BoneNode* node
+    const std::shared_ptr<BoneNode>& node
 ) {
-    const BulletMatrix rx = BulletMatrix::make_rotate_from_axis_angle(
+    const MMDMatrix rx = MMDMatrix::make_rotate_from_axis_angle(
         DirectX::XMVectorSet(1, 0, 0, 0),
         Radian(rigid_body.rotation[0])
     );
-    const BulletMatrix ry = BulletMatrix::make_rotate_from_axis_angle(
+    const MMDMatrix ry = MMDMatrix::make_rotate_from_axis_angle(
         DirectX::XMVectorSet(0, 1, 0, 0),
         Radian(rigid_body.rotation[1])
     );
-    const BulletMatrix rz = BulletMatrix::make_rotate_from_axis_angle(
+    const MMDMatrix rz = MMDMatrix::make_rotate_from_axis_angle(
         DirectX::XMVectorSet(0, 0, 1, 0),
         Radian(rigid_body.rotation[2])
     );
-    const BulletMatrix rotate_matrix = ry * rx * rz;
-    const BulletMatrix translate_matrix = BulletMatrix::make_translation(
+    const MMDMatrix rotate_matrix = ry * rx * rz;
+    const MMDMatrix translate_matrix = MMDMatrix::make_translation(
         rigid_body.position[0],
         rigid_body.position[1],
         rigid_body.position[2]
     );
-    const BulletMatrix transform = translate_matrix * rotate_matrix;
-    const BulletMatrix world_transform = node->bind_bone.global.inverse_z() * transform;
-    const MMDMatrix offset = node->bind_bone.global_inverse * world_transform.inverse_z();
+    const MMDMatrix transform = translate_matrix * rotate_matrix;
+    const MMDMatrix offset = transform;
 
     return offset;
 }
 
-bool MMDRigidBody::make_rigid_body(const PMDRigidBody& rigid_body) {
+bool MMDRigidBody::make_rigid_body(
+    const PMDRigidBody& rigid_body,
+    const IBoneAccessor* bone_accessor
+) {
     if(!bool(this->shape)) {
         return false;
     }
 
-    const bool is_static = this->rigid_body_type == MMDRigidBodyType::Kinematic;
-    const btScalar mass = is_static ? 0.0f : rigid_body.mass;
-    btVector3 local_interia(0, 0, 0);
+    const bool is_kinematic = this->rigid_body_type == MMDRigidBodyType::Kinematic;
+    const btScalar mass = is_kinematic ? 0.0f : rigid_body.mass;
+    btVector3 local_inertia(0, 0, 0);
 
     if(mass != 0.0f) {
-        this->shape->calculateLocalInertia(mass, local_interia);
+        this->shape->calculateLocalInertia(mass, local_inertia);
     }
 
-    if(!this->make_motion_state(rigid_body)) {
+    if(!this->make_motion_state(rigid_body, bone_accessor)) {
         return false;
     }
 
-    btMotionState* const motion_state = is_static ?
+    btMotionState* const motion_state = is_kinematic ?
         this->kinematic_motion_state.get() :
         this->active_motion_state.get();
     btRigidBody::btRigidBodyConstructionInfo construct_info(
         mass,
         motion_state,
         this->shape.get(),
-        local_interia
+        local_inertia
     );
     construct_info.m_linearDamping = rigid_body.linear_damping;
     construct_info.m_angularDamping = rigid_body.angular_damping;
@@ -119,7 +125,7 @@ bool MMDRigidBody::make_rigid_body(const PMDRigidBody& rigid_body) {
     this->rigid_body->setUserPointer(this);
     this->rigid_body->setActivationState(DISABLE_DEACTIVATION);
 
-    if(is_static) {
+    if(is_kinematic) {
         this->rigid_body->setCollisionFlags(
             this->rigid_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT
         );
@@ -128,33 +134,41 @@ bool MMDRigidBody::make_rigid_body(const PMDRigidBody& rigid_body) {
     return true;
 }
 
-bool MMDRigidBody::make_motion_state(const PMDRigidBody& rigid_body) {
-    const MMDMatrix offset = this->make_offset(rigid_body, this->node.get());
+bool MMDRigidBody::make_motion_state(
+    const PMDRigidBody& rigid_body,
+    const IBoneAccessor* bone_accessor
+) {
+    const bool has_node = bool(this->node);
+    const auto& kinematic_node = has_node ? this->node : bone_accessor->get_bone_node(0);
+    const MMDMatrix offset = this->make_offset_from_pmd(rigid_body, kinematic_node);
+    const bool override_with_physics = has_node;
 
     switch(this->rigid_body_type) {
     case MMDRigidBodyType::Kinematic:
         this->kinematic_motion_state = std::make_unique<MMDKinematicMotionState>(
-            this->node,
+            kinematic_node,
             offset
         );
         break;
     case MMDRigidBodyType::Dynamic:
         this->active_motion_state = std::make_unique<MMDDynamicMotionState>(
-            this->node,
-            offset
+            kinematic_node,
+            offset,
+            override_with_physics
         );
         this->kinematic_motion_state = std::make_unique<MMDKinematicMotionState>(
-            this->node,
+            kinematic_node,
             offset
         );
         break;
     case MMDRigidBodyType::DynamicAdjustBone:
         this->active_motion_state = std::make_unique<MMDDynamicAndBoneMergeMotionState>(
-            this->node,
-            offset
+            kinematic_node,
+            offset,
+            override_with_physics
         );
         this->kinematic_motion_state = std::make_unique<MMDKinematicMotionState>(
-            this->node,
+            kinematic_node,
             offset
         );
         break;
@@ -165,8 +179,11 @@ bool MMDRigidBody::make_motion_state(const PMDRigidBody& rigid_body) {
     return true;
 }
 
-bool MMDRigidBody::init(const PMDRigidBody& rigid_body) {
-    if(!this->make_rigid_body(rigid_body)) {
+bool MMDRigidBody::init(
+    const PMDRigidBody& rigid_body,
+    const IBoneAccessor* bone_accessor
+) {
+    if(!this->make_rigid_body(rigid_body, bone_accessor)) {
         return false;
     }
 
@@ -175,12 +192,13 @@ bool MMDRigidBody::init(const PMDRigidBody& rigid_body) {
 
 std::unique_ptr<MMDRigidBody> MMDRigidBody::make_ptr(
     const PMDRigidBody& rigid_body,
+    const IBoneAccessor* bone_accessor,
     const std::shared_ptr<BoneNode>& node
 ) {
     auto mmd_rigid_body = std::unique_ptr<MMDRigidBody>(
         new MMDRigidBody(rigid_body, node) // privateコンストラクタなので
     );
-    if(!mmd_rigid_body->init(rigid_body)) {
+    if(!mmd_rigid_body->init(rigid_body, bone_accessor)) {
         return std::unique_ptr<MMDRigidBody>();
     }
 
@@ -239,8 +257,8 @@ void MMDRigidBody::apply_local_transform(void) {
     // 物理状態の反映(ローカル空間)
     const auto& global = this->node->get_global();
     if(const auto parent_node = this->node->parent.lock()) {
-        const MMDMatrix& parent_globale = parent_node->get_global();
-        const MMDMatrix& local = parent_globale.inverse() * global;
+        const MMDMatrix& parent_global = parent_node->get_global();
+        const MMDMatrix& local = parent_global.inverse() * global;
 
         this->node->set_local(local);
     } else {

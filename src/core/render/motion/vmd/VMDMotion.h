@@ -9,7 +9,7 @@ class MorphKeyFrameManager;
 class IKKeyFrameManager;
 class BoneKeyFrameManager;
 class IKSolver;
-class MMDPhysics;
+class MMDPhysicsWorld;
 
 class VMDMotion : public IMotionHandler {
 private:
@@ -17,7 +17,7 @@ private:
     const std::shared_ptr<IBoneAccessor> bone_accessor;
     const std::shared_ptr<IMorphAccessor> morph_accessor;
     const std::shared_ptr<IKSolver> ik_solver;
-    const std::shared_ptr<MMDPhysics> physics;
+    const std::shared_ptr<MMDPhysicsWorld> physics;
     std::unique_ptr<IKKeyFrameManager> ik_key_frame_manager;
     std::unique_ptr<MorphKeyFrameManager> morph_key_frame_manager;
     std::unique_ptr<BoneKeyFrameManager> bone_key_frame_manager;
@@ -27,7 +27,7 @@ public:
         const std::shared_ptr<IBoneAccessor>& bone_accessor,
         const std::shared_ptr<IMorphAccessor>& morph_accessor,
         const std::shared_ptr<IKSolver>& ik_solver,
-        const std::shared_ptr<MMDPhysics>& physics
+        const std::shared_ptr<MMDPhysicsWorld>& physics
     );
 
     bool init_motion(void) override;

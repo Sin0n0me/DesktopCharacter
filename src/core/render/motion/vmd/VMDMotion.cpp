@@ -1,5 +1,5 @@
 #include "../../../log/Logger.h"
-#include "../../../physics/mmd/MMDPhysics.h"
+#include "../../../physics/mmd/MMDPhysicsWorld.h"
 #include "../../../timer/DeltaTime.h"
 #include "../../model/pmd/bone/IBoneAccessor.h"
 #include "../../model/pmd/ik/IKSolver.h"
@@ -19,28 +19,22 @@ VMDMotion::VMDMotion(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
     const std::shared_ptr<IMorphAccessor>& morph_accessor,
     const std::shared_ptr<IKSolver>& ik_solver,
-    const std::shared_ptr<MMDPhysics>& physics
+    const std::shared_ptr<MMDPhysicsWorld>& physics
 ) :
     bone_accessor(bone_accessor),
     morph_accessor(morph_accessor),
-    frame_manager(
-        new KeyFrameTimer(
-            VMD_FPS,
-            0xFFFFFFFF
-        )
-    ),
+    frame_manager(std::make_shared<KeyFrameTimer>(
+        VMD_FPS,
+        0xFFFFFFFF
+    )),
     ik_solver(ik_solver),
     physics(physics) {
 }
 
 bool VMDMotion::init_motion(void) {
     this->frame_manager->set_frame(0);
-    this->morph_key_frame_manager->apply_morph();
-    this->bone_key_frame_manager->update_local_matricies();
-    this->bone_key_frame_manager->update_global_matricies();
-    this->ik_key_frame_manager->apply_ik();
     this->physics->reset_physics();
-    this->bone_key_frame_manager->apply_skinning();
+    this->physics->apply_physics();
 
     return true;
 }
@@ -79,8 +73,6 @@ bool VMDMotion::load_motion_file(const std::filesystem::path& path) {
         *std::max_element(last_frames.begin(), last_frames.end())
     );
 
-    this->physics->reset_physics();
-
     return true;
 }
 
@@ -89,7 +81,7 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     this->frame_manager->update(delta_time);
 
     // 物理シミュレーション通知
-    //this->physics->notify_update(delta_time);
+    this->physics->notify_update(delta_time);
 
     // モーフの適用
     this->morph_key_frame_manager->apply_morph();
@@ -104,7 +96,7 @@ void VMDMotion::update_motion(const DeltaTime& delta_time) {
     this->ik_key_frame_manager->apply_ik();
 
     // 物理演算適用
-    //this->physics->apply_physics();
+    this->physics->apply_physics();
 
     // スキニング用のグローバル行列の確定
     this->bone_key_frame_manager->apply_skinning();

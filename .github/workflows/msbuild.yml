@@ -17,7 +17,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+        with:
+          submodules: recursive
+          
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -31,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key: cmake-build-${{ matrix.platform }}-${{ hashFiles('build.cmd') }}
+          key: cmake-build-${{ matrix.platform }}-${{ hashFiles('build.cmd', '**/CMakeLists.txt') }}
 
       - name: Run build.cmd (generate lib with CMake)
         if: steps.cache-build.outputs.cache-hit != 'true'

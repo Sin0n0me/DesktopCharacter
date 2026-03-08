@@ -11,9 +11,9 @@ jobs:
 
     strategy:
       matrix:
-        config: [Release]
-        platform: [x86, x64]
-
+        config: [Release, Debug]
+        #platform: [x86, x64]
+        platform: [x64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

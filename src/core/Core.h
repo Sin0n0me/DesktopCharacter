@@ -28,7 +28,7 @@ private:
 
 private:
     std::shared_ptr<D3D11> d3d11;
-    std::shared_ptr<CommonResource> common_resouce;
+    std::shared_ptr<CommonResource> common_resource;
     std::unique_ptr<RenderPipeline> render_pipeline;
     std::unique_ptr<WindowManager> window_manager;
 

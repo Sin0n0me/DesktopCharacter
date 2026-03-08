@@ -8,8 +8,8 @@
 #include "EdgeRenderPass.h"
 #include <d3d11.h>
 
-EdgeRenderPass::EdgeRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept
-    : RenderPass(common_resouce) {
+EdgeRenderPass::EdgeRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept
+    : RenderPass(common_resource) {
 }
 
 bool EdgeRenderPass::init(

@@ -10,6 +10,8 @@
 #include <DirectXMath.h>
 #include <map>
 
+#undef min;
+
 PMDBoneManager::PMDBoneManager(
     const std::shared_ptr<const PMDBones>& bones
 ) noexcept :
@@ -127,11 +129,13 @@ bool PMDBoneManager::init(ID3D11Device* const device) {
 }
 
 void PMDBoneManager::render_update(ID3D11DeviceContext* const context) {
-    const auto size = this->bone_nodes.size();
-    for(size_t i = 0; i < size; ++i) {
-        const auto& bone = this->bone_nodes.at(i)->bind_bone;
-
-        this->bones->bone_matrices[i].set(this->bone_nodes.at(i)->get_global());
+    const auto max_size = std::min(
+        this->bone_nodes.size(),
+        static_cast<size_t>(Bones::MAX_MATRIX_SIZE)
+    );
+    for(size_t i = 0; i < max_size; ++i) {
+        const auto& global = this->bone_nodes.at(i)->get_global();
+        this->bones->bone_matrices[i].set(global);
     }
 
     D3D11_MAPPED_SUBRESOURCE mapped;

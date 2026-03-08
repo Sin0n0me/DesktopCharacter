@@ -8,7 +8,7 @@
 #include "ModelRenderPass.h"
 #include <d3d11.h>
 
-ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept : RenderPass(common_resouce) {}
+ModelRenderPass::ModelRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept : RenderPass(common_resource) {}
 
 bool ModelRenderPass::init(
     ID3D11Device* const device,

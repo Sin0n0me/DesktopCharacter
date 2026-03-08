@@ -18,20 +18,12 @@ class btRigidBody;
 class DeltaTime;
 class IPhysicsSimulationListener;
 
-namespace {
-    enum class SimulationState : int8_t {
-        Waiting,
-        Running,
-        Finished
-    };
-}
-
-class PhysicsWorld {
+class PhysicsWorld final {
 public:
     using Func = std::function<void(btDiscreteDynamicsWorld* const)>;
 
 private:
-    IPhysicsSimulationListener* const applier;
+    std::weak_ptr<IPhysicsSimulationListener> physics_applier;
     std::unique_ptr<btDbvtBroadphase> broadphase;
     std::unique_ptr<btCollisionDispatcher> dispatcher;
     std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
@@ -39,31 +31,27 @@ private:
     std::unique_ptr<btDiscreteDynamicsWorld> world;
 
     std::thread simulation_thread;
-    std::optional<float> delta_time;
+    std::atomic<float> delta_time;
     std::atomic<float> fixed_time_step;
     std::atomic<int> max_step_count;
     std::atomic<bool> is_running;
     std::atomic<bool> do_physics_simulate;
     std::atomic<bool> is_synchronous;
-    std::atomic<bool> sync_step_requested;
+    std::atomic<bool> updated_delta_time;
     std::condition_variable simulate_condition;
-    std::condition_variable state_condition;
     std::mutex simulation_mutex;
+    std::mutex flags_mutex;
 
 private:
+    bool wait_condition(void) const;
+
     void simulation_update(void);
 
-protected:
-
-    /**
-     * @brief 物理シミュレートを同期させるかどうかのフラグをセットする
-     * @param flag 同期させるならtrue 非同期ならfalse
-     */
-    void set_synchronous(const bool flag);
+    void step_simulation(void);
 
 public:
     explicit PhysicsWorld(
-        IPhysicsSimulationListener* const applier
+        const std::shared_ptr<IPhysicsSimulationListener>& applier
     );
     virtual ~PhysicsWorld(void) noexcept;
 
@@ -79,6 +67,18 @@ public:
     void notify_update(const DeltaTime& delta_time);
 
     void submit(const Func& func);
+
     void reset_physics(void);
+
     void apply_physics(void);
+
+    /**
+     * @brief 物理シミュレートを同期させるかどうかのフラグをセットする
+     * @param flag 同期させるならtrue 非同期ならfalse
+     */
+    void set_synchronous(const bool flag);
+
+    void set_fixed_time_step(const float time_step);
+
+    void set_max_step_count(const int step_count);
 };

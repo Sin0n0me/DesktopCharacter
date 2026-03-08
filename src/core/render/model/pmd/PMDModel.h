@@ -9,14 +9,14 @@
 struct ID3D11Device;
 class PMDModelLoader;
 class PMDMorphManager;
-class MMDPhysics;
+class MMDPhysicsWorld;
 class PMDBoneManager;
 class IKSolver;
 class VMDMotionManager;
 
 class PMDModel : public Model {
 private:
-    std::shared_ptr<MMDPhysics> physics; // モデル一体に物理世界を割り当てる(複数用にsharedは可能にする)
+    std::shared_ptr<MMDPhysicsWorld> physics; // モデル一体に物理世界を割り当てる(複数用にsharedは可能にする)
     std::shared_ptr<std::vector<PMDVertexData>> vertices;
     std::shared_ptr<PMDBoneManager> bone_manager;
     std::shared_ptr<PMDMorphManager> morph_manager;

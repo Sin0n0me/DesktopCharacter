@@ -213,12 +213,10 @@
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDKinematicMotionState.h" />
     <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBodyShape.h" />
     <ClInclude Include="src\core\physics\mmd\MMDFilterCallback.h" />
-    <ClInclude Include="src\core\physics\mmd\MMDPhysics.h" />
     <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBodyType.h" />
     <ClInclude Include="src\core\physics\mmd\joint\MMDJoint.h" />
     <ClInclude Include="src\core\physics\mmd\motion_state\MMDMotionState.h" />
     <ClInclude Include="src\core\physics\mmd\rigid_body\MMDRigidBody.h" />
-    <ClInclude Include="src\core\physics\Physics.h" />
     <ClInclude Include="src\core\render\constant_buffer\Light.h" />
     <ClInclude Include="src\core\render\constant_buffer\ModelEdge.h" />
     <ClInclude Include="src\core\render\shader\model_edge\ModelEdgePixelShader.h" />
@@ -339,7 +337,6 @@
     <ClCompile Include="src\core\physics\mmd\MMDPhysicsWorld.cpp" />
     <ClCompile Include="src\core\physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\config\ApplicationConfig.cpp" />
-    <ClCompile Include="src\core\math\test.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.cpp" />
     <ClCompile Include="src\core\timer\FrameTimer.cpp" />
     <ClCompile Include="src\core\timer\DeltaTime.cpp" />
@@ -347,10 +344,8 @@
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDKinematicMotionState.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDFilterCallback.cpp" />
-    <ClCompile Include="src\core\physics\mmd\MMDPhysics.cpp" />
     <ClCompile Include="src\core\physics\mmd\joint\MMDJoint.cpp" />
     <ClCompile Include="src\core\physics\mmd\rigid_body\MMDRigidBody.cpp" />
-    <ClCompile Include="src\core\physics\Physics.cpp" />
     <ClCompile Include="src\core\render\model\pmd\bone\BoneNode.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgePixelShader.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgeVertexShader.cpp" />

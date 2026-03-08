@@ -15,7 +15,7 @@ private:
     uint64_t buffer_index;
 
 public:
-    explicit AlphaMaskRenderPass(const std::shared_ptr<CommonResource>& common_resouce) noexcept;
+    explicit AlphaMaskRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept;
 
     bool init(ID3D11Device* const device, ID3D11RenderTargetView* const render_target_view) override;
     void update(ID3D11DeviceContext* const context) override;

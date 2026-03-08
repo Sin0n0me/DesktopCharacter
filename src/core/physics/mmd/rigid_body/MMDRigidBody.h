@@ -2,14 +2,15 @@
 #include "../../../math/WrappedMatrix.h"
 #include "MMDRigidBodyType.h"
 #include <memory>
-#include <optional>
 
+struct PMDRigidBody;
 class btRigidBody;
 class btCollisionShape;
 class MMDMotionState;
 class BoneNode;
 class MMDPhysics;
 class btDiscreteDynamicsWorld;
+class IBoneAccessor;
 
 class MMDRigidBody {
 private:
@@ -29,9 +30,9 @@ private:
     explicit MMDRigidBody(void) = delete;
 
     static std::unique_ptr<btCollisionShape> make_shape(const PMDRigidBody& rigid_body);
-    static MMDMatrix make_offset(const PMDRigidBody& rigid_body, const BoneNode* node);
-    bool make_rigid_body(const PMDRigidBody& rigid_body);
-    bool make_motion_state(const PMDRigidBody& rigid_body);
+    static MMDMatrix make_offset_from_pmd(const PMDRigidBody& rigid_body, const std::shared_ptr<BoneNode>& node);
+    bool make_rigid_body(const PMDRigidBody& rigid_body, const IBoneAccessor* bone_accessor);
+    bool make_motion_state(const PMDRigidBody& rigid_body, const IBoneAccessor* bone_accessor);
 
 protected:
     explicit MMDRigidBody(
@@ -39,12 +40,16 @@ protected:
         const std::shared_ptr<BoneNode>& node
     );
 
-    bool init(const PMDRigidBody& rigid_body);
+    bool init(
+        const PMDRigidBody& rigid_body,
+        const IBoneAccessor* bone_accessor
+    );
 
 public:
 
     static std::unique_ptr<MMDRigidBody> make_ptr(
         const PMDRigidBody& rigid_body,
+        const IBoneAccessor* bone_accessor,
         const std::shared_ptr<BoneNode>& node
     );
 

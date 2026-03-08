@@ -5,11 +5,13 @@
 
 MMDDynamicAndBoneMergeMotionState::MMDDynamicAndBoneMergeMotionState(
     const std::shared_ptr<BoneNode>& bone_node,
-    const MMDMatrix& offset
+    const MMDMatrix& offset,
+    const bool override_with_physics
 ) :
     bone_node(bone_node),
     offset(offset),
-    inverse_offset(offset.inverse()) {
+    inverse_offset(offset.inverse()),
+    override_with_physics(override_with_physics) {
     this->reset();
 }
 
@@ -23,12 +25,16 @@ void MMDDynamicAndBoneMergeMotionState::setWorldTransform(const btTransform& wor
 
 void MMDDynamicAndBoneMergeMotionState::reset(void) {
     // mmdの世界からbulletの世界に変換しオフセット適用
-    const MMDMatrix global = this->bone_node->get_global();
+    const MMDMatrix global = this->bone_node->bind_bone.global;
     const MMDMatrix offset_matrix = global * this->offset;
     this->transform = matrix_to_transform(offset_matrix.inverse_z());
 }
 
 void MMDDynamicAndBoneMergeMotionState::reflect_global_transform(void) {
+    if(!this->override_with_physics) {
+        return;
+    }
+
     // 中心とのoffsetが掛かっているので
     // offsetの逆行列を掛けることでボーン空間に戻す
     MMDMatrix global = transform_to_matrix(this->transform).inverse_z() * this->inverse_offset;

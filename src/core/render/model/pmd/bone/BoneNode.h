@@ -50,5 +50,5 @@ public:
     const MMDMatrix& get_local(void) const noexcept;
     const MMDMatrix& get_global(void) const noexcept;
 
-    const Vector4& get_global_position(void) const noexcept;
+    Vector4 get_global_position(void) const noexcept;
 };

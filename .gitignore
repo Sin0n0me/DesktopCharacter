@@ -1,8 +1,9 @@
 .vs/
 x64/
-Debug/
-
+build_cmake/
 assets/**/
+./Debug/
+DesktopCharacter/
 
 *.user
 *.obj
@@ -14,4 +15,5 @@ assets/**/
 *.pmd
 *.aieproj
 
+_*.py
 log.txt

@@ -115,6 +115,6 @@ const MMDMatrix& BoneNode::get_global(void) const noexcept {
     return this->global;
 }
 
-const Vector4& BoneNode::get_global_position(void) const noexcept {
+Vector4 BoneNode::get_global_position(void) const noexcept {
     return this->global.get_translation();
 }

@@ -12,7 +12,7 @@ VMDMotionManager::VMDMotionManager(
     const std::shared_ptr<IBoneAccessor>& bone_accessor,
     const std::shared_ptr<IMorphAccessor>& morph_accessor,
     const std::shared_ptr<IKSolver>& ik_solver,
-    const std::shared_ptr<MMDPhysics>& physics
+    const std::shared_ptr<MMDPhysicsWorld>& physics
 ) :
     morph_accessor(morph_accessor),
     bone_accessor(bone_accessor),
@@ -24,7 +24,7 @@ VMDMotionManager::VMDMotionManager(
 bool VMDMotionManager::init(void) {
     this->motion_map.emplace(
         MotionState::WaveHand,
-        new VMDMotion(
+        std::make_unique<VMDMotion>(
             this->bone_accessor,
             this->morph_accessor,
             this->ik_solver,

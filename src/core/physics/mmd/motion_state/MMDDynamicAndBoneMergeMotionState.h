@@ -10,11 +10,13 @@ private:
     const MMDMatrix inverse_offset;
     const MMDMatrix offset;
     btTransform	transform;
+    const bool override_with_physics;
 
 public:
     explicit MMDDynamicAndBoneMergeMotionState(
         const std::shared_ptr<BoneNode>& bone_node,
-        const MMDMatrix& offset
+        const MMDMatrix& offset,
+        const bool override_with_physics
     );
     virtual ~MMDDynamicAndBoneMergeMotionState(void) noexcept = default;
 

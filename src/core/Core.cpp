@@ -15,14 +15,14 @@
 decltype(Engine::instance) Engine::instance;
 
 Engine::Engine(const HINSTANCE& hinstance, const LPWSTR& cmd_line) noexcept :
-    common_resouce(std::make_shared<CommonResource>()),
+    common_resource(std::make_shared<CommonResource>()),
     d3d11(std::make_shared<D3D11>()),
     mouse_state(std::make_shared<MouseState>()) {
-    this->models = std::make_shared<ModelManager>(this->common_resouce);
-    this->scene = std::make_unique<Scene>(this->common_resouce);
+    this->models = std::make_shared<ModelManager>(this->common_resource);
+    this->scene = std::make_unique<Scene>(this->common_resource);
     this->render_pipeline = std::make_unique<RenderPipeline>(
         this->d3d11,
-        this->common_resouce
+        this->common_resource
     );
     this->collider = std::make_unique<Collider>(
         this->scene->get_camera(),
@@ -73,7 +73,7 @@ const IMouseStateGetter* Engine::get_mouse_getter(void) const {
 }
 
 bool Engine::init(const UINT& width, const UINT& height) {
-    if(this->instance.has_value()) {
+    if(Engine::instance.has_value()) {
         return true;
     }
 
@@ -128,7 +128,7 @@ bool Engine::init(const UINT& width, const UINT& height) {
         return false;
     }
 
-    this->instance.emplace(this);
+    Engine::instance.emplace(this);
 
     Logger::info(u8"エンジンの初期化に成功しました");
 
@@ -155,6 +155,8 @@ void Engine::run(void) {
 }
 
 void Engine::uninit(void) {
-    this->instance.reset();
-    CoUninitialize();
+    if(Engine::instance.has_value()) {
+        Engine::instance.reset();
+        CoUninitialize();
+    }
 }

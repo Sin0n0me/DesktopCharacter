@@ -17,6 +17,7 @@ public:
 
 private:
 
+    bool make_depth_stencil(ID3D11Device* const device);
     bool make_shader(ID3D11Device* const device);
     bool make_buffer(ID3D11Device* const device);
 };

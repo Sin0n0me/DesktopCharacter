@@ -1,3 +1,4 @@
+#include "../../../log/Logger.h"
 #include "../../CommonResource.h"
 #include "../../constant_buffer/ConstantBufferNames.h"
 #include "../../constant_buffer/ModelEdge.h"
@@ -16,6 +17,10 @@ bool EdgeRenderPass::init(
     ID3D11Device* const device,
     ID3D11RenderTargetView* const render_target_view
 ) {
+    if(!this->make_depth_stencil(device)) {
+        return false;
+    }
+
     if(!this->make_shader(device)) {
         return false;
     }
@@ -37,7 +42,11 @@ void EdgeRenderPass::render_set(
     context->OMSetRenderTargets(
         1,
         &render_target_view,
-        nullptr
+        this->resource->depth_stencil_view.at(Pattern::Model).Get()
+    );
+    context->OMSetDepthStencilState(
+        this->resource->depth_stencil_state.at(Pattern::ModelEdge).Get(),
+        0
     );
 
     context->IASetInputLayout(
@@ -108,6 +117,27 @@ RasterizerKind EdgeRenderPass::rasterizer_kind(void) const {
     return RasterizerKind::CullFront;
 }
 
+bool EdgeRenderPass::make_depth_stencil(ID3D11Device* const device) {
+    {
+        constexpr D3D11_DEPTH_STENCIL_DESC desc{
+            .DepthEnable = TRUE,
+            .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO,
+            .DepthFunc = D3D11_COMPARISON_LESS_EQUAL,
+        };
+
+        const HRESULT hr = device->CreateDepthStencilState(
+            &desc,
+            this->resource->depth_stencil_state[Pattern::ModelEdge].GetAddressOf()
+        );
+        if(FAILED(hr)) {
+            Logger::error(u8"デプスステンシルステートの作成に失敗しました");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool EdgeRenderPass::make_shader(ID3D11Device* const device) {
     Shader vertex_shader = Shader(std::make_unique<ModelEdgeVertexShader>());
     Shader pixel_shader = Shader(std::make_unique<ModelEdgePixelShader>());
@@ -144,7 +174,7 @@ bool EdgeRenderPass::make_buffer(ID3D11Device* const device) {
     // TODO: GUIから変更可能に
     constexpr ModelEdge edge{
         .edge_color = {0.0f, 0.0f, 0.0f},
-        .edge_width = 0.025f,
+        .edge_width = 0.0025f,
     };
 
     constexpr D3D11_BUFFER_DESC desc = {

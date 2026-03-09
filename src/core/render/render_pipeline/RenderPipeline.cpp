@@ -96,7 +96,7 @@ void RenderPipeline::set(const std::vector<RenderPassName>& names) {
 
 // ラスタライザの作成
 bool RenderPipeline::make_rasterizer(void) {
-    constexpr INT DEPTH_BIAS = 1;
+    constexpr INT DEPTH_BIAS = 100;
     constexpr FLOAT SLOPE_SCALED_DEPTH_BIAS = 0.5f;
     constexpr BOOL DEPTH_CLIP_EBABLE = TRUE;
 
@@ -320,8 +320,8 @@ bool RenderPipeline::init(void) {
     this->set({
         RenderPassName::ShadowMap,
         RenderPassName::Wall,
-        RenderPassName::Edge,
         RenderPassName::Model,
+        RenderPassName::Edge,
         RenderPassName::FXAA,
         });
 

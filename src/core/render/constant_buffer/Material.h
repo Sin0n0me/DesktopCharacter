@@ -8,4 +8,5 @@ struct alignas(16) Material {
     float sphere_mul; // ifによる分岐を減らすため ０-1 で計算
     float sphere_add;
     float edge_flag;
+    float _pad[2];
 };

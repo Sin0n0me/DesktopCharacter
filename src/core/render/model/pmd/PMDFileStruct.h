@@ -26,8 +26,8 @@ struct PMDVertexIndex {
 
 struct PMDMaterial {
     float diffuse[4];		// ディフューズカラー
-    float specular[3];		// スペキュラ係数
-    float shininess;		// スペキュラカラー RGB
+    float shininess;		// スペキュラ係数
+    float specular[3];		// スペキュラカラー RGB
     float ambient[3];		// アンビエントカラー RGB
     uint8_t toon_index;		// トゥーンレンダリング用のテクスチャのインデックス
     uint8_t edge_flag;		// 輪郭エッジフラグ

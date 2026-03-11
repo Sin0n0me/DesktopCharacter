@@ -10,7 +10,7 @@
 #include <DirectXMath.h>
 #include <map>
 
-#undef min;
+#undef min
 
 PMDBoneManager::PMDBoneManager(
     const std::shared_ptr<const PMDBones>& bones

@@ -1,7 +1,7 @@
 #pragma once
 #include "../rasterizer/RasterizerKind.h"
-#include "../render_pass/RenderPass.h"
 #include "../render_target_view/RenderTargetView.h"
+#include "render_pass/RenderPass.h"
 #include "RenderPassName.h"
 #include <d3d11.h>
 #include <deque>
@@ -23,7 +23,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resouce_view; // バックバッファ用
 
-    bool contains(const RenderPassName& name);
+    bool contains(const RenderPassName& name) const;
     void push_back(const RenderPassName& name);
     void push_front(const RenderPassName& name);
     void insert(const RenderPassName& name, const uint32_t& index);

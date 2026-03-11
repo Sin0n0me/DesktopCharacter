@@ -2,12 +2,13 @@
 #include "../../D3D11.h"
 #include "../../log/Logger.h"
 #include "../model/Model.h"
-#include "../render_pass/alpha_mask/AlphaMaskRenderPass.h"
-#include "../render_pass/edge/EdgeRenderPass.h"
-#include "../render_pass/fxaa/FXAARenderPass.h"
-#include "../render_pass/model/ModelRenderPass.h"
-#include "../render_pass/shadow/ShadowRenderPass.h"
-#include "../render_pass/wall/WallRenderPass.h"
+#include "render_pass/alpha_mask/AlphaMaskRenderPass.h"
+#include "render_pass/edge/EdgeRenderPass.h"
+#include "render_pass/fxaa/FXAARenderPass.h"
+#include "render_pass/imgui/IMGUIRenderPass.h"
+#include "render_pass/model/ModelRenderPass.h"
+#include "render_pass/shadow/ShadowRenderPass.h"
+#include "render_pass/wall/WallRenderPass.h"
 #include "RenderPipeline.h"
 
 constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -42,10 +43,23 @@ RenderPipeline::RenderPipeline(
         RenderPassName::Edge,
         std::make_unique<EdgeRenderPass>(resouce)
     );
+    this->render_pass_map.emplace(
+        RenderPassName::IMGUI,
+        std::make_unique<IMGUIRenderPass>(
+            d3d11->device.Get(),
+            d3d11->context.Get(),
+            resouce
+        )
+    );
 }
 
-bool RenderPipeline::contains(const RenderPassName& name) {
-    const auto& find_pass = this->render_pass_map.at(name);
+bool RenderPipeline::contains(const RenderPassName& name) const {
+    const auto& iter = this->render_pass_map.find(name);
+    if(iter == this->render_pass_map.end()) {
+        return false;
+    }
+
+    const auto& find_pass = iter->second;
     for(const auto& render_pass : this->pipe_line) {
         if(render_pass == find_pass) {
             return true;
@@ -97,7 +111,7 @@ void RenderPipeline::set(const std::vector<RenderPassName>& names) {
 // ラスタライザの作成
 bool RenderPipeline::make_rasterizer(void) {
     constexpr INT DEPTH_BIAS = 100;
-    constexpr FLOAT SLOPE_SCALED_DEPTH_BIAS = 0.5f;
+    constexpr FLOAT SLOPE_SCALED_DEPTH_BIAS = 1.0f;
     constexpr BOOL DEPTH_CLIP_EBABLE = TRUE;
 
     {
@@ -323,6 +337,7 @@ bool RenderPipeline::init(void) {
         RenderPassName::Model,
         RenderPassName::Edge,
         RenderPassName::FXAA,
+        RenderPassName::IMGUI,
         });
 
     return true;

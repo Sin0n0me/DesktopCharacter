@@ -7,4 +7,5 @@ enum class RenderPassName {
     FXAA,
     AlphaMask,
     Edge,
+    IMGUI,
 };

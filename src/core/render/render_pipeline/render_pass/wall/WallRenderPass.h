@@ -1,17 +1,17 @@
 #pragma once
-#include "../../../object/IObjectRenderer.h"
 #include "../RenderPass.h"
 #include <memory>
 #include <wrl/client.h>
 
 struct ID3D11BlendState;
+class IObjectRenderer;
 
 class WallRenderPass : public RenderPass {
 private:
     Microsoft::WRL::ComPtr<ID3D11BlendState> blend_state;
     std::unique_ptr<IObjectRenderer> wall_object; //
 
-    WallRenderPass() = default;
+    explicit WallRenderPass(void) = default;
 
 public:
     explicit WallRenderPass(const std::shared_ptr<CommonResource>& common_resource) noexcept;

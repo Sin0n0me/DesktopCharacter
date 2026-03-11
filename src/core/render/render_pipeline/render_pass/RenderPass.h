@@ -1,6 +1,6 @@
 #pragma once
-#include "../rasterizer/RasterizerKind.h"
-#include "../shader/ShaderBindingSlots.h"
+#include "../../rasterizer/RasterizerKind.h"
+#include "../../shader/ShaderBindingSlots.h"
 #include <memory>
 
 struct ID3D11Device;

@@ -1,40 +1,32 @@
 #pragma once
-
 #include "WindowStatus.h"
 #include <memory>
-#include <Windows.h>
 
 class IMouseStateGetter;
 class Collider;
+class IWindowFrame;
+struct SDL_Window;
+enum class GraphicsAPI;
 
 class WindowManager {
 private:
-    const HINSTANCE hinstance;
     const std::shared_ptr<IMouseStateGetter> mouse_state;
-    WindowStatus root_window;
-    WindowStatus hit_window;
+    std::unique_ptr<IWindowFrame> root_window;
 
-    bool make_root_window(void);
-    bool make_hit_window(void);
-    bool make_console_window(void); // debug
-    bool register_input_device(void);
-
-    void update_root_window(void);
-    void update_hit_window(void);
+    bool make_root_window(const GraphicsAPI& api);
 
 public:
 
     explicit WindowManager(
-        const HINSTANCE& hinstance,
-        const LPWSTR& cmd_line,
-        std::shared_ptr<IMouseStateGetter> mouse_state
+        std::unique_ptr<IWindowFrame> root_window
     );
+    ~WindowManager(void) noexcept;
 
-    bool init(void);
+    bool init(const GraphicsAPI& api);
 
     void update(const Collider* collider);
 
-    const WindowStatus& get_root_window_status(void) const noexcept;
+    WindowStatus get_window_status(void) const;
 
-    const WindowStatus& get_hit_window_status(void) const noexcept;
+    std::optional<SDL_Window*> get_window(void) const;
 };

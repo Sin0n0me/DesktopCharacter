@@ -1,11 +1,25 @@
 #pragma once
-#include <windows.h>
+#include "../utility/Point.h"
+#include <cstdint>
 
-struct WindowStatus {
-    HWND hwnd;             // ハンドル
-    POINT screen_position; // 左上座標
-    POINT window_size;     // ウィンドウサイズ
+using WindowPoint = Point2<std::int32_t>;
 
-    POINT to_client_position(const POINT& pt) const;
-    POINT to_screen_position(const POINT& pt) const;
+class WindowStatus {
+private:
+    WindowPoint screen_position;   // 左上座標
+    WindowPoint window_size;       // ウィンドウサイズ
+
+public:
+    explicit WindowStatus(
+        const WindowPoint& screen_position,
+        const WindowPoint& window_size
+    ) noexcept;
+
+    WindowPoint get_screen_position(void) const noexcept;
+    WindowPoint get_window_size(void) const noexcept;
+    WindowPoint to_client_position(const WindowPoint& pt) const noexcept;
+    WindowPoint to_screen_position(const WindowPoint& pt) const noexcept;
+
+    void update_screen_position(const WindowPoint& pt);
+    void update_window_size(const WindowPoint& pt);
 };

@@ -80,7 +80,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm;lib/imgui/;lib/sdl/include</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -109,7 +109,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm;lib/imgui/;lib/sdl/include</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -138,7 +138,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm;lib/imgui/;lib/sdl/include</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -167,7 +167,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>lib/bullet/src/;lib/glm/glm;lib/imgui/;lib/sdl/include</AdditionalIncludeDirectories>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -188,10 +188,21 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\gui\editor\ScriptEditorWindow.h" />
+    <ClInclude Include="src\core\gui\IMGUIManager.h" />
+    <ClInclude Include="src\core\gui\menu\MenuWindow.h" />
     <ClInclude Include="src\core\math\ShaderMatrix.h" />
     <ClInclude Include="src\core\math\GLSLMatrix.h" />
     <ClInclude Include="src\core\math\HLSLMatrix.h" />
     <ClInclude Include="src\core\render\model\pmd\bone\BoneType.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\alpha_mask\AlphaMaskRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\edge\EdgeRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\fxaa\FXAARenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\imgui\IMGUIRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\model\ModelRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\RenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\shadow\ShadowRenderPass.h" />
+    <ClInclude Include="src\core\render\render_pipeline\render_pass\wall\WallRenderPass.h" />
     <ClInclude Include="src\core\render\shader\InputElements.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.h" />
     <ClInclude Include="src\core\render\motion\vmd\bone_key_frame\Bezier.h" />
@@ -204,6 +215,7 @@
     <ClInclude Include="src\config\ApplicationConfig.h" />
     <ClInclude Include="src\core\math\Angle.h" />
     <ClInclude Include="src\core\math\WrappedMatrix.h" />
+    <ClInclude Include="src\core\script\Script.h" />
     <ClInclude Include="src\core\timer\FrameTimer.h" />
     <ClInclude Include="src\core\timer\DeltaTime.h" />
     <ClInclude Include="src\core\physics\PhysicsSettings.h" />
@@ -222,10 +234,8 @@
     <ClInclude Include="src\core\render\shader\model_edge\ModelEdgePixelShader.h" />
     <ClInclude Include="src\core\render\shader\model_edge\ModelEdgeVertexShader.h" />
     <ClInclude Include="src\core\render\rasterizer\RasterizerKind.h" />
-    <ClInclude Include="src\core\render\render_pass\edge\EdgeRenderPass.h" />
     <ClInclude Include="src\core\render\shader\alpha_mask\AlphaMaskComputeShader.h" />
     <ClInclude Include="src\core\render\constant_buffer\AlphaMaskParams.h" />
-    <ClInclude Include="src\core\render\render_pass\alpha_mask\AlphaMaskRenderPass.h" />
     <ClInclude Include="src\core\render\render_target_view\RenderTargetView.h" />
     <ClInclude Include="src\core\utility\Convert.h" />
     <ClInclude Include="src\core\collider\IOBBMapGetter.h" />
@@ -274,8 +284,8 @@
     <ClInclude Include="src\core\render\model\pmd\material\SphereMode.h" />
     <ClInclude Include="src\core\object\full_screen_quad\FullScreenQuad.h" />
     <ClInclude Include="src\core\render\constant_buffer\FXAA.h" />
-    <ClInclude Include="src\core\render\render_pass\fxaa\FXAARenderPass.h" />
     <ClInclude Include="src\core\scene\SceneManager.h" />
+    <ClInclude Include="src\core\utility\Point.h" />
     <ClInclude Include="src\core\utility\Result.h" />
     <ClInclude Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.h" />
     <ClInclude Include="src\core\render\model\pmd\ik\IKSolver.h" />
@@ -301,8 +311,6 @@
     <ClInclude Include="src\core\scene\Scene.h" />
     <ClInclude Include="src\core\render\model\pmd\PMDFileStruct.h" />
     <ClInclude Include="src\core\render\CommonResource.h" />
-    <ClInclude Include="src\core\render\render_pass\shadow\ShadowRenderPass.h" />
-    <ClInclude Include="src\core\render\render_pass\model\ModelRenderPass.h" />
     <ClInclude Include="src\core\render\constant_buffer\Bones.h" />
     <ClInclude Include="src\core\render\constant_buffer\Camera.h" />
     <ClInclude Include="src\core\collider\Collider.h" />
@@ -314,30 +322,43 @@
     <ClInclude Include="src\core\render\model\ModelConfig.h" />
     <ClInclude Include="src\core\render\model\ModelManager.h" />
     <ClInclude Include="src\core\render\model\pmd\PMDModel.h" />
-    <ClInclude Include="src\core\render\render_pass\RenderPass.h" />
     <ClInclude Include="src\core\render\constant_buffer\Shadow.h" />
     <ClInclude Include="src\core\render\texrure\Texture.h" />
-    <ClInclude Include="src\core\render\render_pass\wall\WallRenderPass.h" />
+    <ClInclude Include="src\core\utility\SDLSmartPoiner.h" />
     <ClInclude Include="src\core\utility\Utility.h" />
     <ClInclude Include="src\core\object\wall\WallObject.h" />
-    <ClInclude Include="src\core\event\WindowEvent.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDMotion.h" />
     <ClInclude Include="src\core\render\texrure\TextureNames.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDMotionManager.h" />
     <ClInclude Include="src\core\render\motion\vmd\VMDLoader.h" />
     <ClInclude Include="src\core\render\unordered_access_view\UnorderedAccessViewNames.h" />
+    <ClInclude Include="src\core\window\IWindowFrame.h" />
     <ClInclude Include="src\core\window\WindowManager.h" />
     <ClInclude Include="src\core\window\WindowStatus.h" />
     <ClInclude Include="src\core\physics\TransformConverter.h" />
+    <ClInclude Include="src\core\window\windows\WindowsWindow.h" />
+    <ClInclude Include="src\core\window\windows\WindowsWindowTranslator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\gui\editor\ScriptEditorWindow.cpp" />
+    <ClCompile Include="src\core\gui\IMGUIManager.cpp" />
+    <ClCompile Include="src\core\gui\menu\MenuWindow.cpp" />
     <ClCompile Include="src\core\render\constant_buffer\Shadow.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\alpha_mask\AlphaMaskRenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\edge\EdgeRenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\fxaa\FXAARenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\imgui\IMGUIRenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\model\ModelRenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\RenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\shadow\ShadowRenderPass.cpp" />
+    <ClCompile Include="src\core\render\render_pipeline\render_pass\wall\WallRenderPass.cpp" />
     <ClCompile Include="src\core\render\shader\InputElements.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\Bezier.cpp" />
     <ClCompile Include="src\core\physics\mmd\MMDPhysicsWorld.cpp" />
     <ClCompile Include="src\core\physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\config\ApplicationConfig.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\VMDAnimationBezier.cpp" />
+    <ClCompile Include="src\core\script\Script.cpp" />
     <ClCompile Include="src\core\timer\FrameTimer.cpp" />
     <ClCompile Include="src\core\timer\DeltaTime.cpp" />
     <ClCompile Include="src\core\physics\mmd\motion_state\MMDDynamicAndBoneMergeMotionState.cpp" />
@@ -350,9 +371,7 @@
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgePixelShader.cpp" />
     <ClCompile Include="src\core\render\shader\model_edge\ModelEdgeVertexShader.cpp" />
     <ClCompile Include="src\core\render\model\pmd\material\PMDMaterialData.cpp" />
-    <ClCompile Include="src\core\render\render_pass\edge\EdgeRenderPass.cpp" />
     <ClCompile Include="src\core\render\shader\alpha_mask\AlphaMaskComputeShader.cpp" />
-    <ClCompile Include="src\core\render\render_pass\alpha_mask\AlphaMaskRenderPass.cpp" />
     <ClCompile Include="src\core\utility\Convert.cpp" />
     <ClCompile Include="src\core\log\LogEntry.cpp" />
     <ClCompile Include="src\core\log\Logger.cpp" />
@@ -369,7 +388,6 @@
     <ClCompile Include="src\core\render\shader\shadow\ShadowMapPixelShader.cpp" />
     <ClCompile Include="src\core\render\model\pmd\bone\PMDBoneManager.cpp" />
     <ClCompile Include="src\core\render\model\pmd\PMDModelLoader.cpp" />
-    <ClCompile Include="src\core\render\render_pass\RenderPass.cpp" />
     <ClCompile Include="src\core\render\shader\BindingSlotKey.cpp" />
     <ClCompile Include="src\core\render\shader\clear_wall\ClearWallPixelShader.cpp" />
     <ClCompile Include="src\core\render\shader\clear_wall\ClearWallVertexShader.cpp" />
@@ -383,7 +401,6 @@
     <ClCompile Include="src\core\render\shader\Shader.cpp" />
     <ClCompile Include="src\core\render\shader\ShaderRelfection.cpp" />
     <ClCompile Include="src\core\object\full_screen_quad\FullScreenQuad.cpp" />
-    <ClCompile Include="src\core\render\render_pass\fxaa\FXAARenderPass.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\ik_key_frame\IKKeyFrameManager.cpp" />
     <ClCompile Include="src\core\render\model\pmd\ik\IKSolver.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\bone_key_frame\BoneKeyFrame.cpp" />
@@ -397,10 +414,7 @@
     <ClCompile Include="src\core\collider\Ray.cpp" />
     <ClCompile Include="src\core\event\EventQueue.cpp" />
     <ClCompile Include="src\core\collider\OBB.cpp" />
-    <ClCompile Include="src\core\event\WindowEvent.cpp" />
     <ClCompile Include="src\core\scene\Scene.cpp" />
-    <ClCompile Include="src\core\render\render_pass\shadow\ShadowRenderPass.cpp" />
-    <ClCompile Include="src\core\render\render_pass\model\ModelRenderPass.cpp" />
     <ClCompile Include="src\core\collider\Collider.cpp" />
     <ClCompile Include="src\core\Core.cpp" />
     <ClCompile Include="src\Application.cpp" />
@@ -409,15 +423,18 @@
     <ClCompile Include="src\core\render\model\ModelManager.cpp" />
     <ClCompile Include="src\core\render\model\pmd\PMDModel.cpp" />
     <ClCompile Include="src\core\render\texrure\Texture.cpp" />
-    <ClCompile Include="src\core\render\render_pass\wall\WallRenderPass.cpp" />
+    <ClCompile Include="src\core\utility\SDLSmartPoiner.cpp" />
     <ClCompile Include="src\core\utility\Utility.cpp" />
     <ClCompile Include="src\core\object\wall\WallObject.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDMotion.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDMotionManager.cpp" />
     <ClCompile Include="src\core\render\motion\vmd\VMDLoader.cpp" />
+    <ClCompile Include="src\core\window\IWindowFrame.cpp" />
     <ClCompile Include="src\core\window\WindowManager.cpp" />
     <ClCompile Include="src\core\window\WindowStatus.cpp" />
     <ClCompile Include="src\core\physics\TransformConverter.cpp" />
+    <ClCompile Include="src\core\window\windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\core\window\windows\WindowsWindowTranslator.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

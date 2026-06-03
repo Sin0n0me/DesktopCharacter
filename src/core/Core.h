@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <optional>
+#include <Windows.h> // TODO削除
 
 #ifdef _DEBUG
 constexpr bool IS_DEBUG_MODE = true;

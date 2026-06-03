@@ -1,4 +1,5 @@
 #include "../Application.h"
+#include "../config/GraphicsAPI.h"
 #include "collider/Collider.h"
 #include "Core.h"
 #include "D3D11.h"
@@ -11,6 +12,7 @@
 #include "timer/DeltaTime.h"
 #include "timer/Timer.h"
 #include "window/WindowManager.h"
+#include "window/windows/WindowsWindowTranslator.h"
 
 decltype(Engine::instance) Engine::instance;
 
@@ -46,7 +48,7 @@ void Engine::update(const DeltaTime& delta_time) {
 
     // 現在のマウス位置での当たり判定の更新
     const auto client_position = this->window_manager
-        ->get_root_window_status()
+        ->get_window_status()
         .to_client_position(
             this->mouse_state->mouse_position
         );
@@ -85,17 +87,26 @@ bool Engine::init(const UINT& width, const UINT& height) {
     }
 
     // ウィンドウ管理クラスの初期化
-    if(!this->window_manager->init()) {
+    if(!this->window_manager->init(GraphicsAPI::DirectX11)) {
         Logger::error(u8"ウィンドウ管理クラスの初期化に失敗しました");
         return false;
     }
 
     // DirectX11の初期化
-    const auto& root = this->window_manager->get_root_window_status();
+    const auto& status = this->window_manager->get_window_status();
+    const auto window_size = status.get_window_size();
+
+    const auto opt_window = this->window_manager->get_window();
+    if(!opt_window.has_value()) {
+        Logger::error(u8"ハンドルの取得に失敗しました");
+        return false;
+    }
+    const auto hwnd = WindowsWindowTranslator::get_hwnd(opt_window.value());
+
     if(!this->d3d11->init_d3d11(
-        root.hwnd,
-        root.window_size.x,
-        root.window_size.y
+        hwnd,
+        window_size.x,
+        window_size.y
     )) {
         Logger::error(u8"D3D11の初期化に失敗しました");
         return false;
@@ -124,7 +135,7 @@ bool Engine::init(const UINT& width, const UINT& height) {
     this->render_pipeline->on_model_changed(this->models->get_current_model());
 
     // TODO: separate
-    if(!this->mouse_state->init(root.hwnd)) {
+    if(!this->mouse_state->init(hwnd)) {
         return false;
     }
 

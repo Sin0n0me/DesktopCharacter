@@ -10,7 +10,7 @@ namespace enishi::assets_system {
     struct PMDHeader {
         char magic[3];              // "Pmd"
         float version;              // 1.0
-        std::int8_t model_name[20]; //
+        std::int8_t model_name[20]; // モデル名
         std::int8_t comment[256];   // コメント
     };
 

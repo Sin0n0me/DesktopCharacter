@@ -5,31 +5,9 @@
  *
  */
 
-#include <vector>
+#include <engine_types/renderer/camera.h>
+#include <engine_types/renderer/render_handle.h>
 #include <glm/glm.hpp>
-#include "render_handle.h"
+#include <vector>
 
-namespace enishi::renderer {
-
-    struct DrawCommand {
-        RenderHandle mesh;
-        RenderHandle material;
-        glm::mat4 transform;
-    };
-
-    enum class RenderPassType {
-        Shadow,
-        Model,
-        Lighting,
-        Transparent,
-        PostProcess,
-        UI
-    };
-
-    struct RenderPass {
-        RenderPassType type;
-        RenderHandle render_target; // NullHandle でスワップチェーンに描く
-        std::vector<DrawCommand> commands;
-    };
-
-} // namespace renderer
+namespace enishi::renderer {} // namespace enishi::renderer

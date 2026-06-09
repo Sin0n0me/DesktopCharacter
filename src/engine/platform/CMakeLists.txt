@@ -1,27 +1,19 @@
 cmake_minimum_required (VERSION 3.12)
-project(platfrom)
+project(platform)
 
 # 以下依存設定
-# 外部
-include(FetchContent)
-
-FetchContent_Declare(
-  SDL3
-  GIT_REPOSITORY git@github.com:libsdl-org/SDL.git
-  GIT_TAG "release-3.4.10"
-  GIT_SHALLOW TRUE
-  GIT_PROGRESS ON
-)
-FetchContent_MakeAvailable(SDL3)
-
-set(DEPENDENCIES
-    SDL3::SDL3
-)
+set(DEPENDENCIES)
+set(DEPENDENT_LOACAL_DIRS)
 
 # ローカル
-set(DEPENDENT_DIRS
-    "../renderer"
+set(DEPENDENT_LOACAL_DIRS
     "../assets_system"
+)
+
+set(DEPENDENCIES
+    engine_types
+    assets_system
+    foundation
 )
 
 #
@@ -34,6 +26,12 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
 
+# 依存しているローカルディレクトリの追加
+foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
+    get_filename_component(dir_name "${dir_path}" NAME)
+    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
+endforeach()
+
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"
     "src/*.c"
@@ -41,14 +39,9 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "src/*.cpp"
 )
 
-foreach(dir_path IN LISTS DEPENDENT_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
-
 add_library(${PROJECT_NAME} ${SOURCES})
 
-target_include_directories(${PROJECT_NAME} PUBLIC src/${PROJECT_NAME}/interface)
+target_include_directories(${PROJECT_NAME} PUBLIC src)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
 
@@ -77,10 +70,7 @@ if(BUILD_TESTING)
         "tests/*.hpp" 
         "tests/*.cpp"
     )
-    add_executable(${PROJECT_NAME} ${SOURCES} ${TEST_SOURCES})
-
-    # テスト用exeにメインのライブラリ(lib)をリンクする
-    target_link_libraries(tests PRIVATE my_lib)
+    add_executable(${PROJECT_NAME}_test ${SOURCES} ${TEST_SOURCES})
 
     # CTestにテストケースを登録
     add_test(NAME RunAllTests COMMAND tests)

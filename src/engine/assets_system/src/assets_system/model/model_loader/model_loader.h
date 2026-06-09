@@ -2,4 +2,9 @@
 
 #include "pmd/pmd_model_loader.h"
 
-namespace enishi::assets_system {}
+namespace enishi::assets_system {
+    class ModelLoader {
+      private:
+      public:
+    };
+} // namespace enishi::assets_system

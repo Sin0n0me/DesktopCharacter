@@ -2,27 +2,18 @@ cmake_minimum_required (VERSION 3.14)
 project(renderer)
 
 # 以下依存設定
-# 外部
-include(FetchContent)
-
-FetchContent_Declare(
-  GLM
-  GIT_REPOSITORY git@github.com:g-truc/glm.git
-  GIT_TAG "1.0.3"
-  GIT_SHALLOW TRUE
-  GIT_PROGRESS ON
-)
-FetchContent_MakeAvailable(GLM)
+set(DEPENDENCIES)
+set(DEPENDENT_LOACAL_DIRS)
 
 # ローカル
-
-set(DEPENDENT_DIRS
+set(DEPENDENT_LOACAL_DIRS
     "../platform"
 )
 
 set(DEPENDENCIES
     glm
     platform
+    engine_types
 )
 
 #
@@ -35,17 +26,18 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
 
+# 依存しているローカルディレクトリの追加
+foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
+    get_filename_component(dir_name "${dir_path}" NAME)
+    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
+endforeach()
+
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"
     "src/*.c"
     "src/*.hpp"
     "src/*.cpp"
 )
-
-foreach(dir_path IN LISTS DEPENDENT_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
 
 add_library(${PROJECT_NAME} ${SOURCES})
 

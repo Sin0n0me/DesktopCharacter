@@ -1,23 +1,36 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.14)
 project(assets_system)
 
+# 依存設定
+set(DEPENDENCIES)
+set(DEPENDENT_LOACAL_DIRS)
+
 # 以下依存設定
-set(DEPENDENT_DIRS
+set(DEPENDENT_LOACAL_DIRS
     "../foundation"
+    "../engine_types"
 )
 set(DEPENDENCIES
     foundation
+    engine_types
+    glm
 )
 
 #
 # 以降は触らなくて良い
 #
 
-# MSVCコンパイラの場合のみソースコードと実行バイナリの文字セットをUTF-8に設定
+# MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
 if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
+
+# 依存しているローカルディレクトリの追加
+foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
+    get_filename_component(dir_name "${dir_path}" NAME)
+    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
+endforeach()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"
@@ -25,11 +38,6 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "src/*.hpp"
     "src/*.cpp"
 )
-
-foreach(dir_path IN LISTS DEPENDENT_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
 
 add_library(${PROJECT_NAME} ${SOURCES})
 

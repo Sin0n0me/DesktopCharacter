@@ -1,1 +1,1 @@
-namespace platform {}
+namespace enishi::platform {}

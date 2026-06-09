@@ -1,5 +1,5 @@
 #pragma once
-#include "component_pool.h"
+#include "component/component_pool.h"
 #include "entity/entity.h"
 #include "entity/entity_manager.h"
 #include "view.h"

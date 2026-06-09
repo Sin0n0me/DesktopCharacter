@@ -8,4 +8,4 @@
  * 上のレイヤーは整数型のハンドルをもとにプラットフォームに依存しない抽象的な操作を扱えるようにする
  */
 
-namespace platform {} // namespace platform
+namespace enishi::platform {} // namespace enishi::platform

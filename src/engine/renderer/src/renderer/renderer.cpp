@@ -1,2 +1,2 @@
 #include "renderer.h"
-namespace renderer {}
+namespace enishi::renderer {}

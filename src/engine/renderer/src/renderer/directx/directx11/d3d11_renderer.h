@@ -1,10 +1,14 @@
 #pragma once
+#include "d3d11.h"
 #include <engine_types/renderer/render_handle.h>
-#include <platform/handler/renderer/renderer.h>
+#include <memory>
+#include <platform/renderer/renderer.h>
 
 namespace enishi::renderer::directx {
     class D3D11Renderer : public platform::IRenderer {
       private:
+        std::unique_ptr<D3D11> d3d11;
+
       public:
         platform::RenderResult<void> init(const types::WindowHandle& window_handle) override;
         platform::RenderResult<types::RenderHandle> create_mesh(

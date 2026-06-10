@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace enishi ::foundation {
+namespace enishi::foundation {
     namespace {
         template <typename T, typename E> class ResultBase : public std::expected<T, E> {
           public:
@@ -81,4 +81,7 @@ namespace enishi ::foundation {
             return *this;
         }
     };
+
+    template <typename T, typename E> using EngineResult = Result<T, Error<E>>;
+    template <typename E> using VoidResult = EngineResult<void, E>;
 } // namespace enishi::foundation

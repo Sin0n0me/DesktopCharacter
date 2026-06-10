@@ -14,7 +14,42 @@ set(DEPENDENCIES
     glm
     platform
     engine_types
+    foundation
 )
+
+
+# 各プラットフォームに応じた使用ライブラリの変更
+if(USE_DIRECTX_11)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_DIRECTX_11)
+
+    set(DEPENDENCIES 
+        ${DEPENDENCIES} 
+        d3d11
+        dxgi
+        dxguid
+    )
+elseif(USE_DIRECTX_12)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_DIRECTX_12)    
+    
+    set(DEPENDENCIES 
+        ${DEPENDENCIES} 
+        d3d12
+        dxgi
+        dxguid
+    )
+elseif(USE_OPENGL)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_OPENGL)    
+
+elseif(USE_VULKAN)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_VULKAN)
+    
+    set(DEPENDENCIES 
+        ${DEPENDENCIES} 
+        Vulkan::Vulkan
+    )
+else()
+
+endif()
 
 #
 # 以降は触らなくて良い

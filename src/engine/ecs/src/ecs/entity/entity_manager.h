@@ -5,7 +5,7 @@
 namespace enishi::ecs {
     class EntityManager {
       private:
-        EntityID next_id = 1;
+        EntityID next_id;
         std::vector<bool> alive;
         std::vector<EntityID> free_list;
 

@@ -13,6 +13,11 @@ namespace enishi::types {
         std::int32_t y;
     };
 
+    struct MouseWheel {
+        std::int32_t x;
+        std::int32_t y;
+    };
+
     constexpr ScreenMousePosition to_screen(
         const ClientMousePosition& mouse_position, const WindowPosition& window_position) noexcept {
         return ScreenMousePosition{

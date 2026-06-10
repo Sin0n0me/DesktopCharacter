@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <cstdint>
 
 namespace enishi::types {
     enum class GraphicsAPI : std::uint32_t {

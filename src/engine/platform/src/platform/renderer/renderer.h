@@ -1,5 +1,5 @@
 #pragma once
-#include "../../errors/renderer_errors.h"
+#include "../errors/renderer_errors.h"
 #include <engine_types/assets/model/mesh_data.h>
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>

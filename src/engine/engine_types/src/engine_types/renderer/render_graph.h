@@ -4,6 +4,10 @@
 #include <glm/glm.hpp>
 
 namespace enishi::types {
+    enum class RenderCommand {
+        Bind,
+    };
+
     struct DrawCommand {
         RenderHandle mesh;
         RenderHandle material;

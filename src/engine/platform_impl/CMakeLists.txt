@@ -26,7 +26,19 @@ set(DEPENDENCIES
     SDL3::SDL3
     platform
     engine_types
+    foundation
 )
+
+# 各プラットフォームに応じた使用ライブラリの変更
+if(USE_WINDOWS)
+
+elseif(USE_X11)
+
+elseif(USE_WAYLAND)
+
+else()
+
+endif()
 
 #
 # 以降は触らなくて良い

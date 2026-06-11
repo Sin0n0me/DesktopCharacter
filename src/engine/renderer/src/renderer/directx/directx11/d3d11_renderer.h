@@ -1,13 +1,23 @@
 #pragma once
 #include "d3d11.h"
+#include "resource/resource_manager.h"
+#include "resource/shader.h"
+#include <engine_types/handle/handle_allocator.h>
 #include <engine_types/renderer/render_handle.h>
 #include <memory>
 #include <platform/renderer/renderer.h>
+#include <unordered_map>
 
 namespace enishi::renderer::directx {
     class D3D11Renderer : public platform::IRenderer {
       private:
         std::unique_ptr<D3D11> d3d11;
+        ResourceManager manager;
+
+      private:
+        void bind(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
+        void bind_buffer(ID3D11DeviceContext* const context, const Buffer& buffer) const;
+        void bind_shader(ID3D11DeviceContext* const context, const const types::HandleId id) const;
 
       public:
         platform::RenderResult<void> init(const types::WindowHandle& window_handle) override;

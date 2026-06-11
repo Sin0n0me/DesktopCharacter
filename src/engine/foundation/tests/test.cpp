@@ -1,4 +1,5 @@
 #include "../src/foundation/errors/errors.h"
+#include "../src/foundation/result/result.h"
 
 using namespace enishi::foundation;
 Result<void, std::int16_t> test1() {
@@ -7,7 +8,7 @@ Result<void, std::int16_t> test1() {
 
 Result<std::uint64_t, std::int16_t> test2() {
     const Result<std::uint64_t, std::int16_t> e = std::unexpected(-100);
-    return e.propagation<std::uint64_t>();
+    return e;
 }
 
 Result<void, Error<int>> test3() {
@@ -25,9 +26,13 @@ Result<void, Error<int>> test5() {
     return Err(100);
 }
 
-Result<std::uint64_t, Error<int>> test6() {
+Result<std::uint64_t, Error<float>> test6() {
     using Err = Error<int>;
-    return Err(12345);
+    return Err(12345).propagation(0.0f);
+}
+
+Result<std::uint64_t, Error<float>> test7() {
+    return test4().propagation(0.0f);
 }
 
 int main(void) {

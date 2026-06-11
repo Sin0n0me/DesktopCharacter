@@ -2,5 +2,7 @@
 #include <string>
 
 namespace enishi::platform {
-    enum class RenderError {};
+    enum class RenderError {
+        MakeError,
+    };
 } // namespace enishi::platform

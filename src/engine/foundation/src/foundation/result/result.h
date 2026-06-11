@@ -23,19 +23,11 @@ namespace enishi::foundation {
     template <typename T, typename E> class Result : public ResultBase<T, E> {
       public:
         using ResultBase<T, E>::ResultBase;
-
-        template <typename U> constexpr Result<U, E> propagation(void) const {
-            return std::unexpected(std::move(this->error()));
-        }
     };
 
     template <typename E> class Result<void, E> : public ResultBase<void, E> {
       public:
         using ResultBase<void, E>::ResultBase;
-
-        template <typename U> constexpr Result<U, E> propagation(void) const {
-            return std::unexpected(std::move(this->error()));
-        }
     };
 
     template <typename T, typename E> class Result<T, Error<E>> : public ResultBase<T, Error<E>> {
@@ -46,8 +38,8 @@ namespace enishi::foundation {
             : ResultBase<T, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U> constexpr Result<U, E> propagation(void) const {
-            return std::unexpected(std::move(this->error()));
+        template <typename U> constexpr Result<T, Error<U>> propagation(const U e) const {
+            return std::unexpected(std::move(this->error().propagation(e)));
         }
 
         Result& add_message(const std::u8string& message) {
@@ -68,8 +60,8 @@ namespace enishi::foundation {
             : ResultBase<void, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U> constexpr Result<U, E> propagation(void) const {
-            return std::unexpected(std::move(this->error()));
+        template <typename U> constexpr Result<void, Error<U>> propagation(const U e) const {
+            return std::unexpected(std::move(this->error().propagation(e)));
         }
 
         Result& add_message(const std::u8string& message) {

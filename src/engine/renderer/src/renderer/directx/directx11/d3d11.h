@@ -4,6 +4,7 @@
 #include <dcomp.h>
 #include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
+#include <memory>
 #include <wrl/client.h>
 
 namespace enishi::renderer::directx {
@@ -31,7 +32,7 @@ namespace enishi::renderer::directx {
         foundation::VoidResult<DirectXError> commit(void);
 
       public:
-        static foundation::EngineResult<D3D11, DirectXError> make(
+        static foundation::EngineResult<std::unique_ptr<D3D11>, DirectXError> make(
             const HWND hwnd, const types::WindowSize& size);
 
         ID3D11Device* get_device(void) const;

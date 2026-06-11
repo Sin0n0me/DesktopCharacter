@@ -4,14 +4,8 @@
 #include <glm/glm.hpp>
 
 namespace enishi::types {
-    enum class RenderCommand {
-        Bind,
-    };
-
     struct DrawCommand {
-        RenderHandle mesh;
-        RenderHandle material;
-        glm::mat4 transform;
+        RenderHandle handle;
     };
 
     enum class RenderPassType {

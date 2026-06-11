@@ -4,12 +4,11 @@
 
 namespace enishi::types {
     enum class GuiBackend : std::uint32_t {
-        Win32,
-        Wayland,
-        X11,
+        Type,
+        Function,
     };
 
-    struct SystemHandle {
+    struct ScriptHandle {
         HandleId id;
         GuiBackend type;
 

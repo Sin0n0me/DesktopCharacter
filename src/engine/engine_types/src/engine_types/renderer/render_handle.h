@@ -1,8 +1,10 @@
 #pragma once
-#include "../handler_types.h"
+#include "../handle/handle_type.h"
 #include <cstdint>
 
 namespace enishi::types {
+    // バッファーの種類などはHandleIDから判断する
+    // あくまで何かを示すだけ
     enum class RenderHandleType : std::uint32_t {
         Mesh,
         Texture,

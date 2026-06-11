@@ -6,6 +6,8 @@ namespace enishi::renderer {
         SwapchainError,
         TargetError,
         VisualError,
+        ShaderError,
         ShaderReflectionError,
+        BufferError,
     };
 }

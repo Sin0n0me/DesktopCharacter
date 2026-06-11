@@ -164,11 +164,11 @@ namespace enishi::renderer::directx {
         return {};
     }
 
-    foundation::EngineResult<D3D11, DirectXError> D3D11::make(
+    foundation::EngineResult<std::unique_ptr<D3D11>, DirectXError> D3D11::make(
         const HWND hwnd, const types::WindowSize& size) {
-        D3D11 d3d11{};
+        std::unique_ptr<D3D11> d3d11 = std::make_unique<D3D11>();
 
-        auto reuslt = d3d11.init(hwnd, size);
+        auto reuslt = d3d11->init(hwnd, size);
         if (reuslt.is_err()) {
             return reuslt.add_message(u8"DirectX11の初期化に失敗しました").error();
         }

@@ -16,8 +16,6 @@ namespace enishi::platform {
       public:
         virtual ~IRenderer(void) noexcept = default;
 
-        virtual RenderResult<void> init(const types::WindowHandle& window_handle) = 0;
-
         virtual RenderResult<types::RenderHandle> create_mesh(const types::MeshData& mesh) = 0;
 
         virtual RenderResult<types::RenderHandle> create_texture(

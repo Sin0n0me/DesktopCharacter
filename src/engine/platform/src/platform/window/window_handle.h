@@ -47,8 +47,8 @@ namespace enishi::platform {
         NativeWindowHandle native_handle;
 
       public:
-        explicit WindowHandle(const NativeWindowHandle native) noexcept
-            : native_handle(native) {
+        explicit WindowHandle(const NativeWindowHandle& native_handle) noexcept
+            : native_handle(native_handle) {
         }
 
         // 取得はコピーで返す

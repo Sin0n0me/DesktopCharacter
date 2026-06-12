@@ -1,5 +1,5 @@
 #pragma once
-#include <foundation/errors/errors.h>
+#include <foundation/result/result.h>
 #include <string>
 
 namespace enishi::assets_system {
@@ -15,5 +15,5 @@ namespace enishi::assets_system {
         MismatchHeader,
     };
 
-    template <typename T> using IOReuslt = foundation::Result<T, foundation::Error<IOError>>;
+    template <typename T> using IOReuslt = foundation::EngineResult<T, IOError>;
 } // namespace enishi::assets_system

@@ -1,6 +1,7 @@
 #pragma once
 #include <engine_types/input/input_types.h>
 #include <engine_types/input/key_code.h>
+#include <engine_types/input/mouse_button.h>
 
 namespace enishi::platform {
     class IInput {
@@ -18,7 +19,12 @@ namespace enishi::platform {
             void) const noexcept = 0;
         [[nodiscard]] virtual types::ClientMousePosition get_client_mouse_position(
             void) const noexcept = 0;
-        [[nodiscard]] virtual glm::vec2 mouse_delta() const noexcept = 0;
-        [[nodiscard]] virtual bool is_mouse_button_down(MouseButton) const noexcept = 0;
+        [[nodiscard]] virtual types::MouseWheel get_mouse_wheel(void) const noexcept = 0;
+        [[nodiscard]] virtual bool is_mouse_button_down(
+            const types::MouseButton button) const noexcept = 0;
+        [[nodiscard]] virtual bool is_mouse_button_pressed(
+            const types::MouseButton button) const noexcept = 0; // 今フレームだけ
+        [[nodiscard]] virtual bool is_mouse_button_released(
+            const types::MouseButton button) const noexcept = 0;
     };
 } // namespace enishi::platform

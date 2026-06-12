@@ -10,19 +10,28 @@ namespace enishi::platform_impl {
     }
 
     SDL3Window::SDL3Window(SDLWindowPtr window_ptr)
-        : window(window_ptr) {
+        : window(std::move(window_ptr)) {
     }
 
     foundation::EngineResult<SDL3Window, platform::WindowError> SDL3Window::make(
         const types::GraphicsAPI graphics_api) {
         const SDL_WindowFlags api_flag = SDL3Window::get_flag_from_graphics_api(graphics_api);
 
-        const SDLWindowPtr window_ptr = SDLWindowPtr(SDL_CreateWindow(platform::ROOT_WINDOW_NAME,
+        return SDL3Window{SDLWindowPtr(SDL_CreateWindow(platform::ROOT_WINDOW_NAME,
             platform::WIDTH,
             platform::HEIGHT,
-            SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | api_flag));
+            SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | api_flag))};
+    }
 
-        return SDL3Window(window_ptr);
+    std::optional<const platform::IInput*> SDL3Window::get_input(void) const noexcept {
+        return &this->input;
+    }
+
+    std::optional<SDL_Window*> SDL3Window::get_window_handle(void) const {
+        if (!bool(this->window)) {
+            return {};
+        }
+        return this->window.get();
     }
 
     SDL_WindowFlags SDL3Window::get_flag_from_graphics_api(const types::GraphicsAPI graphics_api) {
@@ -46,11 +55,11 @@ namespace enishi::platform_impl {
         return 0;
     }
 
-    std::optional<types::WindowHandle> SDL3Window::get_handle(void) const {
+    std::optional<types::WindowHandle> SDL3Window::get_handle(void) const noexcept {
         return std::optional<types::WindowHandle>();
     }
 
-    std::optional<types::WindowPosition> SDL3Window::get_position(void) const {
+    std::optional<types::WindowPosition> SDL3Window::get_position(void) const noexcept {
         types::WindowPosition position{};
         if (!SDL_GetWindowPosition(this->window.get(), &position.x, &position.y)) {
             return {};
@@ -60,7 +69,7 @@ namespace enishi::platform_impl {
     }
 
     foundation::VoidResult<platform::WindowError> SDL3Window::set_position(
-        const types::WindowPosition& position) {
+        const types::WindowPosition& position) noexcept {
         if (!SDL_SetWindowPosition(this->window.get(), position.x, position.y)) {
             return foundation::Error(platform::WindowError::FailedSetWinodwPosition);
         }
@@ -68,7 +77,7 @@ namespace enishi::platform_impl {
         return {};
     }
 
-    std::optional<types::WindowSize> SDL3Window::get_size(void) const {
+    std::optional<types::WindowSize> SDL3Window::get_size(void) const noexcept {
         types::WindowSize size{};
         if (!SDL_GetWindowSize(this->window.get(), &size.width, &size.height)) {
             return {};
@@ -78,7 +87,7 @@ namespace enishi::platform_impl {
     }
 
     foundation::VoidResult<platform::WindowError> SDL3Window::set_size(
-        const types::WindowSize& size) {
+        const types::WindowSize& size) noexcept {
         if (!SDL_SetWindowSize(this->window.get(), size.width, size.height)) {
             return foundation::Error(platform::WindowError::FailedSetWinodwSize);
         }
@@ -86,11 +95,12 @@ namespace enishi::platform_impl {
         return {};
     }
 
-    foundation::VoidResult<platform::WindowError> SDL3Window::set_title(const std::string& title) {
+    foundation::VoidResult<platform::WindowError> SDL3Window::set_title(
+        const std::string& title) noexcept {
         return {};
     }
 
-    std::optional<std::string> SDL3Window::get_title(void) const {
+    std::optional<std::string> SDL3Window::get_title(void) const noexcept {
         return std::optional<std::string>();
     }
 
@@ -118,10 +128,10 @@ namespace enishi::platform_impl {
                     this->input.on_key_up(SDL3Input::convert_key_code(event.key.key));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    this->input.on_mouse_button_down();
+                    this->input.on_mouse_button_down(SDL3Input::convert_mouse_button(event.));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_BUTTON_UP:
-                    this->input.on_mouse_button_up();
+                    this->input.on_mouse_button_up(SDL3Input::convert_mouse_button(event.));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_MOTION:
                     this->input.on_mouse_move();

@@ -45,7 +45,7 @@ namespace enishi::ecs {
         }
 
       private:
-        template <typename T> ComponentPool<T>& get_pool() {
+        template <typename T> ComponentPool<T>& get_pool(void) {
             const auto key = std::type_index(typeid(T));
             auto it = this->pools.find(key);
             if (it == this->pools.end()) {

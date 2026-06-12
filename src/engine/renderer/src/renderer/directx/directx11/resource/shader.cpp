@@ -1,7 +1,8 @@
 #include "shader.h"
 
 namespace enishi::renderer::directx {
-    std::optional<const ShaderInfo&> ShaderPool::get_shader_info(const types::HandleId id) const {
+    foundation::Option<const ShaderInfo&> ShaderPool::get_shader_info(
+        const types::HandleId id) const noexcept {
         const auto& iter = this->handle_map.find(id);
         if (iter == this->handle_map.end()) {
             return {};
@@ -10,7 +11,7 @@ namespace enishi::renderer::directx {
         return iter->second;
     }
 
-    void ShaderPool::create(const types::HandleId id, const ShaderType shader_type) {
+    void ShaderPool::create(const types::HandleId id, const ShaderType shader_type) noexcept {
         switch (shader_type) {
             case ShaderType::Vertex: {
                 this->vertex_shaders.push_back({});
@@ -41,23 +42,24 @@ namespace enishi::renderer::directx {
         }
     }
 
-    std::optional<ShaderType> ShaderPool::get_shader_type(const types::HandleId id) const {
+    foundation::Option<ShaderType> ShaderPool::get_shader_type(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         return info.shader_type;
     }
 
-    std::optional<ID3D11VertexShader*> ShaderPool::get_vertex_shader(
-        const types::HandleId id) const {
+    foundation::Option<ID3D11VertexShader*> ShaderPool::get_vertex_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Vertex) {
             return {};
@@ -66,12 +68,13 @@ namespace enishi::renderer::directx {
         return this->vertex_shaders.at(info.index).Get();
     }
 
-    std::optional<ID3D11PixelShader*> ShaderPool::get_pixel_shader(const types::HandleId id) const {
+    foundation::Option<ID3D11PixelShader*> ShaderPool::get_pixel_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Pixcel) {
             return {};
@@ -79,13 +82,13 @@ namespace enishi::renderer::directx {
         return this->pixel_shaders.at(info.index).Get();
     }
 
-    std::optional<ID3D11ComputeShader*> ShaderPool::get_compute_shader(
-        const types::HandleId id) const {
+    foundation::Option<ID3D11ComputeShader*> ShaderPool::get_compute_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Compute) {
             return {};
@@ -93,13 +96,13 @@ namespace enishi::renderer::directx {
         return this->compute_shaders.at(info.index).Get();
     }
 
-    std::optional<ID3D11VertexShader* const*> ShaderPool::get_address_vertex_shader(
-        const types::HandleId id) const {
+    foundation::Option<ID3D11VertexShader* const*> ShaderPool::get_address_vertex_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Vertex) {
             return {};
@@ -107,13 +110,13 @@ namespace enishi::renderer::directx {
         return this->vertex_shaders.at(info.index).GetAddressOf();
     }
 
-    std::optional<ID3D11PixelShader* const*> ShaderPool::get_address_pixel_shader(
-        const types::HandleId id) const {
+    foundation::Option<ID3D11PixelShader* const*> ShaderPool::get_address_pixel_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Pixcel) {
             return {};
@@ -121,13 +124,13 @@ namespace enishi::renderer::directx {
         return this->pixel_shaders.at(info.index).GetAddressOf();
     }
 
-    std::optional<ID3D11ComputeShader* const*> ShaderPool::get_address_compute_shader(
-        const types::HandleId id) const {
+    foundation::Option<ID3D11ComputeShader* const*> ShaderPool::get_address_compute_shader(
+        const types::HandleId id) const noexcept {
         const auto opt_info = this->get_shader_info(id);
         if (!opt_info.has_value()) {
             return {};
         }
-        const auto info = opt_info.value();
+        const auto info = opt_info.unwrap();
 
         if (info.shader_type != ShaderType::Compute) {
             return {};

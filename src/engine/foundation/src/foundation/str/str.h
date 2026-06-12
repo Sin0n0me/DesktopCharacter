@@ -34,7 +34,7 @@ namespace enishi ::foundation {
         constexpr bool IS_U8STRING = std::is_same_v<std::remove_cv_t<T>, std::u8string>;
     } // namespace
 
-    template <typename... Args> static std::u8string concat(const Args&... args) {
+    template <typename... Args> [[nodiscard]] static std::u8string concat(const Args&... args) {
         static_assert((... && (IS_ALLORWD_INTERGER<Args> || IS_ALLORWD_FLOAT<Args> ||
                                   IS_CHAR8_STRING<Args> || IS_U8STRING<Args>)),
             "Args must be char8_t string types, std::u8string or fixed-width integer types");

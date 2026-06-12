@@ -5,7 +5,7 @@ namespace enishi::renderer::directx {
         ID3D11DeviceContext* const context, const types::DrawCommand& command) const {
         switch (command.handle.type) {
             case types::RenderHandleType::Buffer: {
-                const auto& opt_buffer = this->manager.get_buffer(command.handle.id);
+                const auto& opt_buffer = this->resource_manager.get_buffer(command.handle.id);
                 if (!opt_buffer.has_value()) {
                     return;
                 }
@@ -64,30 +64,30 @@ namespace enishi::renderer::directx {
 
     void D3D11Renderer::bind_shader(
         ID3D11DeviceContext* const context, const types::HandleId id) const {
-        const auto& pool = this->manager.get_shader_pool();
+        const auto& pool = this->resource_manager.get_shader_pool();
         const auto opt_type = pool.get_shader_type(id);
-        if (!opt_type.has_value()) {
+        if (opt_type.is_none()) {
             return;
         }
 
         switch (opt_type.value()) {
             case ShaderType::Vertex: {
                 const auto opt_shader = pool.get_vertex_shader(id);
-                if (!opt_shader.has_value()) {
+                if (opt_shader.is_none()) {
                     return;
                 }
                 context->VSSetShader(opt_shader.value(), nullptr, 0);
             } break;
             case ShaderType::Pixcel: {
                 const auto opt_shader = pool.get_pixel_shader(id);
-                if (!opt_shader.has_value()) {
+                if (opt_shader.is_none()) {
                     return;
                 }
                 context->PSSetShader(opt_shader.value(), nullptr, 0);
             } break;
             case ShaderType::Compute: {
                 const auto opt_shader = pool.get_compute_shader(id);
-                if (!opt_shader.has_value()) {
+                if (opt_shader.is_none()) {
                     return;
                 }
                 context->CSSetShader(opt_shader.value(), nullptr, 0);
@@ -97,14 +97,15 @@ namespace enishi::renderer::directx {
         }
     }
 
-    platform::RenderResult<void> D3D11Renderer::init(const types::WindowHandle& window_handle) {
-        return {};
+    D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)
+        : d3d11(std::move(d3d11))
+        , resource_manager(ResourceManager{}) {
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_mesh(
         const types::MeshData& mesh) {
         const auto device = this->d3d11->get_device();
-        const auto result = this->manager.make_mesh(device, mesh);
+        const auto result = this->resource_manager.make_mesh(device, mesh);
         if (result.is_err()) {
             return result.propagation(platform::RenderError::MakeError);
         }
@@ -114,12 +115,24 @@ namespace enishi::renderer::directx {
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_texture(
         const types::TextureData& texture) {
-        return RenderResult<types::RenderHandle>();
+        const auto device = this->d3d11->get_device();
+        const auto result = this->resource_manager.make_texture(device, texture);
+        if (result.is_err()) {
+            return result.propagation(platform::RenderError::MakeError);
+        }
+
+        return result.value();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_shader(
         const types::ShaderData& shader) {
-        return RenderResult<types::RenderHandle>();
+        const auto device = this->d3d11->get_device();
+        const auto result = this->resource_manager.make_shader(device, shader);
+        if (result.is_err()) {
+            return result.propagation(platform::RenderError::MakeError);
+        }
+
+        return result.value();
     }
 
     void D3D11Renderer::submit_render_graph(const types::RenderGraph& graph) {
@@ -138,7 +151,7 @@ namespace enishi::renderer::directx {
             // context->RSSetState();
 
             for (const auto& command : pass.commands) {
-                command.handle;
+                this->bind(context, command);
             }
         }
     }

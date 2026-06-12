@@ -12,15 +12,16 @@ namespace enishi::renderer::directx {
     class D3D11Renderer : public platform::IRenderer {
       private:
         std::unique_ptr<D3D11> d3d11;
-        ResourceManager manager;
+        ResourceManager resource_manager;
 
       private:
         void bind(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
         void bind_buffer(ID3D11DeviceContext* const context, const Buffer& buffer) const;
-        void bind_shader(ID3D11DeviceContext* const context, const const types::HandleId id) const;
+        void bind_shader(ID3D11DeviceContext* const context, const types::HandleId id) const;
 
       public:
-        platform::RenderResult<void> init(const types::WindowHandle& window_handle) override;
+        explicit D3D11Renderer(std::unique_ptr<D3D11> d3d11);
+
         platform::RenderResult<types::RenderHandle> create_mesh(
             const types::MeshData& mesh) override;
         platform::RenderResult<types::RenderHandle> create_texture(

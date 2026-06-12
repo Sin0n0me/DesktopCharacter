@@ -22,12 +22,15 @@ namespace enishi::platform_impl {
         static SDL_WindowFlags get_flag_from_graphics_api(const types::GraphicsAPI graphics_api);
 
         explicit SDL3Window(void) = default;
-        explicit SDL3Window(SDLWindowPtr ptr);
+        explicit SDL3Window(SDLWindowPtr window_ptr);
 
       public:
         static foundation::EngineResult<SDL3Window, platform::WindowError> make(
             const types::GraphicsAPI graphics_api);
 
+        std::optional<SDL_Window*> get_window_handle(void) const;
+
+        std::optional<const platform::IInput*> get_input(void) const noexcept override;
         std::optional<types::WindowHandle> get_handle(void) const noexcept override;
         std::optional<types::WindowPosition> get_position(void) const noexcept override;
         foundation::VoidResult<platform::WindowError> set_position(

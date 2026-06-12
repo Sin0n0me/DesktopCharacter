@@ -34,11 +34,16 @@ namespace enishi::platform_impl {
         return types::to_client(this->mouse_position);
     }
 
-    glm::vec2 SDL3Input::mouse_delta() const noexcept {
-        return glm::vec2();
+    types::MouseWheel SDL3Input::get_mouse_wheel(void) const noexcept {
+        return types::MouseWheel();
     }
-
-    bool SDL3Input::is_mouse_button_down(MouseButton) const noexcept {
+    bool SDL3Input::is_mouse_button_down(const types::MouseButton button) const noexcept {
+        return false;
+    }
+    bool SDL3Input::is_mouse_button_pressed(const types::MouseButton button) const noexcept {
+        return false;
+    }
+    bool SDL3Input::is_mouse_button_released(const types::MouseButton button) const noexcept {
         return false;
     }
 

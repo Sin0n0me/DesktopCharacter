@@ -2,14 +2,16 @@
 
 namespace enishi::renderer::directx {
     ResourceManager::Result ResourceManager::make_mesh(
-        ID3D11Device* const device, const types::MeshData& mesh) {
-        auto result_vertex = this->make_vertex_buffer(device, mesh.vertices);
+        ID3D11Device* const device, const types::MeshData& mesh_data) {
+        // 頂点バッファ作成
+        auto result_vertex = this->make_vertex_buffer(device, mesh_data.vertices);
         if (result_vertex.is_err()) {
             return result_vertex.add_message(u8"メッシュの作成に失敗しました").error();
         }
         const auto vertex_handle = result_vertex.value();
 
-        const auto result_index = this->make_index_buffer(device, mesh.indices);
+        // インデックスバッファ作成
+        const auto result_index = this->make_index_buffer(device, mesh_data.indices);
         if (result_index.is_err()) {
             return result_vertex.add_message(u8"メッシュの作成に失敗しました").error();
         }
@@ -26,6 +28,29 @@ namespace enishi::renderer::directx {
             .id = handle,
             .type = types::RenderHandleType::Mesh,
         };
+    }
+
+    ResourceManager::Result ResourceManager::make_shader(
+        ID3D11Device* const device, const types::ShaderData& shader_data) {
+        switch (shader_data.binary_type) {
+            case types::ShaderBinaryType::DXBC: {
+            } break;
+            case types::ShaderBinaryType::DXIL: {
+            } break;
+            case types::ShaderBinaryType::SPIR_V: {
+            } break;
+            default:
+                break;
+        }
+
+        return Result();
+    }
+
+    ResourceManager::Result ResourceManager::make_texture(
+        ID3D11Device* const device, const types::TextureData& texture_data) {
+        texture_data.format;
+
+        return Result();
     }
 
     ResourceManager::Result ResourceManager::make_vertex_buffer(
@@ -184,7 +209,8 @@ namespace enishi::renderer::directx {
         };
     }
 
-    std::optional<const Buffer&> ResourceManager::get_buffer(const types::HandleId handle) const {
+    foundation::Option<const Buffer&> ResourceManager::get_buffer(
+        const types::HandleId handle) const {
         const auto& iter = this->resource.buffers.find(handle);
         if (iter == this->resource.buffers.end()) {
             return {};

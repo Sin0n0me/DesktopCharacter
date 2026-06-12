@@ -1,8 +1,8 @@
 #pragma once
-#include <cstdint>
+#include <glm/glm.hpp>
 
 namespace enishi::types {
-    struct Camera {
+    struct alignas(16) Camera {
         glm::mat4 world;
         glm::mat4 view;
         glm::mat4 projection;

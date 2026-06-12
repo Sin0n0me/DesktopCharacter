@@ -1,21 +1,21 @@
 #pragma once
 #include "../errors/renderer_errors.h"
-#include "renderer.h"
+#include "../window/window_handle.h"
 #include <engine_types/renderer/render_handle.h>
 #include <engine_types/window/window_handle.h>
+#include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
+#include <memory>
 #include <optional>
 
 namespace enishi::platform {
-    // 各プラットフォームに応じたウィンドウハンドルを受け取って初期化する実装することで
+    // 各プラットフォームに応じたウィンドウハンドルを受け取って初期化を行う実装を行う
     // IRendererを返すことでIRendererはプラットフォームに応じたウィンドウを知らずに初期化ができる
-    class IRendererInitializer {
+    template <typename T> class IRendererInitializer {
       public:
         virtual ~IRendererInitializer(void) noexcept = default;
 
-        //virtual foundation::EngineResult<IRenderer*, RenderError> get(void) const noexcept = 0;
-
-               virtual std::optional<IRenderer*> set(void) const noexcept = 0;
-        virtual std::optional<IRenderer*> get(void) const noexcept = 0;
+        virtual foundation::EngineResult<std::unique_ptr<T>, RenderError> init(
+            const NativeWindowHandle& native_handle, const types::WindowSize& window_size) = 0;
     };
 } // namespace enishi::platform

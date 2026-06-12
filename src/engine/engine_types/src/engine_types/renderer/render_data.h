@@ -10,7 +10,7 @@ namespace enishi::types {
         ReadAndWrite,
     };
 
-    enum class AccessFlag : std::uint8_t {
+    enum class ResourceAccessFlag : std::uint8_t {
         CPURead,
         CPUWrite,
         GPURead,

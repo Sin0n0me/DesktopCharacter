@@ -3,7 +3,9 @@
 #include <glm/glm.hpp>
 
 namespace enishi::types {
-    using BoneIndex = std::uint16_t;
+    // 複数のモデルを扱う場合 std::uint16_t だと不足する可能性が高いため
+    // std::uint32_t になっている
+    using BoneIndex = std::uint32_t;
 
     struct BineBone {
         glm::mat4 local;          // ローカル

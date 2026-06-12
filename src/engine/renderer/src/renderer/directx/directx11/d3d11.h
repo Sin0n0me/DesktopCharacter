@@ -35,8 +35,8 @@ namespace enishi::renderer::directx {
         static foundation::EngineResult<std::unique_ptr<D3D11>, DirectXError> make(
             const HWND hwnd, const types::WindowSize& size);
 
-        ID3D11Device* get_device(void) const;
-        ID3D11DeviceContext* get_context(void) const;
-        IDXGISwapChain1* get_swap_chain(void) const;
+        [[nodiscard]] ID3D11Device* get_device(void) const;
+        [[nodiscard]] ID3D11DeviceContext* get_context(void) const;
+        [[nodiscard]] IDXGISwapChain1* get_swap_chain(void) const;
     };
 } // namespace enishi::renderer::directx

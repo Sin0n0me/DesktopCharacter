@@ -2,6 +2,8 @@
 #include "../model/bone.h"
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <string>
 #include <vector>
 
@@ -26,8 +28,23 @@ namespace enishi::types {
         bool is_looping;
     };
 
-    struct BoneNode {
-        glm::vec4 animation_rotate; // 四元数
-        glm::vec4 ik_rotate;        // 四元数
+    struct AnimationRotate {
+        glm::quat rotate;
+    };
+
+    struct IKLimit {
+        glm::vec3 axis; // 回転を制限する軸
+        float limit;
+    };
+
+    struct IKRotate {
+        glm::quat rotate;
+    };
+
+    struct AnimationFlags {
+        bool apply_animation;
+        bool apply_ik;
+        bool apply_limit_ik;
+        bool apply_physics;
     };
 } // namespace enishi::types

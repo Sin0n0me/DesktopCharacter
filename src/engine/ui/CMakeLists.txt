@@ -4,6 +4,20 @@ project(ui)
 # 以下依存設定
 set(DEPENDENCIES)
 set(DEPENDENT_LOACAL_DIRS)
+set(UI_DEPENDENT_LIBS "${CMAKE_BINARY_DIR}/libs")
+
+# 外部
+include(FetchContent)
+
+FetchContent_Declare(
+    ImGui
+    GIT_REPOSITORY git@github.com:ocornut/imgui.git
+    GIT_TAG "v1.92.8"
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS ON
+    SOURCE_DIR "${UI_DEPENDENT_LIBS}/imgui"
+)
+FetchContent_MakeAvailable(ImGui)
 
 # ローカル
 set(DEPENDENT_LOACAL_DIRS
@@ -11,13 +25,14 @@ set(DEPENDENT_LOACAL_DIRS
 )
 
 set(DEPENDENCIES
+    ${CMAKE_CURRENT_BINARY_DIR}/libs
     platform
     engine_types
     foundation
 )
 
 #
-# 以降は触らなくて良い
+# 以降は触らなくて良い(include汚染対策で他と少し設定が違う)
 #
 
 # MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
@@ -42,6 +57,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${UI_DEPENDENT_LIBS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_mouse.h>
 #include <platform/input/input.h>
 #include <platform/input/input_event.h>
 #include <vector>
@@ -7,10 +8,12 @@
 namespace enishi::platform_impl {
     class SDL3Input : public platform::IInput, platform::IInputEvent {
       private:
-        std::vector<bool> pre_key_state;
         std::vector<bool> key_state;
+        std::vector<bool> pre_key_state;
         types::ScreenMousePosition mouse_position;
+        types::ScreenMousePosition pre_mouse_position;
         types::MouseWheel mouse_wheel;
+        types::MouseWheel pre_mouse_wheel;
 
       public:
         bool is_key_down(const types::KeyCode key) const noexcept override;
@@ -18,8 +21,10 @@ namespace enishi::platform_impl {
         bool is_key_released(const types::KeyCode key) const noexcept override;
         types::ScreenMousePosition get_screen_mouse_position(void) const noexcept override;
         types::ClientMousePosition get_client_mouse_position(void) const noexcept override;
-        glm::vec2 mouse_delta() const noexcept override;
-        bool is_mouse_button_down(types::MouseButton) const noexcept override;
+        types::MouseWheel get_mouse_wheel(void) const noexcept override;
+        bool is_mouse_button_down(const types::MouseButton button) const noexcept override;
+        bool is_mouse_button_pressed(const types::MouseButton button) const noexcept override;
+        bool is_mouse_button_released(const types::MouseButton button) const noexcept override;
 
         bool can_process_event(void) const noexcept override;
         void on_key_down(const types::KeyCode code) override;

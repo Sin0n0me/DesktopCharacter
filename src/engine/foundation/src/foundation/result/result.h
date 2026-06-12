@@ -10,11 +10,11 @@ namespace enishi::foundation {
           public:
             using std::expected<T, E>::expected;
 
-            constexpr bool is_ok(void) const {
+            [[nodiscard]] constexpr bool is_ok(void) const {
                 return this->has_value();
             }
 
-            constexpr bool is_err(void) const {
+            [[nodiscard]] constexpr bool is_err(void) const {
                 return !this->has_value();
             }
         };
@@ -38,7 +38,8 @@ namespace enishi::foundation {
             : ResultBase<T, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U> constexpr Result<T, Error<U>> propagation(const U e) const {
+        template <typename U>
+        [[nodiscard]] constexpr Result<T, Error<U>> propagation(const U e) const {
             return std::unexpected(std::move(this->error().propagation(e)));
         }
 
@@ -60,7 +61,8 @@ namespace enishi::foundation {
             : ResultBase<void, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U> constexpr Result<void, Error<U>> propagation(const U e) const {
+        template <typename U>
+        [[nodiscard]] constexpr Result<void, Error<U>> propagation(const U e) const {
             return std::unexpected(std::move(this->error().propagation(e)));
         }
 

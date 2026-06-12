@@ -98,8 +98,8 @@ namespace enishi::renderer::directx {
     foundation::VoidResult<DirectXError> D3D11::make_swap_chain(const types::WindowSize& size) {
         constexpr DXGI_SAMPLE_DESC sample{.Count = 1};
         const DXGI_SWAP_CHAIN_DESC1 description{
-            .Width = size.width,
-            .Height = size.height,
+            .Width = static_cast<UINT>(size.width),
+            .Height = static_cast<UINT>(size.height),
             .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
             .SampleDesc = sample,
             .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,

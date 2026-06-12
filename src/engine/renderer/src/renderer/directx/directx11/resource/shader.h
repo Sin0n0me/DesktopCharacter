@@ -3,9 +3,9 @@
 #include "../shader/shader_type.h"
 #include <d3d11.h>
 #include <engine_types/handle/handle_type.h>
+#include <foundation/option/option.h>
 #include <foundation/result/result.h>
 #include <memory>
-#include <optional>
 #include <unordered_map>
 #include <vector>
 #include <wrl/client.h>
@@ -24,22 +24,25 @@ namespace enishi::renderer::directx {
         std::vector<Microsoft::WRL::ComPtr<ID3D11ComputeShader>> compute_shaders;
 
       private:
-        std::optional<const ShaderInfo&> get_shader_info(const types::HandleId id) const;
+        [[nodiscard]] foundation::Option<const ShaderInfo&> get_shader_info(
+            const types::HandleId id) const noexcept;
 
       public:
-        void create(const types::HandleId id, const ShaderType shader_type);
-        std::optional<ShaderType> get_shader_type(const types::HandleId id) const;
+        void create(const types::HandleId id, const ShaderType shader_type) noexcept;
+        [[nodiscard]] foundation::Option<ShaderType> get_shader_type(
+            const types::HandleId id) const noexcept;
 
-        std::optional<ID3D11VertexShader*> get_vertex_shader(
+        [[nodiscard]] foundation::Option<ID3D11VertexShader*> get_vertex_shader(
             const types::HandleId id) const noexcept;
-        std::optional<ID3D11PixelShader*> get_pixel_shader(const types::HandleId id) const noexcept;
-        std::optional<ID3D11ComputeShader*> get_compute_shader(
+        [[nodiscard]] foundation::Option<ID3D11PixelShader*> get_pixel_shader(
             const types::HandleId id) const noexcept;
-        std::optional<ID3D11VertexShader* const*> get_address_vertex_shader(
+        [[nodiscard]] foundation::Option<ID3D11ComputeShader*> get_compute_shader(
             const types::HandleId id) const noexcept;
-        std::optional<ID3D11PixelShader* const*> get_address_pixel_shader(
+        [[nodiscard]] foundation::Option<ID3D11VertexShader* const*> get_address_vertex_shader(
             const types::HandleId id) const noexcept;
-        std::optional<ID3D11ComputeShader* const*> get_address_compute_shader(
+        [[nodiscard]] foundation::Option<ID3D11PixelShader* const*> get_address_pixel_shader(
+            const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11ComputeShader* const*> get_address_compute_shader(
             const types::HandleId id) const noexcept;
     };
 } // namespace enishi::renderer::directx

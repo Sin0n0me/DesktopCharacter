@@ -1,3 +1,4 @@
+#pragma once
 #include "handle_type.h"
 #include <vector>
 

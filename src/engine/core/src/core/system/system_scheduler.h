@@ -1,5 +1,6 @@
 #pragma once
 #include "system.h"
+#include <memory>
 #include <vector>
 
 namespace enishi::core {
@@ -11,6 +12,8 @@ namespace enishi::core {
         template <typename T, typename... Args>
         void register_system(const std::uint32_t priority, const Args&... arg) {
             this->system.push_back(std::make_unique<T>(arg...));
+
+            // そもそも登録が頻繁に呼ばれないので毎回ソートでよい
         }
     };
 } // namespace enishi::core

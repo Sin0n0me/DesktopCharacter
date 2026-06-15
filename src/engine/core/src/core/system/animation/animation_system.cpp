@@ -1,20 +1,78 @@
 #include "animation_system.h"
+#include "animation_player.h"
 
 namespace enishi::core {
-    void AnimationSystem::update_local(const types::BoneIndex index) {
-    }
-
-    void AnimationSystem::update_global(const types::BoneIndex index) {
-    }
-
-    void AnimationSystem::update_children_global(const types::BoneIndex index) {
-    }
-
     AnimationSystem::AnimationSystem(const std::shared_ptr<ecs::Registory> registory)
         : registory(registory) {
-        const auto& a = this->registory->get<types::BoneNode>(0);
     }
 
     void AnimationSystem::update(const types::DeltaTime& delta_time) {
+        // TODO マルチスレッドで複数entityの更新
+        auto view = this->registory->view<component::AnimationComponent,
+            component::ModelComponent,
+            component::SkeletonComponent,
+            component::IKComponent>();
+
+        for (auto [entity, animation, model, skeleton, ik] : view) {
+            this->animation(animation, model, skeleton, ik);
+        }
+    }
+
+    void AnimationSystem::animation(component::AnimationComponent& animation,
+        const component::ModelComponent& model,
+        const component::SkeletonComponent& skeleton,
+        const component::IKComponent& ik) {
+        const auto size = animation.bone_buffer.size();
+        for (const auto command : animation.commands) {
+            switch (command) {
+                case component::AnimationCommand::Animation: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::apply_animation(animation, model, skeleton, i);
+                    }
+                } break;
+                case component::AnimationCommand::IK: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::apply_ik(animation, ik, model, i);
+                    }
+                } break;
+                case component::AnimationCommand::PhysicsSimulate: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::apply_physics(animation, model, i);
+                    }
+                } break;
+                case component::AnimationCommand::ResetLocalTransform: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        auto& buffer = animation.bone_buffer[i];
+                        buffer.position = glm::vec3(0.0f);
+                        for (auto& rotation : buffer.rotations) {
+                            rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+                        }
+                        buffer.scale = glm::vec3(0.0f);
+                    }
+                } break;
+                case component::AnimationCommand::UpdateGlobal: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::update_global(animation, model, i);
+                    }
+                } break;
+                case component::AnimationCommand::UpdateLocal: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::update_local(animation, i);
+                    }
+                } break;
+                case component::AnimationCommand::WriteBoneMatrices: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::global_to_bone_matrices(animation, i);
+                    }
+                } break;
+                case component::AnimationCommand::ReadBoneMatrices: {
+                    for (std::uint32_t i = 0; i < size; ++i) {
+                        AnimationPlayer::bone_matrices_to_global(animation, i);
+                    }
+                } break;
+                default:
+                    break;
+            }
+        }
     }
 } // namespace enishi::core

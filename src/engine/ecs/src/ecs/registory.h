@@ -11,10 +11,24 @@
 #include <vector>
 
 namespace enishi::ecs {
+    namespace {
+        using ComponentId = std::size_t;
+
+        ComponentId next_component_id(void) {
+            static ComponentId id = 0;
+            return id++;
+        }
+
+        template <typename T> ComponentId get_component_id(void) {
+            static const ComponentId id = next_component_id();
+            return id;
+        }
+    } // namespace
+
     class Registory {
       private:
         EntityManager entity_manager;
-        std::unordered_map<std::type_index, std::unique_ptr<IComponentPool>> pools;
+        std::unordered_map<ComponentId, std::unique_ptr<IComponentPool>> pools;
 
       public:
         EntityID create(void);
@@ -32,21 +46,22 @@ namespace enishi::ecs {
         }
 
         template <typename T> bool has(const EntityID id) const {
-            auto it = this->pools.find(std::type_index(typeid(T)));
+            const auto key = get_component_id<T>();
+            auto it = this->pools.find(key);
             return it != this->pools.end() && it->second->has(id);
         }
 
-        template <typename T> T& get(const EntityID id) {
+        template <typename T> foundation::Option<T&> get(const EntityID id) {
             return this->get_pool<T>().get(id);
         }
 
-        template <typename... Ts> View<Ts...> view() {
+        template <typename... Ts> View<Ts...> view(void) {
             return View<Ts...>(this->get_pool<Ts>()...);
         }
 
       private:
         template <typename T> ComponentPool<T>& get_pool(void) {
-            const auto key = std::type_index(typeid(T));
+            const auto key = get_component_id<T>();
             auto it = this->pools.find(key);
             if (it == this->pools.end()) {
                 const auto [ins, _] =

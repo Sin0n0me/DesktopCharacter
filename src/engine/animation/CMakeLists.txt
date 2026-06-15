@@ -3,18 +3,31 @@ project(animation)
 
 # 以下依存設定
 set(DEPENDENCIES)
-set(DEPENDENT_LOACAL_DIRS)
+include(FetchContent)
 
-# ローカル
-set(DEPENDENT_LOACAL_DIRS
-    "../engine_types"
-    "../foundation"
+FetchContent_Declare(
+    ENGINE_TYPES
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../engine_types
 )
+FetchContent_MakeAvailable(ENGINE_TYPES)
+
+FetchContent_Declare(
+    FOUNDATION
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../foundation
+)
+FetchContent_MakeAvailable(FOUNDATION)
+
+FetchContent_Declare(
+    ASSETS_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../assets_system
+)
+FetchContent_MakeAvailable(ASSETS_SYSTEM)
 
 set(DEPENDENCIES
     glm
     engine_types
     foundation
+    assets_system
 )
 
 #
@@ -26,12 +39,6 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
-
-# 依存しているローカルディレクトリの追加
-foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"

@@ -6,15 +6,26 @@
 #include <engine_types/renderer/render_graph.h>
 #include <engine_types/renderer/render_handle.h>
 #include <engine_types/window/window_handle.h>
+#include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
 
 namespace enishi::platform {
     template <typename T>
     using RenderResult = foundation::Result<T, foundation::Error<RenderError>>;
 
+    // 主に作ったり描画を担当する
+    // 細かい設定は別のインターフェイスが担当する
     class IRenderer {
       public:
         virtual ~IRenderer(void) noexcept = default;
+
+        virtual RenderResult<types::RenderHandle> create_view_port(
+            const types::WindowPosition& left_top_position,
+            const types::WindowSize& size,
+            const float min_depth,
+            const float max_depth) = 0;
+
+        virtual RenderResult<types::RenderHandle> create_render_target(void) = 0;
 
         virtual RenderResult<types::RenderHandle> create_mesh(const types::MeshData& mesh) = 0;
 

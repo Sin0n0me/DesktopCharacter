@@ -1,3 +1,8 @@
 #pragma once
 
-namespace enishi::platform {} // namespace enishi::platform
+namespace enishi::platform {
+    class PhysicsEngine {
+      public:
+        virtual ~PhysicsEngine(void) noexcept = default;
+    };
+} // namespace enishi::platform

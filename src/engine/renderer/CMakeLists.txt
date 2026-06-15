@@ -3,12 +3,13 @@ project(renderer)
 
 # 以下依存設定
 set(DEPENDENCIES)
-set(DEPENDENT_LOACAL_DIRS)
+include(FetchContent)
 
-# ローカル
-set(DEPENDENT_LOACAL_DIRS
-    "../platform"
+FetchContent_Declare(
+    PLATFORM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../platform
 )
+FetchContent_MakeAvailable(PLATFORM)
 
 set(DEPENDENCIES
     glm
@@ -60,12 +61,6 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
-
-# 依存しているローカルディレクトリの追加
-foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"

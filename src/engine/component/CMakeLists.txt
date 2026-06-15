@@ -1,21 +1,26 @@
 cmake_minimum_required (VERSION 3.14)
-project(engine_types)
+project(component)
 
-# 依存設定
+# 以下依存設定
 set(DEPENDENCIES)
 include(FetchContent)
 
 FetchContent_Declare(
-    GLM
-    GIT_REPOSITORY git@github.com:g-truc/glm.git
-    GIT_TAG "1.0.3"
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS ON
+    ENGINE_TYPES
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../engine_types
 )
-FetchContent_MakeAvailable(GLM)
+FetchContent_MakeAvailable(ENGINE_TYPES)
+
+FetchContent_Declare(
+    FOUNDATION
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../foundation
+)
+FetchContent_MakeAvailable(FOUNDATION)
 
 set(DEPENDENCIES
     glm
+    engine_types
+    foundation
 )
 
 #
@@ -66,10 +71,8 @@ if(BUILD_TESTING)
         "tests/*.hpp" 
         "tests/*.cpp"
     )
-    add_executable(${PROJECT_NAME}_test ${SOURCES} ${TEST_SOURCES})
 
-    # テスト用exeにメインのライブラリ(lib)をリンクする
-    #target_link_libraries(tests PRIVATE my_lib)
+    add_executable(${PROJECT_NAME}_test ${SOURCES} ${TEST_SOURCES})
 
     # CTestにテストケースを登録
     add_test(NAME RunAllTests COMMAND tests)

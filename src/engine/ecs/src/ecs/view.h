@@ -1,18 +1,24 @@
+#pragma once
 #include <tuple>
 
 namespace enishi::ecs {
     template <typename... Ts> class View {
       private:
         std::tuple<ComponentPool<Ts>&...> pools;
-        uint32_t current_id = 0;
+        std::uint32_t current_id;
 
       private:
         // 全コンポーネントを持つエンティティまでスキップ
         void skip_invalid(const uint32_t start) {
             this->current_id = start;
             auto& entities = this->base_pool().entities();
-            while (
-                this->current_id < entities.size() && !this->has_all(entities[this->current_id])) {
+            const auto entities_size = entities.size();
+
+            for (;;) {
+                if (this->current_id < entities_size &&
+                    !this->has_all(entities[this->current_id])) {
+                    break;
+                }
                 ++this->current_id;
             }
         }
@@ -22,12 +28,14 @@ namespace enishi::ecs {
         }
 
         auto& base_pool(void) {
-            return std::get<ComponentPool, std::tuple_element_t<0, std::tuple<Ts...>>>(this->pools);
+            return std::get<ComponentPool<std::tuple_element_t<0, std::tuple<Ts...>>>&>(
+                this->pools);
         }
 
       public:
-        explicit View(const ComponentPool<Ts>&... pools)
-            : pools(pools...) {
+        explicit View(ComponentPool<Ts>&... pools)
+            : current_id(0)
+            , pools(pools...) {
         }
 
         // range-based for で使えるイテレータ
@@ -38,21 +46,22 @@ namespace enishi::ecs {
             bool operator!=(const Iterator& other) const {
                 return this->idx != other.idx;
             }
-            Iterator& operator++() {
+            Iterator& operator++(void) {
                 ++this->idx;
                 return *this;
             }
 
             // [EntityID, Component&...] のタプルを返す
-            auto operator*() {
+            std::tuple<EntityID, Ts&...> operator*(void) {
                 // 最もエンティティ数が少ないPoolのdenseを基準にする
                 EntityID id = this->base_pool().entities()[this->idx];
+
                 return std::tuple<EntityID, Ts&...>(
-                    id, std::get<ComponentPool<Ts>&>(this->view.pools).get(id)...);
+                    id, std::get<ComponentPool<Ts>&>(this->view.pools).get(id).unwrap_mut()...);
             }
 
-            ComponentPool<std::tuple_element_t<0, std::tuple<Ts...>>>& base_pool() {
-                return std::get<0>(view.pools);
+            ComponentPool<std::tuple_element_t<0, std::tuple<Ts...>>>& base_pool(void) {
+                return std::get<0>(this->view.pools);
             }
         };
 

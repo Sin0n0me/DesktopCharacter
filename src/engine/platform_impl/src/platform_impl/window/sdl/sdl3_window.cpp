@@ -9,18 +9,22 @@ namespace enishi::platform_impl {
         }
     }
 
-    SDL3Window::SDL3Window(SDLWindowPtr window_ptr)
-        : window(std::move(window_ptr)) {
+    SDL3Window::SDL3Window(const platform::WindowSystem window_system, SDLWindowPtr window_ptr)
+        : window(std::move(window_ptr))
+        , window_system(window_system) {
     }
 
     foundation::EngineResult<SDL3Window, platform::WindowError> SDL3Window::make(
-        const types::GraphicsAPI graphics_api) {
+        const platform::WindowSystem window_system, const types::GraphicsAPI graphics_api) {
         const SDL_WindowFlags api_flag = SDL3Window::get_flag_from_graphics_api(graphics_api);
 
-        return SDL3Window{SDLWindowPtr(SDL_CreateWindow(platform::ROOT_WINDOW_NAME,
-            platform::WIDTH,
-            platform::HEIGHT,
-            SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | api_flag))};
+        return SDL3Window{
+            window_system,
+            SDLWindowPtr(SDL_CreateWindow(platform::ROOT_WINDOW_NAME,
+                platform::WIDTH,
+                platform::HEIGHT,
+                SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | api_flag)),
+        };
     }
 
     std::optional<const platform::IInput*> SDL3Window::get_input(void) const noexcept {
@@ -55,8 +59,75 @@ namespace enishi::platform_impl {
         return 0;
     }
 
-    std::optional<types::WindowHandle> SDL3Window::get_handle(void) const noexcept {
-        return std::optional<types::WindowHandle>();
+    foundation::Option<platform::NativeWindowHandle> SDL3Window::get_native_handle(
+        SDL_Window* const window, const platform::WindowSystem window_system) {
+        switch (window_system) {
+            case platform::WindowSystem::Wayland: {
+#if defined(USE_WAYLAND)
+                const auto handle = platform::NativeWaylandHandle{};
+#else
+                const auto handle = platform::NativeWaylandHandle{};
+#endif
+
+                return platform::NativeWindowHandle{
+                    .wayland = handle,
+                };
+            }
+            case platform::WindowSystem::Windows: {
+#if defined(USE_WINDOWS)
+                const SDL_PropertiesID props = SDL_GetWindowProperties(window);
+                const HWND hwnd = (HWND)SDL_GetPointerProperty(
+                    props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+                const HINSTANCE hinstance = (HINSTANCE)SDL_GetPointerProperty(
+                    props, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, nullptr);
+                if (hwnd == nullptr || hwnd == nullptr) {
+                    return {};
+                }
+
+                const auto handle = platform::NativeWindowsHandle{
+                    .hwnd = hwnd,
+                    .hinstance = hinstance,
+                };
+#else
+                const auto handle = platform::NativeWindowsHandle{};
+#endif
+
+                return platform::NativeWindowHandle{
+                    .windows = handle,
+                };
+            }
+            case platform::WindowSystem::X11: {
+#if defined(USE_X11)
+                const auto handle = platform::NativeX11Handle{};
+#else
+                const auto handle = platform::NativeX11Handle{};
+#endif
+
+                return platform::NativeWindowHandle{
+                    .x11 = handle,
+                };
+            }
+            default:
+                break;
+        }
+
+        return {};
+    }
+
+    std::optional<platform::WindowHandle> SDL3Window::get_handle(void) const noexcept {
+        const auto opt_window_handle =
+            SDL3Window::get_native_handle(this->window.get(), this->window_system);
+        if (opt_window_handle.is_none()) {
+            return {};
+        }
+
+        const platform::WindowHandle handle{
+            .id = 0,
+            .tag = this->window_system,
+            .native_handle = opt_window_handle.unwrap(),
+        };
+
+        return handle;
     }
 
     std::optional<types::WindowPosition> SDL3Window::get_position(void) const noexcept {
@@ -128,13 +199,20 @@ namespace enishi::platform_impl {
                     this->input.on_key_up(SDL3Input::convert_key_code(event.key.key));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    this->input.on_mouse_button_down(SDL3Input::convert_mouse_button(event.));
+                    this->input.on_mouse_button_down(
+                        SDL3Input::convert_mouse_button(event.button.button));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_BUTTON_UP:
-                    this->input.on_mouse_button_up(SDL3Input::convert_mouse_button(event.));
+                    this->input.on_mouse_button_up(
+                        SDL3Input::convert_mouse_button(event.button.button));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_MOTION:
-                    this->input.on_mouse_move();
+                    this->input.on_mouse_move(types::to_screen(
+                        types::ClientMousePosition{
+                            .x = static_cast<std::int32_t>(event.motion.x),
+                            .y = static_cast<std::int32_t>(event.motion.y),
+                        },
+                        this->position));
                     break;
                 case SDL_EventType::SDL_EVENT_MOUSE_WHEEL:
 

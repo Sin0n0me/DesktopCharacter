@@ -17,7 +17,7 @@ namespace enishi::types {
             const glm::mat4& matrix) noexcept;
 
         // ヤコビ法による固有ベクトル取得
-        static void jacobi_eigen_decomposition(glm::mat4& matrix, glm::mat4& eigenVectors) noexcept;
+        static glm::mat4 jacobi_eigen_decomposition(const glm::mat4& matrix) noexcept;
 
         //
         static OBB make_by_covariance_matrix(const std::vector<glm::vec3>& positions);

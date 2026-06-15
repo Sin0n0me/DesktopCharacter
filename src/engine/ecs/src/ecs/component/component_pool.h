@@ -1,7 +1,8 @@
 #pragma once
 #include "../entity/entity.h"
 #include "../errors/errors.h"
-#include <expected>
+#include <foundation/option/option.h>
+#include <foundation/result/result.h>
 #include <vector>
 
 namespace enishi::ecs {
@@ -15,15 +16,16 @@ namespace enishi::ecs {
 
     template <typename T> class ComponentPool final : public IComponentPool {
       private:
-        static constexpr uint32_t INVALID = UINT32_MAX;
+        static constexpr std::uint32_t INVALID = UINT32_MAX;
 
-        std::vector<uint32_t> sparse; // EntityID → dense添字
-        std::vector<EntityID> dense;  // 有効なEntityIDの列
-        std::vector<T> components;    // denseと同じ並びのコンポーネント列
+        std::vector<std::uint32_t> sparse; // EntityID -> dense添字
+        std::vector<EntityID> dense;       // 有効なEntityIDの列
+        std::vector<T> components;         // denseと同じ並びのコンポーネント列
 
       public:
         // コンポーネントを追加
-        template <typename... Args> ECSReuslt<T&> emplace(const EntityID id, Args&&... args) {
+        template <typename... Args>
+        foundation::EngineResult<T&, ECSError> emplace(const EntityID id, Args&&... args) {
             if (this->has(id)) {
                 return foundation::Error(ECSError::AlreadyHasComponent, u8"already has component");
             }
@@ -41,7 +43,7 @@ namespace enishi::ecs {
             return this->components.back();
         }
 
-        // コンポーネントを削除（swap-and-pop で穴を作らない）
+        // コンポーネントを削除(swap-and-pop で穴を作らない)
         void remove(const EntityID id) override {
             if (this->has(id)) {
                 return;
@@ -65,13 +67,17 @@ namespace enishi::ecs {
             return id < this->sparse.size() && this->sparse[id] != ComponentPool::INVALID;
         }
 
-        T& get(const EntityID id) {
-            assert(has(id));
+        foundation::Option<T&> get(const EntityID id) {
+            if (!this->has(id)) {
+                return {};
+            }
             return this->components[this->sparse[id]];
         }
 
-        const T& get(const EntityID id) const {
-            assert(has(id));
+        foundation::Option<const T&> get(const EntityID id) const {
+            if (!this->has(id)) {
+                return {};
+            }
             return this->components[this->sparse[id]];
         }
 

@@ -1,16 +1,16 @@
 #pragma once
 #include "../errors/window_errors.h"
 #include "../input/input.h"
-#include <engine_types/window/window_handle.h>
 #include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
 #include <optional>
 #include <string>
+#include "window_handle.h"
 
 namespace enishi::platform {
     class IWindow {
       public:
-        [[nodiscard]] virtual std::optional<types::WindowHandle> get_handle(
+        [[nodiscard]] virtual std::optional<WindowHandle> get_handle(
             void) const noexcept = 0;
 
         [[nodiscard]] virtual std::optional<const IInput*> get_input(void) const noexcept = 0;

@@ -20,7 +20,8 @@ namespace enishi::platform_impl {
         bool is_key_pressed(const types::KeyCode key) const noexcept override;
         bool is_key_released(const types::KeyCode key) const noexcept override;
         types::ScreenMousePosition get_screen_mouse_position(void) const noexcept override;
-        types::ClientMousePosition get_client_mouse_position(void) const noexcept override;
+        types::ClientMousePosition get_client_mouse_position(
+            const types::WindowPosition& position) const noexcept override;
         types::MouseWheel get_mouse_wheel(void) const noexcept override;
         bool is_mouse_button_down(const types::MouseButton button) const noexcept override;
         bool is_mouse_button_pressed(const types::MouseButton button) const noexcept override;
@@ -36,7 +37,6 @@ namespace enishi::platform_impl {
         void end_frame(void) override;
 
         [[nodiscard]] static types::KeyCode convert_key_code(const SDL_Keycode& code);
-        [[nodiscard]] static types::MouseButton convert_mouse_button(
-            const SDL_MouseButtonFlags& code);
+        [[nodiscard]] static types::MouseButton convert_mouse_button(const std::uint8_t& code);
     };
 } // namespace enishi::platform_impl

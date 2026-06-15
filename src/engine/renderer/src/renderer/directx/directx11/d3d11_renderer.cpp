@@ -139,6 +139,7 @@ namespace enishi::renderer::directx {
         graph.camera;
 
         const auto context = this->d3d11->get_context();
+
         for (const auto& pass : graph.passes) {
             pass.pass_type;
 

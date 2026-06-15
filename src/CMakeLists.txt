@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(platfrom)
+project(enishi)
 
 # 以下依存設定
 # 外部

@@ -1,6 +1,6 @@
 #pragma once
 #include "../input/input_types.h"
-#include "../renderer/camera.h"
+#include "../renderer/buffer/camera.h"
 #include "../window/window_types.h"
 #include <glm/glm.hpp>
 
@@ -13,4 +13,4 @@ namespace enishi::types {
             const ClientMousePosition& mouse_position,
             const Camera& camera);
     };
-} // namespace enishi::collider
+} // namespace enishi::types

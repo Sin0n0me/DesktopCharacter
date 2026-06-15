@@ -23,17 +23,45 @@ namespace enishi::foundation {
       public:
         using OptionBase<T>::OptionBase;
 
-        [[nodiscard]] T unwrap(void) const {
+        [[nodiscard]] const T& unwrap(void) const {
             return this->value();
         }
+
+        [[nodiscard]] T& unwrap_mut(void) {
+            return this->value();
+        }
+
+        /*
+        [[nodiscard]] const T&& unwrap(void) const {
+            return this->value();
+        }
+
+        [[nodiscard]] T&& unwrap_mut(void) {
+            return this->value();
+        }
+        */
     };
 
     template <typename T> class Option<T&> : public OptionBase<std::reference_wrapper<T>> {
       public:
         using OptionBase<std::reference_wrapper<T>>::OptionBase;
 
-        [[nodiscard]] T& unwrap(void) const {
+        [[nodiscard]] const T& unwrap(void) const {
             return this->value().get();
         }
+
+        [[nodiscard]] T& unwrap_mut(void) {
+            return this->value().get();
+        }
+
+        /*
+        [[nodiscard]] const T&& unwrap(void) const {
+            return this->value().get();
+        }
+
+        [[nodiscard]] T&& unwrap_mut(void) {
+            return this->value().get();
+        }
+        */
     };
 } // namespace enishi::foundation

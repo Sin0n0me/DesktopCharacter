@@ -1,4 +1,5 @@
 #include "OBB.h"
+// #include <glm/gtx/>
 
 namespace enishi::types {
     std::tuple<float, std::uint32_t, std::uint32_t> OBB::find_jacobi_pivot(
@@ -20,8 +21,9 @@ namespace enishi::types {
         return {max_value, p, q};
     }
 
-    void OBB::jacobi_eigen_decomposition(glm::mat4& matrix, glm::mat4& eigen_vectors) noexcept {
-        eigen_vectors = glm::mat4(1.0f);
+    glm::mat4 OBB::jacobi_eigen_decomposition(const glm::mat4& in_matrix) noexcept {
+        glm::mat4 eigen_vectors = glm::mat4(1.0f);
+        glm::mat4 matrix = in_matrix;
         for (int i = 0; i < 32; ++i) {
             const auto [max_value, p, q] = find_jacobi_pivot(matrix);
             if (max_value < 1e-6f) {
@@ -42,8 +44,10 @@ namespace enishi::types {
             r[q][p] = -s;
 
             matrix = glm::transpose(r) * matrix * r;
-            eigen_vectors = eigen_vectors * r;
+            eigen_vectors *= r;
         }
+
+        return eigen_vectors;
     }
 
     OBB OBB::make_by_covariance_matrix(const std::vector<glm::vec3>& positions) {
@@ -52,30 +56,29 @@ namespace enishi::types {
         // 重心を求める
         glm::vec3 mean = glm::vec3(0.0f);
         for (const auto& position : positions) {
-            mean = mean + position;
+            mean += position;
         }
         mean *= 1.0f / positions_size;
 
         // 共分散行列の作成
         glm::mat4 matrix = glm::mat4(0.0f);
         for (const auto& position : positions) {
-            const auto vec_diff = position - mean;
+            const glm::vec4 vec_diff = glm::vec4(position - mean, 0.0f);
 
             // vec_diff.x * vec_diff + (x*x, x*y, x*z, x*w)
-            matrix[0] += glm::splatX(vec_diff) * vec_diff;
+            matrix[0] += glm::vec4(vec_diff.x) * vec_diff;
             // vec_diff.y * vec_diff + (y*x, y*y, y*z, y*w)
-            matrix[1] += glm::splatY(vec_diff) * vec_diff;
+            matrix[1] += glm::vec4(vec_diff.y) * vec_diff;
             // vec_diff.z * vec_diff + (z*x, z*y, z*z, z*w)
-            matrix[2] += glm::splatZ(vec_diff) * vec_diff;
+            matrix[2] += glm::vec4(vec_diff.z) * vec_diff;
         }
         matrix *= 1.0f / positions_size;
         matrix[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // 元の行列は単位行列ではないので
 
         // ヤコビ法による固有ベクトル取得
-        glm::mat4 eigenvectors{};
-        jacobi_eigen_decomposition(matrix, eigenvectors);
+        const glm::mat4 eigen_vectors = jacobi_eigen_decomposition(matrix);
 
-        return OBB::make(positions, glm::vec4(mean, 0.0f), eigenvectors);
+        return OBB::make(positions, mean, eigen_vectors);
     }
 
     OBB OBB::make(const std::vector<glm::vec3>& positions,

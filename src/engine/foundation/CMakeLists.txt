@@ -1,9 +1,32 @@
 cmake_minimum_required (VERSION 3.12)
 project(foundation)
 
-# 以下依存設定
+# 依存設定
 set(DEPENDENCIES)
-set(DEPENDENT_LOACAL_DIRS)
+include(ExternalProject)
+
+ExternalProject_Add(
+    ICU
+    GIT_REPOSITORY git@github.com:unicode-org/icu.git
+    GIT_TAG "release-78.3"
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS ON
+    SOURCE_SUBDIR  icu4c/source
+    PREFIX ${CMAKE_BINARY_DIR}/icu
+    INSTALL_DIR "${CMAKE_BINARY_DIR}/icu_install"
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        -DICU_BUILD_TESTS=OFF
+        -DICU_BUILD_SAMPLES=OFF
+        -DICU_BUILD_TOOLS=OFF
+    INSTALL_COMMAND make install    
+)
+
+set(DEPENDENCIES
+    icuuc
+    icudata
+    icui18n
+)
 
 #
 # 以降は触らなくて良い
@@ -14,12 +37,6 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
-
-# 依存しているローカルディレクトリの追加
-foreach(dir_path IN LISTS DEPENDENT_LOACAL_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
     "src/*.h"

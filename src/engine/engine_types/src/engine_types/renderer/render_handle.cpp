@@ -1,4 +1,3 @@
-#pragma once
 #include "render_handle.h"
 #include <cstdint>
 

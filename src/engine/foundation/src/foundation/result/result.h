@@ -1,7 +1,7 @@
 #pragma once
 #include "../errors/errors.h"
+#include "../str/str.h"
 #include <expected>
-#include <string>
 #include <vector>
 
 namespace enishi::foundation {
@@ -38,12 +38,11 @@ namespace enishi::foundation {
             : ResultBase<T, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U>
-        [[nodiscard]] constexpr Result<T, Error<U>> propagation(const U e) const {
-            return std::unexpected(std::move(this->error().propagation(e)));
+        template <typename U> [[nodiscard]] constexpr Error<U> propagation(const U e) const {
+            return this->error().propagation(e);
         }
 
-        Result& add_message(const std::u8string& message) {
+        Result& add_message(const UTF8& message) {
             if (this->is_ok()) {
                 return *this;
             }
@@ -61,12 +60,11 @@ namespace enishi::foundation {
             : ResultBase<void, Error<E>>(std::unexpected(err)) {
         }
 
-        template <typename U>
-        [[nodiscard]] constexpr Result<void, Error<U>> propagation(const U e) const {
-            return std::unexpected(std::move(this->error().propagation(e)));
+        template <typename U> [[nodiscard]] constexpr Error<U> propagation(const U e) const {
+            return this->error().propagation(e);
         }
 
-        Result& add_message(const std::u8string& message) {
+        Result& add_message(const UTF8& message) {
             if (this->is_ok()) {
                 return *this;
             }

@@ -8,9 +8,15 @@
 #include <wrl/client.h>
 
 namespace enishi::renderer::directx {
+    namespace {
+        template <typename T> using ResourceMap = std::unordered_map<types::HandleId, T>;
+    }
+
     struct GPUResource {
-        std::unordered_map<types::HandleId, Buffer> buffers;
-        std::unordered_map<types::HandleId, Texture> textures;
+        ResourceMap<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> render_targets;
+        ResourceMap<Microsoft::WRL::ComPtr<ID3D11RasterizerState>> rasterizers;
+        ResourceMap<Buffer> buffers;
+        ResourceMap<Texture> textures;
         ShaderPool shaders;
     };
 } // namespace enishi::renderer::directx

@@ -4,12 +4,12 @@
 #include <string_view>
 
 namespace enishi ::foundation {
-    std::u8string add_indent(const std::u8string_view& input, std::u8string_view prefix) {
+    UTF8 add_indent(const UTF8& input, UTF8 prefix) {
         auto lines = input | std::views::split('\n');
-        std::u8string result;
+        UTF8 result;
 
         for (auto it = lines.begin(); it != lines.end(); ++it) {
-            const std::u8string_view line{(*it).data(), (*it).size()};
+            const UTF8 line{(*it).data(), (*it).size()};
 
             if (it != lines.begin()) {
                 result += prefix;
@@ -20,14 +20,13 @@ namespace enishi ::foundation {
         return result;
     }
 
-    std::u8string LogEntry::format_log(void) const {
+    UTF8 LogEntry::format_log(void) const {
         // https://cpprefjp.github.io/reference/chrono/format.html
-        const std::string time = std::format("[{:%F %T}]", this->time);
-        // ASCII前提なので仮にASCIIを返さなかった場合はバグるので要修正
-        const std::u8string time_stamp(time.begin(), time.end());
-        const std::u8string log_level = u8"[" + level_to_string(this->level) + u8"]";
-        const std::u8string indent(time_stamp.length() + log_level.length() + 2, ' ');
+        const UTF8 time = std::format("[{:%F %T}]", this->time);
+        const UTF8 time_stamp(time.begin(), time.end());
+        const UTF8 log_level = "[" + level_to_string(this->level) + "]";
+        const UTF8 indent(time_stamp.length() + log_level.length() + 2, ' ');
 
-        return time_stamp + u8" " + log_level + u8" " + add_indent(this->message, indent);
+        return time_stamp + " " + log_level + " " + add_indent(this->message, indent);
     }
 } // namespace enishi::foundation

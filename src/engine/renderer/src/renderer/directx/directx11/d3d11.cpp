@@ -49,13 +49,12 @@ namespace enishi::renderer::directx {
             this->context.GetAddressOf());
         if (FAILED(result_device)) {
             return foundation::Error(
-                DirectXError::DeviceError, u8"D3D11デバイスの作成に失敗しました");
+                DirectXError::DeviceError, "D3D11デバイスの作成に失敗しました");
         }
 
         const HRESULT result_dxgi_device = this->device.As(&this->dxgi_device);
         if (FAILED(result_dxgi_device)) {
-            return foundation::Error(
-                DirectXError::DeviceError, u8"DXGIデバイスの作成に失敗しました");
+            return foundation::Error(DirectXError::DeviceError, "DXGIデバイスの作成に失敗しました");
         }
 
         const HRESULT result_dcom_device = DCompositionCreateDevice(dxgi_device.Get(),
@@ -63,7 +62,7 @@ namespace enishi::renderer::directx {
             reinterpret_cast<void**>(this->dcomp_device.GetAddressOf()));
         if (FAILED(result_dcom_device)) {
             return foundation::Error(
-                DirectXError::DeviceError, u8"DCompositionデバイスの作成に失敗しました");
+                DirectXError::DeviceError, "DCompositionデバイスの作成に失敗しました");
         }
 
         return {};
@@ -74,8 +73,7 @@ namespace enishi::renderer::directx {
             __uuidof(this->dxgi_factory),
             reinterpret_cast<void**>(this->dxgi_factory.GetAddressOf()));
         if (FAILED(result_factory)) {
-            return foundation::Error(
-                DirectXError::FactoryError, u8"DXGIFactoryの作成に失敗しました");
+            return foundation::Error(DirectXError::FactoryError, "DXGIFactoryの作成に失敗しました");
         }
 
         return {};
@@ -89,7 +87,7 @@ namespace enishi::renderer::directx {
             this->dcomp_surface.GetAddressOf());
         if (FAILED(result)) {
             return foundation::Error(
-                DirectXError::SurfaceError, u8"Surface(Composition)の作成に失敗しました");
+                DirectXError::SurfaceError, "Surface(Composition)の作成に失敗しました");
         }
 
         return {};
@@ -112,7 +110,7 @@ namespace enishi::renderer::directx {
 
         if (FAILED(result_swap_chain)) {
             return foundation::Error(
-                DirectXError::SwapchainError, u8"SwapChain(Composition)の作成に失敗しました");
+                DirectXError::SwapchainError, "SwapChain(Composition)の作成に失敗しました");
         }
 
         return {};
@@ -125,7 +123,7 @@ namespace enishi::renderer::directx {
 
         if (FAILED(hr)) {
             return foundation::Error(
-                DirectXError::TargetError, u8"Target(Composition)の作成に失敗しました");
+                DirectXError::TargetError, "Target(Composition)の作成に失敗しました");
         }
 
         return {};
@@ -135,7 +133,7 @@ namespace enishi::renderer::directx {
         const HRESULT hr = this->dcomp_device->CreateVisual(this->dcomp_visual.GetAddressOf());
         if (FAILED(hr)) {
             return foundation::Error(
-                DirectXError::VisualError, u8"Visual(Composition)の作成に失敗しました");
+                DirectXError::VisualError, "Visual(Composition)の作成に失敗しました");
         }
 
         return {};
@@ -146,19 +144,19 @@ namespace enishi::renderer::directx {
             this->dcomp_visual->SetContent(this->dxgi_swap_chain.Get());
         if (FAILED(result_set_context)) {
             return foundation::Error(
-                DirectXError::SwapchainError, u8"SwapChain(Composition)のセットに失敗しました");
+                DirectXError::SwapchainError, "SwapChain(Composition)のセットに失敗しました");
         }
 
         const HRESULT result_set_root = this->dcomp_target->SetRoot(this->dcomp_visual.Get());
         if (FAILED(result_set_root)) {
             return foundation::Error(
-                DirectXError::VisualError, u8"Visual(Composition)のセットに失敗しました");
+                DirectXError::VisualError, "Visual(Composition)のセットに失敗しました");
         }
 
         // 合成エンジンに完了を通知
         const HRESULT result_commit = this->dcomp_device->Commit();
         if (FAILED(result_commit)) {
-            return foundation::Error(DirectXError::DeviceError, u8"Commitに失敗しました");
+            return foundation::Error(DirectXError::DeviceError, "Commitに失敗しました");
         }
 
         return {};
@@ -170,7 +168,7 @@ namespace enishi::renderer::directx {
 
         auto reuslt = d3d11->init(hwnd, size);
         if (reuslt.is_err()) {
-            return reuslt.add_message(u8"DirectX11の初期化に失敗しました").error();
+            return reuslt.add_message("DirectX11の初期化に失敗しました").error();
         }
 
         return d3d11;

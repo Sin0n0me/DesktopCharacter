@@ -5,6 +5,8 @@
 #include <vector>
 
 namespace enishi::assets_system {
+    constexpr float VMD_FPS = 30.0f;
+
     struct VMDData {
         std::array<char, 20> name;
         std::vector<VMDBoneKeyFrame> bone_key_frames;

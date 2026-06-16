@@ -1,5 +1,5 @@
 #pragma once
-#include <string>
+#include "../str/str.h"
 
 namespace enishi ::foundation {
     enum class LogLevel {
@@ -10,5 +10,5 @@ namespace enishi ::foundation {
         Critical, // 継続できないような致命的な場合
     };
 
-    const std::u8string level_to_string(const LogLevel& level);
+    const UTF8 level_to_string(const LogLevel& level);
 } // namespace enishi::foundation

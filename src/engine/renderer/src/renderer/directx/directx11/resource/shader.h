@@ -11,10 +11,12 @@
 #include <wrl/client.h>
 
 namespace enishi::renderer::directx {
-    struct ShaderInfo {
-        ShaderType shader_type;
-        std::uint32_t index;
-    };
+    namespace {
+        struct ShaderInfo {
+            ShaderType shader_type;
+            std::uint32_t index;
+        };
+    } // namespace
 
     class ShaderPool {
       private:
@@ -28,7 +30,8 @@ namespace enishi::renderer::directx {
             const types::HandleId id) const noexcept;
 
       public:
-        void create(const types::HandleId id, const ShaderType shader_type) noexcept;
+        [[nodiscard]] foundation::VoidResult<DirectXError> create(
+            const types::HandleId id, const ShaderType shader_type) noexcept;
         [[nodiscard]] foundation::Option<ShaderType> get_shader_type(
             const types::HandleId id) const noexcept;
 

@@ -52,7 +52,7 @@ namespace enishi::assets_system {
         VMDHeader header{};
         auto result = binary_reader.read_to(&header);
         if (result.is_err()) {
-            return result.add_message(u8"ヘッダを読み込めませんでした");
+            return result.add_message("ヘッダを読み込めませんでした");
         }
 
         result = binary_reader.read_magic_number("Vocaloid Motion Data");
@@ -65,7 +65,7 @@ namespace enishi::assets_system {
             return {};
         }
 
-        result.error().add_message(u8"");
+        result.error().add_message("");
         return result;
     }
 
@@ -74,13 +74,13 @@ namespace enishi::assets_system {
         std::uint32_t size; // サイズは4Byte
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
         result = binary_reader.read_to_vec(vmd_data->bone_key_frames, size);
         if (result.is_err()) {
-            result.error().add_message(u8"");
+            result.error().add_message("");
             return result;
         }
 
@@ -92,13 +92,13 @@ namespace enishi::assets_system {
         std::uint32_t size; // サイズは4Byte
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
         result = binary_reader.read_to_vec(vmd_data->morph_key_frames, size);
         if (result.is_err()) {
-            result.error().add_message(u8"");
+            result.error().add_message("");
             return result;
         }
 
@@ -111,13 +111,13 @@ namespace enishi::assets_system {
 
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
         result = binary_reader.read_to_vec(vmd_data->camera_key_frames, size);
         if (result.is_err()) {
-            result.error().add_message(u8"");
+            result.error().add_message("");
             return result;
         }
 
@@ -129,13 +129,13 @@ namespace enishi::assets_system {
         std::uint32_t size; // サイズは4Byte
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
         result = binary_reader.read_to_vec(vmd_data->light_key_frames, size);
         if (result.is_err()) {
-            result.error().add_message(u8"");
+            result.error().add_message("");
             return result;
         }
 
@@ -147,13 +147,13 @@ namespace enishi::assets_system {
         std::uint32_t size; // サイズは4Byte
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
         result = binary_reader.read_to_vec(vmd_data->shadow_key_frames, size);
         if (result.is_err()) {
-            result.error().add_message(u8"");
+            result.error().add_message("");
             return result;
         }
 
@@ -165,7 +165,7 @@ namespace enishi::assets_system {
 
         auto result = binary_reader.read_to(&size);
         if (result.is_err()) {
-            result.error().add_message(u8"のサイズ読み込みに失敗しました");
+            result.error().add_message("のサイズ読み込みに失敗しました");
             return result;
         }
 
@@ -174,13 +174,13 @@ namespace enishi::assets_system {
             //
             result = binary_reader.read(&ik, sizeof(VMDIK) - sizeof(VMDIK::ik_infos));
             if (!result) {
-                result.error().add_message(u8"");
+                result.error().add_message("");
                 return result;
             }
 
             result = binary_reader.read_to_vec(ik.ik_infos, ik.count);
             if (!result) {
-                result.error().add_message(u8"");
+                result.error().add_message("");
                 return result;
             }
         }

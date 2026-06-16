@@ -1,7 +1,7 @@
 #include "d3d11_renderer.h"
 
 namespace enishi::renderer::directx {
-    void D3D11Renderer::bind(
+    void D3D11Renderer::execute(
         ID3D11DeviceContext* const context, const types::DrawCommand& command) const {
         switch (command.handle.type) {
             case types::RenderHandleType::Buffer: {
@@ -19,7 +19,7 @@ namespace enishi::renderer::directx {
             } break;
             case types::RenderHandleType::Texture: {
             } break;
-            case types::RenderHandleType::RenderTarget: {
+            case types::RenderHandleType::View: {
             } break;
             default:
                 break;
@@ -97,9 +97,54 @@ namespace enishi::renderer::directx {
         }
     }
 
+    void D3D11Renderer::bind_render_target(ID3D11DeviceContext* const context) {
+        // context->OMSetRenderTargets(8, null_rtv, nullptr);
+    }
+
     D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)
         : d3d11(std::move(d3d11))
         , resource_manager(ResourceManager{}) {
+    }
+
+    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_viewport(
+        const types::ViewportRect& config) {
+        return platform::RenderResult<types::RenderHandle>();
+    }
+
+    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_rasterizer(void) {
+        return platform::RenderResult<types::RenderHandle>();
+    }
+
+    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_image(
+        const types::ImageDescription& description) {
+        return platform::RenderResult<types::RenderHandle>();
+    }
+
+    platform::RenderResult<std::unique_ptr<platform::IRenderTargetView>>
+    D3D11Renderer::create_render_target_view(
+        types::RenderHandle image_handle, const types::ImageViewDescription& description) {
+        return platform::RenderResult<std::unique_ptr<platform::IRenderTargetView>>();
+    }
+
+    platform::RenderResult<std::unique_ptr<platform::IDepthStencilView>>
+    D3D11Renderer::create_depth_stencil_view(
+        types::RenderHandle image_handle, const types::ImageViewDescription& description) {
+        return platform::RenderResult<std::unique_ptr<platform::IDepthStencilView>>();
+    }
+
+    platform::RenderResult<std::unique_ptr<platform::IShaderResourceView>>
+    D3D11Renderer::create_shader_resource_view(
+        types::RenderHandle image_handle, const types::ImageViewDescription& description) {
+        return platform::RenderResult<std::unique_ptr<platform::IShaderResourceView,
+            std::default_delete<platform::IShaderResourceView>>>();
+    }
+
+    platform::RenderResult<std::unique_ptr<platform::IUnorderedAccessView,
+        std::default_delete<platform::IUnorderedAccessView>>>
+    D3D11Renderer::create_unordered_access_view(
+        types::RenderHandle image_handle, const types::ImageViewDescription& description) {
+        return platform::RenderResult<std::unique_ptr<platform::IUnorderedAccessView,
+            std::default_delete<platform::IUnorderedAccessView>>>();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_mesh(
@@ -141,18 +186,31 @@ namespace enishi::renderer::directx {
         const auto context = this->d3d11->get_context();
 
         for (const auto& pass : graph.passes) {
-            pass.pass_type;
+            switch (pass.pass_type) {
+                case types::RenderPassType::Lighting: {
+                } break;
+                case types::RenderPassType::Model: {
+                } break;
+                case types::RenderPassType::PostProcess: {
+                } break;
+                case types::RenderPassType::Shadow: {
+                } break;
+                case types::RenderPassType::Transparent: {
+                } break;
+                case types::RenderPassType::UI: {
+                } break;
+                default:
+                    break;
+            }
 
             pass.render_target;
-
-            // context->OMSetRenderTargets(8, null_rtv, nullptr);
 
             // context->ClearRenderTargetView(render_target_view.Get(), CLEAR_COLOR);
 
             // context->RSSetState();
 
             for (const auto& command : pass.commands) {
-                this->bind(context, command);
+                this->execute(context, command);
             }
         }
     }

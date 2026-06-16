@@ -112,7 +112,7 @@ namespace enishi::assets_system {
 
         auto result = binary_reader.read_to(&header);
         if (result.is_err()) {
-            return result.add_message(u8"ヘッダを読み込めませんでした");
+            return result.add_message("ヘッダを読み込めませんでした");
         }
 
         result = binary_reader.read_magic_number("Pmd");
@@ -130,18 +130,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"頂点情報リストサイズの取得に失敗しました");
+                return result.add_message("頂点情報リストサイズの取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->vertices, size);
             if (result.is_err()) {
-                return result.add_message(u8"頂点情報の取得に失敗しました");
+                return result.add_message("頂点情報の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"頂点情報の読み込みに成功しました");
+        // Logger::info("頂点情報の読み込みに成功しました");
         return {};
     }
 
@@ -152,18 +152,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"インデックスリストサイズの取得に失敗しました");
+                return result.add_message("インデックスリストサイズの取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->indices, size);
             if (result.is_err()) {
-                return result.add_message(u8"インデックス情報の取得に失敗しました");
+                return result.add_message("インデックス情報の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"インデックス情報の読み込みに成功しました");
+        // Logger::info("インデックス情報の読み込みに成功しました");
         return {};
     }
 
@@ -174,18 +174,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"マテリアルリストサイズの取得に失敗しました");
+                return result.add_message("マテリアルリストサイズの取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->materials, size);
             if (result.is_err()) {
-                return result.add_message(u8"マテリアル情報の取得に失敗しました");
+                return result.add_message("マテリアル情報の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"マテリアル情報の読み込みに成功しました");
+        // Logger::info("マテリアル情報の読み込みに成功しました");
         return {};
     }
 
@@ -196,18 +196,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーンリストサイズの取得に失敗しました");
+                return result.add_message("ボーンリストサイズの取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->bones, size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーン情報の取得に失敗しました");
+                return result.add_message("ボーン情報の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"ボーン情報の読み込みに成功しました");
+        // Logger::info("ボーン情報の読み込みに成功しました");
         return {};
     }
 
@@ -218,7 +218,7 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"IKリストサイズの取得に失敗しました");
+                return result.add_message("IKリストサイズの取得に失敗しました");
             }
         }
 
@@ -229,7 +229,7 @@ namespace enishi::assets_system {
             {
                 auto result = binary_reader.read(&ik, sizeof(PMDIK) - sizeof(PMDIK::chain));
                 if (result.is_err()) {
-                    return result.add_message(u8"IK情報の取得に失敗しました");
+                    return result.add_message("IK情報の取得に失敗しました");
                 }
             }
 
@@ -237,12 +237,12 @@ namespace enishi::assets_system {
             {
                 auto result = binary_reader.read_to_vec(ik.chain, ik.chain_length);
                 if (result.is_err()) {
-                    return result.add_message(u8"IKのリンク情報の取得に失敗しました");
+                    return result.add_message("IKのリンク情報の取得に失敗しました");
                 }
             }
         }
 
-        // Logger::info(u8"IK情報の読み込みに成功しました");
+        // Logger::info("IK情報の読み込みに成功しました");
         return {};
     }
 
@@ -253,7 +253,7 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"モーフリストサイズの取得に失敗しました");
+                return result.add_message("モーフリストサイズの取得に失敗しました");
             }
         }
 
@@ -265,7 +265,7 @@ namespace enishi::assets_system {
                 auto result =
                     binary_reader.read(&morph, sizeof(PMDMorph) - sizeof(PMDMorph::vertices));
                 if (result.is_err()) {
-                    return result.add_message(u8"モーフ情報の取得に失敗しました");
+                    return result.add_message("モーフ情報の取得に失敗しました");
                 }
             }
 
@@ -273,12 +273,12 @@ namespace enishi::assets_system {
             {
                 auto result = binary_reader.read_to_vec(morph.vertices, morph.vertex_count);
                 if (result.is_err()) {
-                    return result.add_message(u8"モーフの頂点情報の取得に失敗しました");
+                    return result.add_message("モーフの頂点情報の取得に失敗しました");
                 }
             }
         }
 
-        // Logger::info(u8"モーフ情報の読み込みに成功しました");
+        // Logger::info("モーフ情報の読み込みに成功しました");
         return {};
     }
 
@@ -289,18 +289,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"モーフの表示リストのサイズ取得に失敗しました");
+                return result.add_message("モーフの表示リストのサイズ取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->display_morphs, size);
             if (result.is_err()) {
-                return result.add_message(u8"モーフの表示リスト取得に失敗しました");
+                return result.add_message("モーフの表示リスト取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"モーフ表示情報の読み込みに成功しました");
+        // Logger::info("モーフ表示情報の読み込みに成功しました");
         return {};
     }
 
@@ -311,18 +311,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーン枠名リストのサイズ取得に失敗しました");
+                return result.add_message("ボーン枠名リストのサイズ取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->bone_frame_name, size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーン枠名の取得に失敗しました");
+                return result.add_message("ボーン枠名の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"ボーン枠名情報の読み込みに成功しました");
+        // Logger::info("ボーン枠名情報の読み込みに成功しました");
         return {};
     }
 
@@ -333,18 +333,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーン表示名リストの取得に失敗しました");
+                return result.add_message("ボーン表示名リストの取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->display_bones, size);
             if (result.is_err()) {
-                return result.add_message(u8"ボーン表示名の取得に失敗しました");
+                return result.add_message("ボーン表示名の取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"ボーン表示名情報の読み込みに成功しました");
+        // Logger::info("ボーン表示名情報の読み込みに成功しました");
         return {};
     }
 
@@ -355,13 +355,13 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&eng_dict->is_support);
             if (result.is_err()) {
-                return result.add_message(u8"英名対応フラグの取得に失敗しました");
+                return result.add_message("英名対応フラグの取得に失敗しました");
             }
         }
 
         // 英語非対応の場合はそのまま次へ
         if (eng_dict->is_support == 0) {
-            // Logger::info(u8"このモデルは英名対応していません");
+            // Logger::info("このモデルは英名対応していません");
             return {};
         }
 
@@ -369,14 +369,14 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&eng_dict->model_name);
             if (result.is_err()) {
-                return result.add_message(u8"モデル名(英名)取得に失敗しました");
+                return result.add_message("モデル名(英名)取得に失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to(&eng_dict->comment);
             if (result.is_err()) {
-                return result.add_message(u8"コメント(英名)取得に失敗しました");
+                return result.add_message("コメント(英名)取得に失敗しました");
             }
         }
 
@@ -384,7 +384,7 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to_vec(eng_dict->bone_name, pmd_data->bones.size());
             if (result.is_err()) {
-                return result.add_message(u8"ボーン名(英名)取得に失敗しました");
+                return result.add_message("ボーン名(英名)取得に失敗しました");
             }
         }
 
@@ -392,7 +392,7 @@ namespace enishi::assets_system {
             auto result =
                 binary_reader.read_to_vec(eng_dict->skin_name, pmd_data->morphs.size() - 1);
             if (result.is_err()) {
-                return result.add_message(u8"スキン名(英名)取得に失敗しました");
+                return result.add_message("スキン名(英名)取得に失敗しました");
             }
         }
 
@@ -400,11 +400,11 @@ namespace enishi::assets_system {
             auto result =
                 binary_reader.read_to_vec(eng_dict->display_name, pmd_data->bone_frame_name.size());
             if (result.is_err()) {
-                return result.add_message(u8"ボーン枠名(英名)取得に失敗しました");
+                return result.add_message("ボーン枠名(英名)取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"英名対応辞書の読み込みに成功しました");
+        // Logger::info("英名対応辞書の読み込みに成功しました");
         return {};
     }
 
@@ -413,11 +413,11 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&pmd_data->toon_textures.file_names);
             if (result.is_err()) {
-                return result.add_message(u8"トゥーンテクスチャの取得に失敗しました");
+                return result.add_message("トゥーンテクスチャの取得に失敗しました");
             }
         }
 
-        // Logger::info(u8"トゥーンテクスチャの読み込みに成功しました");
+        // Logger::info("トゥーンテクスチャの読み込みに成功しました");
         return {};
     }
 
@@ -428,18 +428,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"剛体情報リストのサイズ読み込みに失敗しました");
+                return result.add_message("剛体情報リストのサイズ読み込みに失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->rigid_bodies, size);
             if (result.is_err()) {
-                return result.add_message(u8"剛体情報の読み込みに失敗しました");
+                return result.add_message("剛体情報の読み込みに失敗しました");
             }
         }
 
-        // Logger::info(u8"剛体情報の読み込みに成功しました");
+        // Logger::info("剛体情報の読み込みに成功しました");
         return {};
     }
 
@@ -450,18 +450,18 @@ namespace enishi::assets_system {
         {
             auto result = binary_reader.read_to(&size);
             if (result.is_err()) {
-                return result.add_message(u8"物理ジョイントリストのサイズ読み込みに失敗しました");
+                return result.add_message("物理ジョイントリストのサイズ読み込みに失敗しました");
             }
         }
 
         {
             auto result = binary_reader.read_to_vec(pmd_data->physics_joints, size);
             if (result.is_err()) {
-                return result.add_message(u8"物理ジョイント情報の読み込みに失敗しました");
+                return result.add_message("物理ジョイント情報の読み込みに失敗しました");
             }
         }
 
-        // Logger::info(u8"物理ジョイント情報の読み込みに成功しました");
+        // Logger::info("物理ジョイント情報の読み込みに成功しました");
         return {};
     }
 

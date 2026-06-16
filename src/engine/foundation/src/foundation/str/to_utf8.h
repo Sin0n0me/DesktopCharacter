@@ -1,4 +1,9 @@
 #pragma once
-#include <>
+#include "../result/result.h"
+#include "str.h"
+#include <unicode/ucnv.h>
+#include <unicode/unistr.h>
 
-namespace enishi ::foundation {}
+namespace enishi ::foundation {
+    EngineResult<UTF8, StringError> sjis_to_utf8(const std::string& sjis);
+} // namespace enishi::foundation

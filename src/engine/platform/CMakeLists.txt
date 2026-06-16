@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(FOUNDATION)
 set(DEPENDENCIES
     engine_types
     foundation
+    glm
 )
 
 #

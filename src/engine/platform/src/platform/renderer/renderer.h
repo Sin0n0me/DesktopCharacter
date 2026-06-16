@@ -1,11 +1,13 @@
 #pragma once
 #include "../errors/renderer_errors.h"
+#include "image_view.h"
 #include <engine_types/assets/model/mesh_data.h>
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>
+#include <engine_types/renderer/description/image_description.h>
 #include <engine_types/renderer/render_graph.h>
 #include <engine_types/renderer/render_handle.h>
-#include <engine_types/window/window_handle.h>
+#include <engine_types/renderer/viewport.h>
 #include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
 
@@ -19,19 +21,41 @@ namespace enishi::platform {
       public:
         virtual ~IRenderer(void) noexcept = default;
 
-        virtual RenderResult<types::RenderHandle> create_view_port(
-            const types::WindowPosition& left_top_position,
-            const types::WindowSize& size,
-            const float min_depth,
-            const float max_depth) = 0;
+        [[nodiscard]]
+        virtual RenderResult<types::RenderHandle> create_viewport(
+            const types::ViewportRect& config) = 0;
 
-        virtual RenderResult<types::RenderHandle> create_render_target(void) = 0;
+        [[nodiscard]]
+        virtual RenderResult<types::RenderHandle> create_rasterizer(void) = 0;
 
+        [[nodiscard]]
+        virtual RenderResult<types::RenderHandle> create_image(
+            const types::ImageDescription& description) = 0;
+
+        [[nodiscard]]
+        virtual RenderResult<std::unique_ptr<IRenderTargetView>> create_render_target_view(
+            types::RenderHandle image_handle, const types::ImageViewDescription& description) = 0;
+
+        [[nodiscard]]
+        virtual RenderResult<std::unique_ptr<IDepthStencilView>> create_depth_stencil_view(
+            types::RenderHandle image_handle, const types::ImageViewDescription& description) = 0;
+
+        [[nodiscard]]
+        virtual RenderResult<std::unique_ptr<IShaderResourceView>> create_shader_resource_view(
+            types::RenderHandle image_handle, const types::ImageViewDescription& description) = 0;
+
+        [[nodiscard]]
+        virtual RenderResult<std::unique_ptr<IUnorderedAccessView>> create_unordered_access_view(
+            types::RenderHandle image_handle, const types::ImageViewDescription& description) = 0;
+
+        [[nodiscard]]
         virtual RenderResult<types::RenderHandle> create_mesh(const types::MeshData& mesh) = 0;
 
+        [[nodiscard]]
         virtual RenderResult<types::RenderHandle> create_texture(
             const types::TextureData& texture) = 0;
 
+        [[nodiscard]]
         virtual RenderResult<types::RenderHandle> create_shader(
             const types::ShaderData& shader) = 0;
 

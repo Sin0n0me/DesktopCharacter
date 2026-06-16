@@ -21,11 +21,9 @@ namespace enishi::renderer::directx {
 
     foundation::VoidResult<DirectXError> ShaderReflection::load(void) noexcept {
         D3D11_SHADER_DESC shader_desc{};
-        {
-            const HRESULT hr = this->reflector->GetDesc(&shader_desc);
-            if (FAILED(hr)) {
-                return foundation::Error(DirectXError::ShaderReflectionError);
-            }
+        const HRESULT hr = this->reflector->GetDesc(&shader_desc);
+        if (FAILED(hr)) {
+            return foundation::Error(DirectXError::ShaderReflectionError);
         }
 
         for (std::uint32_t i = 0; i < shader_desc.BoundResources; ++i) {
@@ -93,6 +91,7 @@ namespace enishi::renderer::directx {
             }
         }
 
+        /*
         const D3D11_INPUT_ELEMENT_DESC element_desc = {
             .SemanticName = param_desc.SemanticName,
             .SemanticIndex = param_desc.SemanticIndex,
@@ -102,6 +101,7 @@ namespace enishi::renderer::directx {
             .InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
             .InstanceDataStepRate = 0,
         };
+        */
 
         return {};
     }
@@ -110,14 +110,10 @@ namespace enishi::renderer::directx {
         const types::ShaderData& data) {
         ShaderReflection reflection;
 
-        {
-            const HRESULT hr = D3DReflect(data.code.data(),
-                data.code.size(),
-                IID_PPV_ARGS(reflection.reflector.GetAddressOf()));
-
-            if (FAILED(hr)) {
-                return foundation::Error(DirectXError::ShaderReflectionError);
-            }
+        const HRESULT hr = D3DReflect(
+            data.code.data(), data.code.size(), IID_PPV_ARGS(reflection.reflector.GetAddressOf()));
+        if (FAILED(hr)) {
+            return foundation::Error(DirectXError::ShaderReflectionError);
         }
 
         return foundation::EngineResult<ShaderReflection, DirectXError>();

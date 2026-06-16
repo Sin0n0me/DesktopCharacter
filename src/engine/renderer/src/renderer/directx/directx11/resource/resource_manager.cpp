@@ -6,14 +6,14 @@ namespace enishi::renderer::directx {
         // 頂点バッファ作成
         auto result_vertex = this->make_vertex_buffer(device, mesh_data.vertices);
         if (result_vertex.is_err()) {
-            return result_vertex.add_message(u8"メッシュの作成に失敗しました").error();
+            return result_vertex.add_message("メッシュの作成に失敗しました").error();
         }
         const auto vertex_handle = result_vertex.value();
 
         // インデックスバッファ作成
         const auto result_index = this->make_index_buffer(device, mesh_data.indices);
         if (result_index.is_err()) {
-            return result_vertex.add_message(u8"メッシュの作成に失敗しました").error();
+            return result_vertex.add_message("メッシュの作成に失敗しました").error();
         }
         const auto index_handle = result_index.value();
 
@@ -78,8 +78,7 @@ namespace enishi::renderer::directx {
         };
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
-            return foundation::Error(
-                DirectXError::BufferError, u8"頂点バッファの作成に失敗しました");
+            return foundation::Error(DirectXError::BufferError, "頂点バッファの作成に失敗しました");
         }
 
         const types::HandleId handle = this->handle_allocator.create();
@@ -127,7 +126,7 @@ namespace enishi::renderer::directx {
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
             return foundation::Error(
-                DirectXError::BufferError, u8"インデックスバッファの作成に失敗しました");
+                DirectXError::BufferError, "インデックスバッファの作成に失敗しました");
         }
 
         const types::HandleId handle = this->handle_allocator.create();
@@ -158,8 +157,7 @@ namespace enishi::renderer::directx {
         };
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
-            return foundation::Error(
-                DirectXError::BufferError, u8"定数バッファの作成に失敗しました");
+            return foundation::Error(DirectXError::BufferError, "定数バッファの作成に失敗しました");
         }
 
         const types::HandleId handle = this->handle_allocator.create();
@@ -197,7 +195,7 @@ namespace enishi::renderer::directx {
         const HRESULT hr =
             device->CreateTexture2D(&desc, &subresource, texture.texture.GetAddressOf());
         if (FAILED(hr)) {
-            return foundation::Error(DirectXError::BufferError, u8"テクスチャの作成に失敗しました");
+            return foundation::Error(DirectXError::BufferError, "テクスチャの作成に失敗しました");
         }
 
         const types::HandleId handle = this->handle_allocator.create();

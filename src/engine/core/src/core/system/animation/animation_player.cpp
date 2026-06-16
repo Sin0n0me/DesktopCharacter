@@ -14,7 +14,7 @@ namespace enishi::core {
                 continue;
             }
             const auto index = iter->second;
-            rotate *= bone.rotations[index];
+            rotate = bone.rotations[index] * rotate;
         }
 
         // 列優先なので M = T * R * S
@@ -64,7 +64,6 @@ namespace enishi::core {
 
     void AnimationPlayer::apply_animation(component::AnimationComponent& animation,
         const component::ModelComponent& model,
-        const component::SkeletonComponent& skeleton,
         const types::BoneIndex index) {
     }
 

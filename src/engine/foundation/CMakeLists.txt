@@ -3,33 +3,16 @@ project(foundation)
 
 # 依存設定
 set(DEPENDENCIES)
-include(ExternalProject)
 
-ExternalProject_Add(
-    ICU
-    GIT_REPOSITORY git@github.com:unicode-org/icu.git
-    GIT_TAG "release-78.3"
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS ON
-    SOURCE_SUBDIR  icu4c/source
-    PREFIX ${CMAKE_BINARY_DIR}/icu
-    INSTALL_DIR "${CMAKE_BINARY_DIR}/icu_install"
-    CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        -DICU_BUILD_TESTS=OFF
-        -DICU_BUILD_SAMPLES=OFF
-        -DICU_BUILD_TOOLS=OFF
-    INSTALL_COMMAND make install    
-)
+find_package(ICU REQUIRED COMPONENTS uc data)
 
 set(DEPENDENCIES
-    icuuc
-    icudata
-    icui18n
+    ICU::uc
+    ICU::data
 )
 
 #
-# 以降は触らなくて良い
+# 以降は触らなくて良い(基盤なのでPUBLICになっている)
 #
 
 # MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
@@ -49,7 +32,7 @@ add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 23

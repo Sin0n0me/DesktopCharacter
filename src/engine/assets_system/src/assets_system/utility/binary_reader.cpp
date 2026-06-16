@@ -10,13 +10,13 @@ namespace enishi::assets_system {
 
         // 念のためファイルが存在するかチェック
         if (!std::filesystem::exists(path)) {
-            return foundation::Error(IOError::FileNotFound,
-                path.u8string() + u8" というパスもしくはファイルは存在しません");
+            return foundation::Error(
+                IOError::FileNotFound, path.string() + " というパスもしくはファイルは存在しません");
         }
 
         reader.file = std::ifstream(path, std::ios::binary | std::ios::in);
         if (!reader.file.is_open()) {
-            return foundation::Error(IOError::PermissionDenied, u8"ファイルが開けませんでした");
+            return foundation::Error(IOError::PermissionDenied, "ファイルが開けませんでした");
         }
 
         return std::move(reader);
@@ -24,13 +24,13 @@ namespace enishi::assets_system {
 
     IOReuslt<void> BinaryReader::read(void* data, const int size) {
         if (this->file.bad()) {
-            return foundation::Error(IOError::BrokenStream, u8"streamが壊れています");
+            return foundation::Error(IOError::BrokenStream, "streamが壊れています");
         }
 
         this->file.read(reinterpret_cast<char*>(data), size);
 
         if (this->file.fail()) {
-            return foundation::Error(IOError::ReadFailed, u8"ファイルの読み取りに失敗しました");
+            return foundation::Error(IOError::ReadFailed, "ファイルの読み取りに失敗しました");
         }
 
         const auto read_size = this->file.gcount();
@@ -39,7 +39,7 @@ namespace enishi::assets_system {
                 "正常に読み取りができませんでした\n期待したサイズ: {}\n実際に読み取ったサイズ: {}",
                 size,
                 read_size);
-            return foundation::Error(IOError::InvalidData, std::u8string(mes.begin(), mes.end()));
+            return foundation::Error(IOError::InvalidData, std::string(mes.begin(), mes.end()));
         }
 
         return {};
@@ -66,7 +66,7 @@ namespace enishi::assets_system {
         const std::streampos saved_pos = file.tellg();
         if (saved_pos == std::streampos(-1)) {
             return foundation::Error(
-                IOError::InvalidStreamPosition, u8"Streamが無効な位置を指しています");
+                IOError::InvalidStreamPosition, "Streamが無効な位置を指しています");
         }
 
         // 先頭に戻す
@@ -87,8 +87,7 @@ namespace enishi::assets_system {
         if (std::strncmp(buff.get(), expect.c_str(), size) != 0) {
             std::string mes = std::format(
                 "予期しないファイルヘッダです\n期待した値: {}\n実際の値: {}", expect, size);
-            return foundation::Error(
-                IOError::MismatchHeader, std::u8string(mes.begin(), mes.end()));
+            return foundation::Error(IOError::MismatchHeader, std::string(mes.begin(), mes.end()));
         }
 
         return {};

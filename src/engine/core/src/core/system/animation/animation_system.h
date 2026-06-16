@@ -4,7 +4,6 @@
 #include <component/animation_component.h>
 #include <component/ik_component.h>
 #include <component/model_component.h>
-#include <component/skeleton_component.h>
 #include <component/transform_component.h>
 #include <ecs/registory.h>
 #include <engine_types/assets/model/bone.h>
@@ -23,7 +22,6 @@ namespace enishi::core {
       private:
         void animation(component::AnimationComponent& animation,
             const component::ModelComponent& model,
-            const component::SkeletonComponent& skeleton,
             const component::IKComponent& ik);
     };
 } // namespace enishi::core

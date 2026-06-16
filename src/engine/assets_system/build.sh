@@ -1,4 +1,0 @@
-
-
-cmake -B build -S .
-

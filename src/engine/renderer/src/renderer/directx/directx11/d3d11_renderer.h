@@ -15,13 +15,31 @@ namespace enishi::renderer::directx {
         ResourceManager resource_manager;
 
       private:
-        void bind(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
+        void execute(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
         void bind_buffer(ID3D11DeviceContext* const context, const Buffer& buffer) const;
         void bind_shader(ID3D11DeviceContext* const context, const types::HandleId id) const;
+        void bind_render_target(ID3D11DeviceContext* const context);
 
       public:
         explicit D3D11Renderer(std::unique_ptr<D3D11> d3d11);
 
+        platform::RenderResult<types::RenderHandle> create_viewport(
+            const types::ViewportRect& config) override;
+        platform::RenderResult<types::RenderHandle> create_rasterizer(void) override;
+        platform::RenderResult<types::RenderHandle> create_image(
+            const types::ImageDescription& description) override;
+        platform::RenderResult<std::unique_ptr<platform::IRenderTargetView>>
+        create_render_target_view(types::RenderHandle image_handle,
+            const types::ImageViewDescription& description) override;
+        platform::RenderResult<std::unique_ptr<platform::IDepthStencilView>>
+        create_depth_stencil_view(types::RenderHandle image_handle,
+            const types::ImageViewDescription& description) override;
+        platform::RenderResult<std::unique_ptr<platform::IShaderResourceView>>
+        create_shader_resource_view(types::RenderHandle image_handle,
+            const types::ImageViewDescription& description) override;
+        platform::RenderResult<std::unique_ptr<platform::IUnorderedAccessView>>
+        create_unordered_access_view(types::RenderHandle image_handle,
+            const types::ImageViewDescription& description) override;
         platform::RenderResult<types::RenderHandle> create_mesh(
             const types::MeshData& mesh) override;
         platform::RenderResult<types::RenderHandle> create_texture(

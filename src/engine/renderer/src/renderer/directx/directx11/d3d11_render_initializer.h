@@ -7,7 +7,7 @@ namespace enishi::renderer::directx {
     class D3D11RenderInitializer : public platform::IRendererInitializer<D3D11Renderer> {
       public:
         foundation::EngineResult<std::unique_ptr<D3D11Renderer>, platform::RenderError> init(
-            const platform::NativeWindowHandle& native_handle,
+            const platform::WindowHandle& window_handle,
             const types::WindowSize& window_size) override;
     };
 } // namespace enishi::renderer::directx

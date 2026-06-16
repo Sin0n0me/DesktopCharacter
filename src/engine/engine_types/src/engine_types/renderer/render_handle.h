@@ -10,7 +10,7 @@ namespace enishi::types {
         Texture,
         Shader,
         Buffer,
-        RenderTarget,
+        View,
     };
 
     struct RenderHandle {
@@ -22,6 +22,6 @@ namespace enishi::types {
 
     constexpr static RenderHandle DEFAULT_RENDER_TARGET = RenderHandle{
         .id = details::INVALID_HANDLE_ID,
-        .type = RenderHandleType::RenderTarget,
+        .type = RenderHandleType::View,
     };
 } // namespace enishi::types

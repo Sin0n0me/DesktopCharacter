@@ -3,7 +3,6 @@
 #include <component/ik_component.h>
 #include <component/model_component.h>
 #include <component/physics_component.h>
-#include <component/skeleton_component.h>
 #include <ecs/registory.h>
 #include <engine_types/assets/animation/animation.h>
 #include <engine_types/assets/model/bone.h>
@@ -31,7 +30,6 @@ namespace enishi::core {
 
         static void apply_animation(component::AnimationComponent& animation,
             const component::ModelComponent& model,
-            const component::SkeletonComponent& skeleton,
             const types::BoneIndex index);
 
         static void apply_ik(component::AnimationComponent& animation,
@@ -42,10 +40,5 @@ namespace enishi::core {
         static void apply_physics(component::AnimationComponent& animation,
             const component::ModelComponent& model,
             const types::BoneIndex index);
-
-      private:
-        static void limited_ccd_ik();
-
-        static void ccd_ik();
     };
 } // namespace enishi::core

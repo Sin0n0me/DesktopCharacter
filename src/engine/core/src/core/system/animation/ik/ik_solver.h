@@ -2,7 +2,6 @@
 #include <component/animation_component.h>
 #include <component/ik_component.h>
 #include <component/model_component.h>
-#include <engine_types/assets/animation/animation.h>
 #include <engine_types/assets/model/bone.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>

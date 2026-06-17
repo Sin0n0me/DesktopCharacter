@@ -15,5 +15,7 @@ namespace enishi::core {
 
             // そもそも登録が頻繁に呼ばれないので毎回ソートでよい
         }
+
+        void update();
     };
 } // namespace enishi::core

@@ -1,7 +1,7 @@
 #include "application.h"
 
-namespace enishi {
-    int main(void) {
-        return 0;
-    }
+int main(void) {
+    enishi::core::SystemScheduler s;
+
+    return 0;
 }

@@ -1,7 +1,8 @@
 #pragma once
+#include "../linear_interpolation/linear_interpolation.h"
+#include <array>
 #include <assets_system/animation/vmd/vmd_data.h>
 #include <assets_system/model/interface_bone_resolver.h>
-#include <engine_types/assets/animation/animation.h>
 
 namespace enishi::animation {
     struct VMDBezier {

@@ -23,12 +23,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(COMPONENT)
 
+FetchContent_Declare(
+    ANIMATION
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../animation
+)
+FetchContent_MakeAvailable(ANIMATION)
+
 
 set(DEPENDENCIES
     platform
     ecs
     component
-    #animation
+    animation
     glm
     engine_types
     foundation

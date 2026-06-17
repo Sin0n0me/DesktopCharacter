@@ -1,3 +1,3 @@
 #pragma once
-
-namespace enishi {}
+#include <core/system/system_scheduler.h>
+#include <ui/ui.h>

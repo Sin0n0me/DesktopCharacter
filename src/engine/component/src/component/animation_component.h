@@ -43,5 +43,6 @@ namespace enishi::component {
         std::vector<MultiplyOrder> multiply_order;
         std::vector<AnimationBuffer> bone_buffer; // ボーンごとの中間データ
         std::vector<glm::mat4> bone_matrices;     // 最終結果(GPU送信用)
+        float elapsed_time;                       // 経過時間
     };
 } // namespace enishi::component

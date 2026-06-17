@@ -1,13 +1,13 @@
 #pragma once
-#include "interpolation.h"
+#include "vmd_interpolation_data.h"
 
 namespace enishi::animation {
     VMDBezier VMDBezier::make_animation_bezier(
         const std::array<std::uint8_t, 64>& interpolation, const size_t offset) {
-        const int x0 = interpolation[0 + offset];
-        const int y0 = interpolation[4 + offset];
-        const int x1 = interpolation[8 + offset];
-        const int y1 = interpolation[12 + offset];
+        const std::uint8_t x0 = interpolation[0 + offset];
+        const std::uint8_t y0 = interpolation[4 + offset];
+        const std::uint8_t x1 = interpolation[8 + offset];
+        const std::uint8_t y1 = interpolation[12 + offset];
 
         return VMDBezier{
             .x1 = static_cast<float>(x0) / 127.0f,
@@ -19,10 +19,10 @@ namespace enishi::animation {
 
     VMDBezier VMDBezier::make_camera_bezier(
         const std::array<std::uint8_t, 64>& interpolation, const size_t offset) {
-        const int x0 = interpolation[0 + offset];
-        const int y0 = interpolation[1 + offset];
-        const int x1 = interpolation[2 + offset];
-        const int y1 = interpolation[3 + offset];
+        const std::uint8_t x0 = interpolation[0 + offset];
+        const std::uint8_t y0 = interpolation[1 + offset];
+        const std::uint8_t x1 = interpolation[2 + offset];
+        const std::uint8_t y1 = interpolation[3 + offset];
 
         return VMDBezier{
             .x1 = static_cast<float>(x0) / 127.0f,
@@ -53,13 +53,14 @@ namespace enishi::animation {
         float start = 0.0f;
         float stop = 1.0f;
         float t2 = 0.5f;
-        for (float x = this->eval_x(t2); EPSILON < std::abs(t - x); x = this->eval_x(t2)) {
+        for (float x = this->eval_x(t2); EPSILON < std::abs(t - x);) {
             if (t < x) {
                 stop = t2;
             } else {
                 start = t2;
             }
             t2 = (stop + start) * 0.5f;
+            x = this->eval_x(t2);
         }
 
         return t2;

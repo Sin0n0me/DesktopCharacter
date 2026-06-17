@@ -2,16 +2,33 @@ cmake_minimum_required (VERSION 3.12)
 project(enishi)
 
 # 以下依存設定
-# 外部
+include(FetchContent)
+
+FetchContent_Declare(
+    CORE
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine/core
+)
+FetchContent_MakeAvailable(CORE)
+
+FetchContent_Declare(
+    PLATFORM_IMPL
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine/platform_impl
+)
+FetchContent_MakeAvailable(PLATFORM_IMPL)
+
+
+FetchContent_Declare(
+    UI
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine/ui
+)
+FetchContent_MakeAvailable(UI)
+
 set(DEPENDENCIES
-    SDL3::SDL3
+    core
+    platform_impl
+    ui
 )
 
-# ローカル
-set(DEPENDENT_DIRS
-    "../renderer"
-    "../assets_system"
-)
 
 #
 # 以降は触らなくて良い
@@ -23,19 +40,12 @@ if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
 endif()
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
-    "src/*.h"
-    "src/*.c"
-    "src/*.hpp"
-    "src/*.cpp"
+set(SOURCES
+    "application.h"
+    "application.cpp"
 )
 
-foreach(dir_path IN LISTS DEPENDENT_DIRS)
-    get_filename_component(dir_name "${dir_path}" NAME)
-    add_subdirectory("${dir_path}" "${CMAKE_CURRENT_BINARY_DIR}/build_${dir_name}")
-endforeach()
-
-add_library(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src/${PROJECT_NAME}/interface)
 

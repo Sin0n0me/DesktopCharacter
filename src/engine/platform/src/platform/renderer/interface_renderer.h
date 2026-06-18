@@ -1,6 +1,6 @@
 #pragma once
 #include "../errors/renderer_errors.h"
-#include "image_view.h"
+#include "interface_image_view.h"
 #include <engine_types/assets/model/mesh_data.h>
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>
@@ -10,6 +10,7 @@
 #include <engine_types/renderer/viewport.h>
 #include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
+#include "interface_pipeline_layout.h"
 
 namespace enishi::platform {
     template <typename T>
@@ -24,6 +25,12 @@ namespace enishi::platform {
         [[nodiscard]]
         virtual RenderResult<types::RenderHandle> create_viewport(
             const types::ViewportRect& config) = 0;
+
+        [[nodiscard]]
+        virtual RenderResult<std::unique_ptr<IPipelineLayout>>
+        create_pipeline_layout(const types::VertexLayout& layout,
+            const types::RenderHandle& vertex_shader,
+            const types::RenderHandle& pixel_shader) = 0;
 
         [[nodiscard]]
         virtual RenderResult<types::RenderHandle> create_rasterizer(void) = 0;

@@ -13,6 +13,12 @@ namespace enishi::animation {
             // return;
         }
 
+        /*
+        if (FrameConverter::write_morph_track(clip_data.morph_tracks, data.morph_key_frames)
+                .is_err()) {
+        }
+        */
+
         return clip_data;
     }
 
@@ -52,7 +58,7 @@ namespace enishi::animation {
             BoneTrack& bone_track = bone_tracks[tmep[bone_index]];
 
             // フレーム単位なので時間に変換
-            float time = static_cast<float>(bone_key_frame.frame) / assets_system::VMD_FPS;
+            const float time = static_cast<float>(bone_key_frame.frame) / assets_system::VMD_FPS;
             bone_track.positions.times.emplace_back(time);
             bone_track.rotations.times.emplace_back(time);
 
@@ -73,6 +79,62 @@ namespace enishi::animation {
 
             bone_track.positions.values.emplace_back(translate);
             bone_track.rotations.values.emplace_back(rotate);
+        }
+
+        return {};
+    }
+
+    foundation::VoidResult<AnimationError> FrameConverter::write_morph_track(
+        std::vector<MorphTrack>& morph_tracks,
+        const std::vector<assets_system::VMDMorphKeyFrame>& morph_key_frames,
+        const assets_system::IMorphResolver* resolver) {
+        std::unordered_map<std::uint32_t, std::uint32_t> tmep;
+
+        for (const auto& key_frames : morph_key_frames) {
+            const auto utf8 = foundation::sjis_to_utf8(key_frames.morph_name);
+            if (utf8.is_err()) {
+                foundation::Logger::warning("UTF8に変換できない文字が含まれています");
+                continue;
+            }
+
+            const auto opt_index = resolver->resolve_index(utf8.value());
+            if (opt_index.is_none()) {
+                foundation::Logger::warning("モデルに存在しないボーンが含まれています");
+                continue;
+            };
+            const auto index = opt_index.value();
+
+            // 0はすべてのベースなので除外
+            if (index == 0) {
+                continue;
+            }
+
+            // 意図したものかはわからないので警告は出す
+            if (key_frames.weight < 0) {
+                foundation::Logger::warning("モーフに符号がマイナスのウエイトがあります");
+            }
+
+            if (!tmep.contains(index)) {
+                const auto track_index = morph_tracks.size() - 1;
+                tmep[index] = track_index;
+
+                // 初回追加時のみ
+                if (track_index == 0) {
+                    MorphTrack& bone_track = morph_tracks[0];
+                    bone_track.morph_index = index;
+
+                    // モーフは通常の線形補間
+                    bone_track.weights.interpolation_type = InterpolationType::Linear;
+                }
+            }
+
+            MorphTrack& morph_track = morph_tracks[tmep[index]];
+
+            // フレーム単位なので時間に変換
+            const float time = static_cast<float>(key_frames.frame) / assets_system::VMD_FPS;
+            morph_track.weights.times.emplace_back(time);
+
+            morph_track.weights.values.emplace_back(key_frames.weight);
         }
 
         return {};

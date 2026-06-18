@@ -10,7 +10,7 @@ namespace enishi::animation {
         std::string name;
         std::vector<BoneTrack> bone_tracks;
         std::vector<MorphTrack> morph_tracks;
-        std::vector<MorphTrack> ik_tracks;
+        std::vector<IKTrack> ik_tracks;
         float duration; // 秒
         bool is_looping;
     };

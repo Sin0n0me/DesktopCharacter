@@ -1,5 +1,5 @@
 #pragma once
-#include "../system.h"
+#include "../interface_system.h"
 #include "animation_player.h"
 #include <component/animation_component.h>
 #include <component/ik_component.h>

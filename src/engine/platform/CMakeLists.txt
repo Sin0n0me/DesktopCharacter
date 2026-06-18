@@ -31,6 +31,7 @@ set(DEPENDENCIES
 if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 

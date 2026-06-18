@@ -1,5 +1,6 @@
 #include "sdl3_window.h"
 #include <SDL3/SDL_init.h>
+#include <foundation/log/logger.h>
 #include <platform/window/common_settings.h>
 
 namespace enishi::platform_impl {
@@ -9,29 +10,47 @@ namespace enishi::platform_impl {
         }
     }
 
-    SDL3Window::SDL3Window(const platform::WindowSystem window_system, SDLWindowPtr window_ptr)
-        : window(std::move(window_ptr))
-        , window_system(window_system) {
+    SDL3Window::SDL3Window(const foundation::UTF8& window_name,
+        const types::WindowSize& size,
+        const platform::WindowSystem window_system,
+        const types::GraphicsAPI graphics_api)
+        : window_system(window_system)
+        , window(SDLWindowPtr(SDL_CreateWindow(window_name.c_str(),
+              size.width,
+              size.height,
+              SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS |
+                  SDL3Window::get_flag_from_graphics_api(graphics_api))))
+        , is_closing(false)
+        , size()
+        , position() {
     }
 
-    foundation::EngineResult<SDL3Window, platform::WindowError> SDL3Window::make(
-        const platform::WindowSystem window_system, const types::GraphicsAPI graphics_api) {
-        const SDL_WindowFlags api_flag = SDL3Window::get_flag_from_graphics_api(graphics_api);
-
-        return SDL3Window{
-            window_system,
-            SDLWindowPtr(SDL_CreateWindow(platform::ROOT_WINDOW_NAME,
-                platform::WIDTH,
-                platform::HEIGHT,
-                SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS | api_flag)),
-        };
+    SDL3Window::~SDL3Window(void) noexcept {
+        // TODO: ルートウィンドウの時だけ
+        SDL_QuitSubSystem(SDL_INIT_EVENTS);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
 
-    std::optional<const platform::IInput*> SDL3Window::get_input(void) const noexcept {
+    foundation::VoidResult<platform::WindowError> SDL3Window::init(void) noexcept {
+        // TODO: ルートウィンドウの時だけ
+        if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+            foundation::Logger::error(SDL_GetError());
+            return foundation::Error(platform::WindowError::InitError);
+        }
+
+        if (!SDL_InitSubSystem(SDL_INIT_EVENTS)) {
+            foundation::Logger::error(SDL_GetError());
+            return foundation::Error(platform::WindowError::InitError);
+        }
+
+        return {};
+    }
+
+    foundation::Option<const platform::IInput*> SDL3Window::get_input(void) const noexcept {
         return &this->input;
     }
 
-    std::optional<SDL_Window*> SDL3Window::get_window_handle(void) const {
+    foundation::Option<SDL_Window*> SDL3Window::get_window_handle(void) const {
         if (!bool(this->window)) {
             return {};
         }
@@ -80,7 +99,7 @@ namespace enishi::platform_impl {
                     props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
                 const HINSTANCE hinstance = (HINSTANCE)SDL_GetPointerProperty(
                     props, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, nullptr);
-                if (hwnd == nullptr || hwnd == nullptr) {
+                if (hwnd == nullptr || hinstance == nullptr) {
                     return {};
                 }
 
@@ -114,7 +133,7 @@ namespace enishi::platform_impl {
         return {};
     }
 
-    std::optional<platform::WindowHandle> SDL3Window::get_handle(void) const noexcept {
+    foundation::Option<platform::WindowHandle> SDL3Window::get_handle(void) const noexcept {
         const auto opt_window_handle =
             SDL3Window::get_native_handle(this->window.get(), this->window_system);
         if (opt_window_handle.is_none()) {
@@ -130,7 +149,7 @@ namespace enishi::platform_impl {
         return handle;
     }
 
-    std::optional<types::WindowPosition> SDL3Window::get_position(void) const noexcept {
+    foundation::Option<types::WindowPosition> SDL3Window::get_position(void) const noexcept {
         types::WindowPosition position{};
         if (!SDL_GetWindowPosition(this->window.get(), &position.x, &position.y)) {
             return {};
@@ -148,7 +167,7 @@ namespace enishi::platform_impl {
         return {};
     }
 
-    std::optional<types::WindowSize> SDL3Window::get_size(void) const noexcept {
+    foundation::Option<types::WindowSize> SDL3Window::get_size(void) const noexcept {
         types::WindowSize size{};
         if (!SDL_GetWindowSize(this->window.get(), &size.width, &size.height)) {
             return {};
@@ -171,16 +190,20 @@ namespace enishi::platform_impl {
         return {};
     }
 
-    std::optional<std::string> SDL3Window::get_title(void) const noexcept {
-        return std::optional<std::string>();
+    foundation::Option<std::string> SDL3Window::get_title(void) const noexcept {
+        return foundation::Option<std::string>();
     }
 
     void SDL3Window::close(void) {
+        this->is_closing = true;
+    }
+
+    bool SDL3Window::should_close(void) const {
+        return !this->is_closing;
     }
 
     void SDL3Window::poll_events(void) {
         SDL_Event event;
-
         while (SDL_PollEvent(&event)) {
             /*
             if (ImGui_ImplSDL3_ProcessEvent(&event)) {

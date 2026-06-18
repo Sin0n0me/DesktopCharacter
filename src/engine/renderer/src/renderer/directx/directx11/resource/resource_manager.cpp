@@ -219,4 +219,8 @@ namespace enishi::renderer::directx {
     const ShaderPool& ResourceManager::get_shader_pool(void) const {
         return this->resource.shaders;
     }
+
+    const ViewPool& ResourceManager::get_view_pool(void) const {
+        return this->resource.views;
+    }
 } // namespace enishi::renderer::directx

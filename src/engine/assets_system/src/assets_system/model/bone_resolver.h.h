@@ -1,5 +1,5 @@
 #pragma once
-#include "bone_data.h"
+#include "bone/bone_data.h"
 #include "interface_bone_resolver.h"
 #include <engine_types/assets/model/bone.h>
 #include <foundation/option/option.h>

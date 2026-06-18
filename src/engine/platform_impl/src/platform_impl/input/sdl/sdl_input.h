@@ -1,8 +1,8 @@
 #pragma once
 #include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_mouse.h>
-#include <platform/input/input.h>
-#include <platform/input/input_event.h>
+#include <platform/input/interface_input.h>
+#include <platform/input/interface_input_event.h>
 #include <vector>
 
 namespace enishi::platform_impl {

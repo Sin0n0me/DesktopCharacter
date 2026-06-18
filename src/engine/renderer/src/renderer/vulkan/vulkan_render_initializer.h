@@ -1,6 +1,6 @@
 #pragma once
 #include "vulkan_renderer.h"
-#include <platform/renderer/render_initializer.h>
+#include <platform/renderer/interface_render_initializer.h>
 
 namespace enishi::renderer::vulkan {
     class VullkanRenderInitializer : public platform::IRendererInitializer<VulkanRenderer> {

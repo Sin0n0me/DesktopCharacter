@@ -2,8 +2,8 @@
 #include <engine_types/handle/handle_allocator.h>
 #include <engine_types/renderer/render_handle.h>
 #include <memory>
-#include <platform/renderer/render_initializer.h>
-#include <platform/renderer/renderer.h>
+#include <platform/renderer/interface_render_initializer.h>
+#include <platform/renderer/interface_renderer.h>
 #include <unordered_map>
 
 namespace enishi::renderer::vulkan {

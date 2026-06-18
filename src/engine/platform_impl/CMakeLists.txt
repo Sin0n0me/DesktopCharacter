@@ -1,47 +1,6 @@
 cmake_minimum_required (VERSION 3.14)
 project(platform_impl)
 
-# 以下依存設定
-set(DEPENDENCIES)
-include(FetchContent)
-
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY git@github.com:libsdl-org/SDL.git
-    GIT_TAG "release-3.4.10"
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS ON
-)
-FetchContent_MakeAvailable(SDL3)
-
-FetchContent_Declare(
-    PLATFORM
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../platform
-)
-FetchContent_MakeAvailable(PLATFORM)
-
-set(DEPENDENCIES
-    SDL3::SDL3
-    platform
-    engine_types
-    foundation
-)
-
-# 各プラットフォームに応じた使用ライブラリの変更
-if(USE_WINDOWS)
-
-elseif(USE_X11)
-
-elseif(USE_WAYLAND)
-
-else()
-
-endif()
-
-#
-# 以降は触らなくて良い
-#
-
 # MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
 if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
@@ -56,6 +15,55 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 )
 
 add_library(${PROJECT_NAME} ${SOURCES})
+
+
+# 以下依存設定
+set(DEPENDENCIES)
+include(FetchContent)
+include(ExternalProject)
+
+FetchContent_Declare(
+    PLATFORM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../platform
+)
+FetchContent_MakeAvailable(PLATFORM)
+
+set(DEPENDENCIES
+    platform
+    foundation
+    engine_types
+)
+
+# 各プラットフォームに応じた使用ライブラリの変更
+if(USE_SDL3)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "USE_SDL3")
+
+    FetchContent_Declare(
+        SDL3
+        GIT_REPOSITORY git@github.com:libsdl-org/SDL.git
+        GIT_TAG "release-3.4.10"
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS ON
+    )
+    FetchContent_MakeAvailable(SDL3)
+
+    set(DEPENDENCIES 
+        ${DEPENDENCIES} 
+        PUBLIC SDL3::SDL3
+    )
+elseif(USE_WINDOWS)
+
+elseif(USE_X11)
+
+elseif(USE_WAYLAND)
+
+else()
+
+endif()
+
+#
+# 以降は触らなくて良い
+#
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 

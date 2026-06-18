@@ -31,9 +31,9 @@ FetchContent_MakeAvailable(ANIMATION)
 
 
 set(DEPENDENCIES
-    platform
-    ecs
-    component
+    PUBLIC platform
+    PUBLIC ecs
+    PUBLIC component
     animation
     glm
     engine_types

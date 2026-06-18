@@ -172,7 +172,7 @@ namespace enishi::assets_system {
         vmd_data->iks.resize(size);
         for (auto& ik : vmd_data->iks) {
             //
-            result = binary_reader.read(&ik, sizeof(VMDIK) - sizeof(VMDIK::ik_infos));
+            result = binary_reader.read(&ik, sizeof(VMDIKKeyFrame) - sizeof(VMDIKKeyFrame::ik_infos));
             if (!result) {
                 result.error().add_message("");
                 return result;
@@ -195,13 +195,13 @@ namespace enishi::assets_system {
         }
         auto& binary_reader = reader.value();
         VMDLoader loader{};
-        VMDData vmd_data{};
+        std::unique_ptr<VMDData> vmd_data = std::make_unique<VMDData>();
 
-        const auto result = loader.load_vmd(binary_reader, &vmd_data);
+        const auto result = loader.load_vmd(binary_reader, vmd_data.get());
         if (result.is_err()) {
             return std::unexpected(std::move(result.error()));
         }
 
-        return {};
+        return std::move(vmd_data);
     }
 } // namespace enishi::assets_system

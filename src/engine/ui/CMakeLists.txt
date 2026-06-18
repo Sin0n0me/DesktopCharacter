@@ -25,10 +25,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(PLATFORM)
 
 set(DEPENDENCIES
-    ${CMAKE_CURRENT_BINARY_DIR}/libs
     platform
     engine_types
     foundation
+    PUBLIC ${UI_DEPENDENT_LIBS}
 )
 
 #
@@ -51,7 +51,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
-target_include_directories(${PROJECT_NAME} PRIVATE ${UI_DEPENDENT_LIBS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${UI_DEPENDENT_LIBS} ${UI_DEPENDENT_LIBS}/imgui)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
 

@@ -2,10 +2,11 @@
 #include "../../input/sdl/sdl_input.h"
 #include <SDL3/SDL.h>
 #include <engine_types/renderer/graphics_api.h>
+#include <engine_types/window/window_types.h>
 #include <foundation/option/option.h>
 #include <foundation/result/result.h>
 #include <memory>
-#include <platform/window/window.h>
+#include <platform/window/interface_window.h>
 
 namespace enishi::platform_impl {
     struct SDLWindowDeleter {
@@ -27,27 +28,32 @@ namespace enishi::platform_impl {
         static foundation::Option<platform::NativeWindowHandle> get_native_handle(
             SDL_Window* const window, const platform::WindowSystem window_system);
 
-        explicit SDL3Window(void) = default;
-        explicit SDL3Window(const platform::WindowSystem window_system, SDLWindowPtr window_ptr);
+        explicit SDL3Window(void) = delete;
 
       public:
-        static foundation::EngineResult<SDL3Window, platform::WindowError> make(
-            const platform::WindowSystem window_system, const types::GraphicsAPI graphics_api);
+        explicit SDL3Window(const foundation::UTF8& window_name,
+            const types::WindowSize& size,
+            const platform::WindowSystem window_system,
+            const types::GraphicsAPI graphics_api);
 
-        std::optional<SDL_Window*> get_window_handle(void) const;
+        ~SDL3Window(void) noexcept;
 
-        std::optional<const platform::IInput*> get_input(void) const noexcept override;
-        std::optional<platform::WindowHandle> get_handle(void) const noexcept override;
-        std::optional<types::WindowPosition> get_position(void) const noexcept override;
+        foundation::Option<SDL_Window*> get_window_handle(void) const;
+
+        foundation::VoidResult<platform::WindowError> init(void) noexcept override;
+        foundation::Option<const platform::IInput*> get_input(void) const noexcept override;
+        foundation::Option<platform::WindowHandle> get_handle(void) const noexcept override;
+        foundation::Option<types::WindowPosition> get_position(void) const noexcept override;
         foundation::VoidResult<platform::WindowError> set_position(
             const types::WindowPosition& position) noexcept override;
-        std::optional<types::WindowSize> get_size(void) const noexcept override;
+        foundation::Option<types::WindowSize> get_size(void) const noexcept override;
         foundation::VoidResult<platform::WindowError> set_size(
             const types::WindowSize& size) noexcept override;
         foundation::VoidResult<platform::WindowError> set_title(
             const std::string& title) noexcept override;
-        std::optional<std::string> get_title(void) const noexcept override;
+        foundation::Option<std::string> get_title(void) const noexcept override;
         void close(void) override;
+        bool should_close(void) const override;
         void poll_events(void) override;
     };
 } // namespace enishi::platform_impl

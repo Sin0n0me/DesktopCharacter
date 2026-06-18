@@ -7,5 +7,6 @@ namespace enishi::platform {
         FailedSetWinodwSize,
         FailedSetWinodwPosition,
         FailedSetWinodwTitle,
+        InitError,
     };
 } // namespace enishi::platform

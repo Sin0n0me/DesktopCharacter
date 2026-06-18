@@ -49,5 +49,6 @@ namespace enishi::renderer::directx {
         [[nodiscard]] foundation::Option<const Texture&> get_texture(
             const types::HandleId handle) const;
         [[nodiscard]] const ShaderPool& get_shader_pool(void) const;
+        [[nodiscard]] const ViewPool& get_view_pool(void) const;
     };
 } // namespace enishi::renderer::directx

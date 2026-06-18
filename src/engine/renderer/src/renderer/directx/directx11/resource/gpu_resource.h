@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "shader.h"
 #include "texture.h"
+#include "view.h"
 #include <d3d11.h>
 #include <engine_types/handle/handle_type.h>
 #include <unordered_map>
@@ -13,10 +14,10 @@ namespace enishi::renderer::directx {
     }
 
     struct GPUResource {
-        ResourceMap<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> render_targets;
         ResourceMap<Microsoft::WRL::ComPtr<ID3D11RasterizerState>> rasterizers;
         ResourceMap<Buffer> buffers;
         ResourceMap<Texture> textures;
         ShaderPool shaders;
+        ViewPool views;
     };
 } // namespace enishi::renderer::directx

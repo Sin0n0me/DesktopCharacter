@@ -1,7 +1,29 @@
 cmake_minimum_required (VERSION 3.12)
 project(enishi)
 
+# MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
+if(MSVC)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
+set(SOURCES
+    "application.h"
+    "application.cpp"
+)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+#
+# フラグ設定
+#
+set(USE_SDL3 ON)
+set(USE_DIRECTX_11 ON)
+
+#
 # 以下依存設定
+#
 include(FetchContent)
 
 FetchContent_Declare(
@@ -16,6 +38,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(PLATFORM_IMPL)
 
+FetchContent_Declare(
+    RENDERER
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine/renderer
+)
+FetchContent_MakeAvailable(RENDERER)
 
 FetchContent_Declare(
     UI
@@ -23,29 +50,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(UI)
 
+FetchContent_Declare(
+    SCRIPT
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine/script
+)
+FetchContent_MakeAvailable(SCRIPT)
+
 set(DEPENDENCIES
     core
+    platform
     platform_impl
+    renderer
+    script
     ui
+    engine_types
+    foundation
 )
 
 
 #
 # 以降は触らなくて良い
 #
-
-# MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
-if(MSVC)
-    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
-    add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
-endif()
-
-set(SOURCES
-    "application.h"
-    "application.cpp"
-)
-
-add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src/${PROJECT_NAME}/interface)
 

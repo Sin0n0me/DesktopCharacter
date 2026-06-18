@@ -1,21 +1,40 @@
 #pragma once
-#include "system.h"
+#include "interface_system.h"
+#include <algorithm>
+#include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace enishi::core {
+    using Priority = std::uint32_t;
+
     class SystemScheduler {
       private:
-        std::vector<std::shared_ptr<ISystem>> system;
+        struct Entry {
+            Priority priority;
+            std::shared_ptr<ISystem> system;
+        };
+
+      private:
+        std::vector<Entry> managed_systems;
 
       public:
         template <typename T, typename... Args>
-        void register_system(const std::uint32_t priority, const Args&... arg) {
-            this->system.push_back(std::make_unique<T>(arg...));
+        std::shared_ptr<T> register_system(const Priority priority, const Args&... args) {
+            auto system = std::make_shared<T>(args...);
+            this->managed_systems.emplace_back(Entry{
+                .priority = priority,
+                .system = system,
+            });
 
-            // そもそも登録が頻繁に呼ばれないので毎回ソートでよい
+            // 初期化時にしか呼ばれないので毎回ソートで構わない
+            std::ranges::sort(this->managed_systems,
+                [](const Entry& lhs, const Entry& rhs) { return lhs.priority < rhs.priority; });
+
+            return system;
         }
 
-        void update();
+        void update(const types::DeltaTime& dt);
     };
 } // namespace enishi::core

@@ -38,11 +38,24 @@ namespace enishi::renderer::directx {
         [[nodiscard]] foundation::Option<types::ImageViewType> get_view_type(
             const types::HandleId id) const noexcept;
 
-        [[nodiscard]] foundation::Option<ID3D11VertexShader*> get_vertex_shader(
+        [[nodiscard]] foundation::Option<ID3D11DepthStencilView*> get_depth_stencil_view(
             const types::HandleId id) const noexcept;
-        [[nodiscard]] foundation::Option<ID3D11PixelShader*> get_pixel_shader(
+        [[nodiscard]] foundation::Option<ID3D11RenderTargetView*> get_render_target_view(
             const types::HandleId id) const noexcept;
-        [[nodiscard]] foundation::Option<ID3D11ComputeShader*> get_compute_shader(
+        [[nodiscard]] foundation::Option<ID3D11ShaderResourceView*> get_shader_resource_view(
             const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11UnorderedAccessView*> get_unordered_access_view(
+            const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11DepthStencilView* const*>
+        get_address_depth_stencil_view(const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11RenderTargetView* const*>
+        get_address_render_target_view(const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11ShaderResourceView* const*>
+        get_address_shader_resource_view(const types::HandleId id) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11UnorderedAccessView* const*>
+        get_address_unordered_access_view(const types::HandleId id) const noexcept;
+
+        [[nodiscard]] const std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>>&
+        get_render_targets(void) const noexcept;
     };
 } // namespace enishi::renderer::directx

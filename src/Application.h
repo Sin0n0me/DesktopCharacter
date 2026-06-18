@@ -1,3 +1,26 @@
 #pragma once
+#include <core/system/asset/asset_manager.h>
+#include <core/system/render/render_system.h>
 #include <core/system/system_scheduler.h>
+#include <core/timer/application_timer.h>
+#include <platform/renderer/interface_renderer.h>
+#include <platform/window/interface_window.h>
 #include <ui/ui.h>
+
+namespace enishi {
+    class Application {
+      private:
+        std::unique_ptr<platform::IWindow> root_window;
+        std::unique_ptr<platform::IRenderer> renderer;
+        std::shared_ptr<ecs::Registory> rsegistory;
+        std::shared_ptr<core::RenderSystem> render_system;
+        core::SystemScheduler system_scheduler;
+        core::ApplicationTimer app_timer;
+
+      public:
+        bool init(void);
+        void run(void);
+
+      private:
+    };
+} // namespace enishi

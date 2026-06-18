@@ -19,7 +19,7 @@ set(DEPENDENCIES
 )
 
 #
-# 以降は触らなくて良い
+# 以降は触らなくて良い(基盤なのでpublic)
 #
 
 # MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
@@ -39,7 +39,7 @@ add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 23

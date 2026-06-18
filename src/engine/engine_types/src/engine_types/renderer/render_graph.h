@@ -4,8 +4,14 @@
 #include <glm/glm.hpp>
 
 namespace enishi::types {
+    enum class SubCommand {
+        Bind,
+        Clear,
+    };
+
     struct DrawCommand {
         RenderHandle handle;
+        SubCommand sub_command;
     };
 
     enum class RenderPassType {

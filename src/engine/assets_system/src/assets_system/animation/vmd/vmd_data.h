@@ -12,9 +12,8 @@ namespace enishi::assets_system {
         std::vector<VMDBoneKeyFrame> bone_key_frames;
         std::vector<VMDMorphKeyFrame> morph_key_frames;
         std::vector<VMDCameraKeyframe> camera_key_frames;
-        std::vector<VMDLight> light_key_frames;
-        std::vector<VMDShadow> shadow_key_frames;
-        std::vector<VMDIKInfo> ik_infos;
-        std::vector<VMDIK> iks;
+        std::vector<VMDLightKeyFrame> light_key_frames;
+        std::vector<VMDShadowKeyFrame> shadow_key_frames;
+        std::vector<VMDIKKeyFrame> iks;
     };
 } // namespace enishi::assets_system

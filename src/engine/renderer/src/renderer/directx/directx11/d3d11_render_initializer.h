@@ -1,7 +1,7 @@
 #pragma once
 #include "d3d11.h"
 #include "d3d11_renderer.h"
-#include <platform/renderer/render_initializer.h>
+#include <platform/renderer/interface_render_initializer.h>
 
 namespace enishi::renderer::directx {
     class D3D11RenderInitializer : public platform::IRendererInitializer<D3D11Renderer> {

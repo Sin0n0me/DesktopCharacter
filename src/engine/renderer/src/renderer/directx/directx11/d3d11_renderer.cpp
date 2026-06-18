@@ -1,6 +1,8 @@
 #include "d3d11_renderer.h"
 
 namespace enishi::renderer::directx {
+    constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
     void D3D11Renderer::execute(
         ID3D11DeviceContext* const context, const types::DrawCommand& command) const {
         switch (command.handle.type) {
@@ -20,6 +22,7 @@ namespace enishi::renderer::directx {
             case types::RenderHandleType::Texture: {
             } break;
             case types::RenderHandleType::View: {
+                this->bind_render_target(context, command.handle.id);
             } break;
             default:
                 break;
@@ -97,8 +100,31 @@ namespace enishi::renderer::directx {
         }
     }
 
-    void D3D11Renderer::bind_render_target(ID3D11DeviceContext* const context) {
-        // context->OMSetRenderTargets(8, null_rtv, nullptr);
+    void D3D11Renderer::bind_render_target(
+        ID3D11DeviceContext* const context, const types::HandleId id) const {
+        const auto& view_pool = this->resource_manager.get_view_pool();
+        const auto opt_type = view_pool.get_view_type(id);
+        if (opt_type.is_none()) {
+            return;
+        }
+
+        switch (opt_type.value()) {
+            case types::ImageViewType::DepthStencil: {
+            } break;
+            case types::ImageViewType::RenderTarget: {
+                const auto opt_view = view_pool.get_address_render_target_view(id);
+                if (opt_view.is_none()) {
+                    return;
+                }
+                context->OMSetRenderTargets(1, opt_view.value(), nullptr);
+            } break;
+            case types::ImageViewType::ShaderResource: {
+            } break;
+            case types::ImageViewType::UnorderedAccess: {
+            } break;
+            default:
+                break;
+        }
     }
 
     D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)
@@ -109,6 +135,13 @@ namespace enishi::renderer::directx {
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_viewport(
         const types::ViewportRect& config) {
         return platform::RenderResult<types::RenderHandle>();
+    }
+
+    platform::RenderResult<std::unique_ptr<platform::IPipelineLayout>>
+    D3D11Renderer::create_pipeline_layout(const types::VertexLayout& layout,
+        const types::RenderHandle& vertex_shader,
+        const types::RenderHandle& pixel_shader) {
+        return platform::RenderResult<std::unique_ptr<platform::IPipelineLayout>>();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_rasterizer(void) {
@@ -181,9 +214,12 @@ namespace enishi::renderer::directx {
     }
 
     void D3D11Renderer::submit_render_graph(const types::RenderGraph& graph) {
-        graph.camera;
+        const auto& context = this->d3d11->get_context();
+        const auto& view_pool = this->resource_manager.get_view_pool();
 
-        const auto context = this->d3d11->get_context();
+        for (const auto& render_target : view_pool.get_render_targets()) {
+            context->ClearRenderTargetView(render_target.Get(), CLEAR_COLOR);
+        }
 
         for (const auto& pass : graph.passes) {
             switch (pass.pass_type) {
@@ -205,7 +241,7 @@ namespace enishi::renderer::directx {
 
             pass.render_target;
 
-            // context->ClearRenderTargetView(render_target_view.Get(), CLEAR_COLOR);
+            //
 
             // context->RSSetState();
 

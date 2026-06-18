@@ -36,13 +36,13 @@ namespace enishi::assets_system {
         std::uint8_t perspective;
     };
 
-    struct VMDLight {
+    struct VMDLightKeyFrame {
         std::uint32_t frame;
         float color[3];
         float position[3];
     };
 
-    struct VMDShadow {
+    struct VMDShadowKeyFrame {
         std::uint32_t frame;
         std::uint8_t shadow_type;
         float distance;
@@ -54,7 +54,7 @@ namespace enishi::assets_system {
     };
 
     // 可変要素を含む
-    struct VMDIK {
+    struct VMDIKKeyFrame {
         std::uint32_t frame;
         std::uint8_t show_flag; //
         std::uint32_t count;

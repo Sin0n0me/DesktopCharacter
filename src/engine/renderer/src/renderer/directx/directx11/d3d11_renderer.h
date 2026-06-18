@@ -5,7 +5,7 @@
 #include <engine_types/handle/handle_allocator.h>
 #include <engine_types/renderer/render_handle.h>
 #include <memory>
-#include <platform/renderer/renderer.h>
+#include <platform/renderer/interface_renderer.h>
 #include <unordered_map>
 
 namespace enishi::renderer::directx {
@@ -18,13 +18,17 @@ namespace enishi::renderer::directx {
         void execute(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
         void bind_buffer(ID3D11DeviceContext* const context, const Buffer& buffer) const;
         void bind_shader(ID3D11DeviceContext* const context, const types::HandleId id) const;
-        void bind_render_target(ID3D11DeviceContext* const context);
+        void bind_render_target(ID3D11DeviceContext* const context, const types::HandleId id) const;
 
       public:
         explicit D3D11Renderer(std::unique_ptr<D3D11> d3d11);
 
         platform::RenderResult<types::RenderHandle> create_viewport(
             const types::ViewportRect& config) override;
+        platform::RenderResult<std::unique_ptr<platform::IPipelineLayout>> create_pipeline_layout(
+            const types::VertexLayout& layout,
+            const types::RenderHandle& vertex_shader,
+            const types::RenderHandle& pixel_shader) override;
         platform::RenderResult<types::RenderHandle> create_rasterizer(void) override;
         platform::RenderResult<types::RenderHandle> create_image(
             const types::ImageDescription& description) override;

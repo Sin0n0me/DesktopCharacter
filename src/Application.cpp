@@ -1,5 +1,6 @@
 #include "application.h"
 #include <core/system/animation/animation_system.h>
+#include <foundation/log/logger.h>
 #include <platform_impl/window/sdl/sdl3_window.h>
 #include <renderer/directx/directx11/d3d11_render_initializer.h>
 #include <renderer/directx/directx11/d3d11_renderer.h>
@@ -56,7 +57,8 @@ namespace enishi {
     }
 
     void Application::run(void) {
-        const auto init_time = this->app_timer.tick();
+        const auto init_time = this->app_timer.tick_unclamp();
+        foundation::Logger::info(std::format("初期化時間: {:%S}秒", init_time.delta_time));
 
         for (; this->root_window->should_close();) {
             this->root_window->poll_events();

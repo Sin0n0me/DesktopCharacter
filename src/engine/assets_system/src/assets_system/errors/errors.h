@@ -15,5 +15,10 @@ namespace enishi::assets_system {
         MismatchHeader,
     };
 
+    enum class AssetError {
+        AlreadyHasAsset,
+        NotFound,
+    };
+
     template <typename T> using IOReuslt = foundation::EngineResult<T, IOError>;
 } // namespace enishi::assets_system

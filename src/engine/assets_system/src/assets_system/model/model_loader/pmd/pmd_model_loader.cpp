@@ -483,4 +483,11 @@ namespace enishi::assets_system {
 
         return pmd_data;
     }
+
+    bool PMDModelLoader::is_supported_extension(const std::filesystem::path& path) noexcept {
+        if (!path.has_extension()) {
+            return false;
+        }
+        return path.extension() == ".pmd";
+    }
 } // namespace enishi::assets_system

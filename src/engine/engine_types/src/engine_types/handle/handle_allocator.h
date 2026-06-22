@@ -10,6 +10,8 @@ namespace enishi::types {
         std::vector<HandleId> free_list;
 
       public:
+        explicit HandleAllocator(void);
+
         HandleId create(void);
 
         void destroy(const HandleId id);

@@ -1,6 +1,10 @@
 #include "handle_allocator.h"
 
 namespace enishi::types {
+    HandleAllocator::HandleAllocator(void)
+        : next_id(0) {
+    }
+
     HandleId HandleAllocator::create(void) {
         if (!this->free_list.empty()) {
             // 削除済みIDを再利用

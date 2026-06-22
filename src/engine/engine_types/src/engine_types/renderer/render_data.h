@@ -31,9 +31,11 @@ namespace enishi::types {
       public:
         explicit OwnedRenderData(std::vector<T>&& buffer)
             : buffer(buffer)
-            , render_data(RenderData{.data = buffer.data(),
-                  .stride = sizeof(T),
-                  .byte_width = sizeof(T) * buffer.size()}) {
+            , render_data(RenderData{
+                  .data = buffer.data(),
+                  .stride = static_cast<std::uint32_t>(sizeof(T)),
+                  .byte_width = static_cast<std::uint32_t>(sizeof(T) * buffer.size()),
+              }) {
         }
 
         T& operator[](const std::uint32_t index) {

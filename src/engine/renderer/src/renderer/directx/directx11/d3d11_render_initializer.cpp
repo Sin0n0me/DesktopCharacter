@@ -1,7 +1,7 @@
 #include "d3d11_render_initializer.h"
 
 namespace enishi::renderer::directx {
-    foundation::EngineResult<std::unique_ptr<D3D11Renderer>, platform::RenderError>
+    foundation::Result<std::unique_ptr<D3D11Renderer>, platform::RenderError>
     D3D11RenderInitializer::init(
         const platform::WindowHandle& window_handle, const types::WindowSize& window_size) {
         if (window_handle.tag != platform::WindowSystem::Windows) {

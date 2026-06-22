@@ -14,6 +14,7 @@ namespace enishi {
         std::unique_ptr<platform::IRenderer> renderer;
         std::shared_ptr<ecs::Registory> rsegistory;
         std::shared_ptr<core::RenderSystem> render_system;
+        std::shared_ptr<core::AssetManager> asset_manager;
         core::SystemScheduler system_scheduler;
         core::ApplicationTimer app_timer;
 

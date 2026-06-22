@@ -3,7 +3,8 @@
 namespace enishi::assets_system {
     void BoneData::build_name_index(void) {
         this->bone_name_to_index.clear();
-        for (uint32_t i = 0; i < static_cast<uint32_t>(this->bones.size()); ++i) {
+        const auto size = this->bones.size();
+        for (std::size_t i = 0; i < size; ++i) {
             this->bone_name_to_index[this->bones[i].name] = i;
         }
     }

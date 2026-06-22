@@ -25,22 +25,47 @@ namespace enishi::ecs {
       public:
         // コンポーネントを追加
         template <typename... Args>
-        foundation::EngineResult<T&, ECSError> emplace(const EntityID id, Args&&... args) {
+        foundation::Result<T&, ECSError> emplace(const EntityID id, Args&&... args) {
             if (this->has(id)) {
-                return foundation::Error(ECSError::AlreadyHasComponent, u8"already has component");
+                return foundation::Error(ECSError::AlreadyHasComponent, "already has component");
             }
 
-            // sparse を id の大きさに合わせて拡張
-            const auto next_id = id + 1;
-            if (this->sparse.size() < next_id) {
-                this->sparse.resize(next_id, ComponentPool::INVALID);
+            return this->emplace_component(id, T(std::forward<Args>(args)...));
+        }
+
+        foundation::Result<T&, ECSError> insert(const EntityID id, T& component) {
+            if (this->has(id)) {
+                return foundation::Error(ECSError::AlreadyHasComponent, "already has component");
             }
 
-            this->sparse[id] = static_cast<std::uint32_t>(this->dense.size());
-            this->dense.push_back(id);
-            this->components.emplace_back(std::forward<Args>(args)...);
+            return this->emplace_component(id, std::move(component));
+        }
 
-            return this->components.back();
+        foundation::Result<T&, ECSError> insert(const EntityID id, T&& component) {
+            if (this->has(id)) {
+                return foundation::Error(ECSError::AlreadyHasComponent, "already has component");
+            }
+
+            return this->emplace_component(id, component);
+        }
+
+        // 既に持っている場合は上書き, なければ追加
+        T& insert_or_replace(const EntityID id, const T component) {
+            if (this->has(id)) {
+                // 既存のコンポーネントを上書き
+                T& existing = this->components[this->sparse[id]];
+                existing = std::move(component);
+                return existing;
+            }
+            return this->insert(id, std::move(component));
+        }
+
+        // 既に持っている場合は何もしない
+        T& insert_or_ignore(const EntityID id, const T component) {
+            if (this->has(id)) {
+                return this->components[this->sparse[id]];
+            }
+            return this->insert(id, std::move(component));
         }
 
         // コンポーネントを削除(swap-and-pop で穴を作らない)
@@ -88,6 +113,21 @@ namespace enishi::ecs {
 
         std::vector<EntityID>& entities(void) noexcept {
             return this->dense;
+        }
+
+      private:
+        T& emplace_component(const EntityID id, T&& component) {
+            // sparse を id の大きさに合わせて拡張
+            const auto next_id = id + 1;
+            if (this->sparse.size() < next_id) {
+                this->sparse.resize(next_id, ComponentPool::INVALID);
+            }
+
+            this->sparse[id] = static_cast<std::uint32_t>(this->dense.size());
+            this->dense.push_back(id);
+            this->components.emplace_back(component);
+
+            return this->components.back();
         }
     };
 } // namespace enishi::ecs

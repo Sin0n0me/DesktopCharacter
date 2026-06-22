@@ -1,20 +1,19 @@
 #pragma once
 #include "../errors/renderer_errors.h"
 #include "interface_image_view.h"
-#include <engine_types/assets/model/mesh_data.h>
+#include "interface_pipeline_layout.h"
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>
 #include <engine_types/renderer/description/image_description.h>
+#include <engine_types/renderer/mesh_data.h>
 #include <engine_types/renderer/render_graph.h>
 #include <engine_types/renderer/render_handle.h>
 #include <engine_types/renderer/viewport.h>
 #include <engine_types/window/window_types.h>
 #include <foundation/result/result.h>
-#include "interface_pipeline_layout.h"
 
 namespace enishi::platform {
-    template <typename T>
-    using RenderResult = foundation::Result<T, foundation::Error<RenderError>>;
+    template <typename T> using RenderResult = foundation::Result<T, RenderError>;
 
     // 主に作ったり描画を担当する
     // 細かい設定は別のインターフェイスが担当する
@@ -27,8 +26,8 @@ namespace enishi::platform {
             const types::ViewportRect& config) = 0;
 
         [[nodiscard]]
-        virtual RenderResult<std::unique_ptr<IPipelineLayout>>
-        create_pipeline_layout(const types::VertexLayout& layout,
+        virtual RenderResult<std::unique_ptr<IPipelineLayout>> create_pipeline_layout(
+            const types::VertexLayout& layout,
             const types::RenderHandle& vertex_shader,
             const types::RenderHandle& pixel_shader) = 0;
 

@@ -14,7 +14,11 @@ namespace enishi::assets_system {
       private:
         std::shared_ptr<const BoneData> bone_data;
 
+        BoneResolver(void) = delete;
+
       public:
+        explicit BoneResolver(const std::shared_ptr<const BoneData> bone_data);
+
         foundation::Option<types::BoneIndex> resolve_index(
             const foundation::UTF8& bone_name) const noexcept override;
         foundation::Option<foundation::UTF8> resolve_name(

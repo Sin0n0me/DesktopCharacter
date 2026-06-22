@@ -6,5 +6,5 @@ namespace enishi::ecs {
         AlreadyHasComponent,
     };
 
-    template <typename T> using ECSReuslt = foundation::EngineResult<T, ECSError>;
+    template <typename T> using ECSReuslt = foundation::Result<T, ECSError>;
 } // namespace enishi::ecs

@@ -37,8 +37,29 @@ namespace enishi::ecs {
 
         bool is_alive(const EntityID id) const noexcept;
 
-        template <typename T, typename... Args> T& emplace(const EntityID id, Args&&... args) {
+        template <typename T, typename... Args>
+        foundation::Result<T&, ECSError> emplace(const EntityID id, Args&&... args) {
             return this->get_pool<T>().emplace(id, std::forward<Args>(args)...);
+        }
+
+        template <typename T>
+        foundation::Result<T&, ECSError> insert(const EntityID id, T& component) {
+            return this->get_pool<T>().insert(id, component);
+        }
+
+        template <typename T>
+        foundation::Result<T&, ECSError> insert(const EntityID id, T&& component) {
+            return this->get_pool<T>().insert(id, component);
+        }
+
+        template <typename T>
+        foundation::Result<T&, ECSError> insert_or_replace(const EntityID id, T& component) {
+            return this->get_pool<T>().insert_or_replace(id, std::move(component));
+        }
+
+        template <typename T>
+        foundation::Result<T&, ECSError> insert_or_ignore(const EntityID id, T& component) {
+            return this->get_pool<T>().insert_or_ignore(id, std::move(component));
         }
 
         template <typename T> void remove(const EntityID id) {

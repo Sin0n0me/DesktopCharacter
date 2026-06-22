@@ -32,7 +32,7 @@ namespace enishi::renderer::directx {
         foundation::VoidResult<DirectXError> commit(void);
 
       public:
-        static foundation::EngineResult<std::unique_ptr<D3D11>, DirectXError> make(
+        static foundation::Result<std::unique_ptr<D3D11>, DirectXError> make(
             const HWND hwnd, const types::WindowSize& size);
 
         [[nodiscard]] ID3D11Device* get_device(void) const;

@@ -1,5 +1,4 @@
 #include "OBB.h"
-// #include <glm/gtx/>
 
 namespace enishi::types {
     std::tuple<float, std::uint32_t, std::uint32_t> OBB::find_jacobi_pivot(

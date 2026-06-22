@@ -20,9 +20,4 @@ namespace enishi::types {
 
         bool has_parent(void) const;
     };
-
-    struct B {
-        glm::mat4 local;
-        glm::mat4 global;
-    };
 } // namespace enishi::types

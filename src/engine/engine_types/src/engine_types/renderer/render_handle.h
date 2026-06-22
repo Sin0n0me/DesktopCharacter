@@ -21,7 +21,7 @@ namespace enishi::types {
     };
 
     constexpr static RenderHandle DEFAULT_RENDER_TARGET = RenderHandle{
-        .id = details::INVALID_HANDLE_ID,
+        .id = INVALID_HANDLE_ID,
         .type = RenderHandleType::View,
     };
 } // namespace enishi::types

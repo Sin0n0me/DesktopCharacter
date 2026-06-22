@@ -1,5 +1,5 @@
 #pragma once
-#include "../../renderer/render_data.h"
+#include "render_data.h"
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <vector>

@@ -9,6 +9,8 @@
 namespace enishi::assets_system {
     struct Bone {
         foundation::UTF8 name;
+        types::BindBone bind_bone;
+        types::BoneNode bone_node;
     };
 
     struct BoneData {

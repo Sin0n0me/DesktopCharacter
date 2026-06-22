@@ -1,22 +1,13 @@
 #pragma once
+#include "asset_type.h"
 #include <cstdint>
 #include <engine_types/handle/handle_type.h>
 #include <functional>
 
 namespace enishi::assets_system {
-    enum class AssetHandleType : std::uint8_t {
-        Model,
-        Animation,
-        Shader,
-        Texture,
-        Video,
-        Sound,
-        Script,
-    };
-
     struct AssetHandle {
         types::HandleId id;
-        AssetHandleType type;
+        AssetType type;
 
         bool is_valid(void) const noexcept;
 

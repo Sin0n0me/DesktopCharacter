@@ -2,7 +2,7 @@
 namespace enishi ::foundation {
     constexpr const char* SOURCE_ENCODING = "Shift_JIS";
 
-    EngineResult<UTF8, StringError> sjis_to_utf8(const std::string& sjis) {
+    Result<UTF8, StringError> sjis_to_utf8(const std::string& sjis) {
         UErrorCode status = U_ZERO_ERROR;
 
         const icu::UnicodeString unicode(

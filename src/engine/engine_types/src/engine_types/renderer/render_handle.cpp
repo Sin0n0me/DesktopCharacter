@@ -3,6 +3,6 @@
 
 namespace enishi::types {
     bool enishi::types::RenderHandle::is_valid(void) const noexcept {
-        return this->id != details::INVALID_HANDLE_ID;
+        return this->id != INVALID_HANDLE_ID;
     }
 } // namespace enishi::types

@@ -162,7 +162,7 @@ namespace enishi::renderer::directx {
         return {};
     }
 
-    foundation::EngineResult<std::unique_ptr<D3D11>, DirectXError> D3D11::make(
+    foundation::Result<std::unique_ptr<D3D11>, DirectXError> D3D11::make(
         const HWND hwnd, const types::WindowSize& size) {
         std::unique_ptr<D3D11> d3d11 = std::make_unique<D3D11>();
 

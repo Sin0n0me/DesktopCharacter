@@ -1,6 +1,10 @@
-#include "bone_resolver.h.h"
+#include "bone_resolver.h"
 
 namespace enishi::assets_system {
+    assets_system::BoneResolver::BoneResolver(const std::shared_ptr<const BoneData> bone_data)
+        : bone_data(bone_data) {
+    }
+
     foundation::Option<types::BoneIndex> BoneResolver::resolve_index(
         const foundation::UTF8& bone_name) const noexcept {
         return this->bone_data->find_bone_index(bone_name);

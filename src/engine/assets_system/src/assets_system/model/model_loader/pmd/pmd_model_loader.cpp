@@ -465,6 +465,7 @@ namespace enishi::assets_system {
         return {};
     }
 
+    [[nodiscard]]
     IOReuslt<std::unique_ptr<PMDData>> PMDModelLoader::load(
         const std::filesystem::path& path) noexcept {
         auto reader = BinaryReader::make_reader(path);

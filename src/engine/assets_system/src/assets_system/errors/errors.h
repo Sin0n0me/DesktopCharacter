@@ -18,7 +18,8 @@ namespace enishi::assets_system {
     enum class AssetError {
         AlreadyHasAsset,
         NotFound,
+        IOError,
     };
 
-    template <typename T> using IOReuslt = foundation::EngineResult<T, IOError>;
+    template <typename T> using IOReuslt = foundation::Result<T, IOError>;
 } // namespace enishi::assets_system

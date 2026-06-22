@@ -1,31 +1,56 @@
 #pragma once
 #include "../interface_system.h"
+#include <assets_system/asset_handle.h>
 #include <assets_system/interface_asset_system.h>
 #include <ecs/registory.h>
-#include <engine_types/assets/asset_handle.h>
 #include <filesystem>
 #include <foundation/str/str.h>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace enishi::core {
-    class AssetManager : public ISystem, public assets_system::IAssetSystem {
+    class AssetManager : public assets_system::IAssetSystem, public ISystem {
       private:
-        std::shared_ptr<ecs::Registory> registory;
+        ecs::Registory asset_registory;
+        std::unordered_map<std::filesystem::path, assets_system::AssetHandle> path_to_handle;
+        std::unordered_map<foundation::UTF8, assets_system::AssetType> extension_to_asset_type;
+
+      public:
+        foundation::Result<assets_system::AssetHandle, assets_system::AssetError> load_asset(
+            const std::filesystem::path& path) noexcept override;
+
+        void release_asset(const assets_system::AssetHandle& handle) noexcept override;
+
+        foundation::Option<const std::filesystem::path&> get_asset_file_name(
+            const assets_system::AssetHandle& handle) const noexcept override;
+
+        std::vector<std::filesystem::path> find_assets(const std::filesystem::path& target_path,
+            const std::unordered_set<std::filesystem::path>& target_extensions)
+            const noexcept override;
 
       public:
         void update(const types::DeltaTime& delta_time) override;
 
-      public:
-        static std::vector<std::filesystem::path> find_assets(
-            const std::filesystem::path& target_path,
-            const std::unordered_set<std::filesystem::path>& target_extensions);
+      private:
+        foundation::Result<types::HandleId, assets_system::IOError> load_model(
+            const std::filesystem::path& path) noexcept;
 
-      public:
-        foundation::EngineResult<types::AssetHandle, assets_system::IOError> load_asset(
-            const std::filesystem::path& path) noexcept override;
-        void release_asset(const types::AssetHandle& handle) noexcept override;
-        foundation::Option<const std::filesystem::path&> get_asset_file_name(
-            const types::AssetHandle& handle) const noexcept override;
+        foundation::Result<types::HandleId, assets_system::IOError> load_animation(
+            const std::filesystem::path& path) noexcept;
+
+        foundation::Result<types::HandleId, assets_system::IOError> load_shader(
+            const std::filesystem::path& path) noexcept;
+
+        foundation::Result<types::HandleId, assets_system::IOError> load_texture(
+            const std::filesystem::path& path) noexcept;
+
+        foundation::Result<types::HandleId, assets_system::IOError> load_video(
+            const std::filesystem::path& path) noexcept;
+
+        foundation::Result<types::HandleId, assets_system::IOError> load_sound(
+            const std::filesystem::path& path) noexcept;
+
+        foundation::Result<types::HandleId, assets_system::IOError> load_script(
+            const std::filesystem::path& path) noexcept;
     };
 } // namespace enishi::core

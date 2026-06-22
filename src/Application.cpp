@@ -19,9 +19,19 @@ int main(void) {
 
 namespace enishi {
     bool Application::init(void) {
+        this->rsegistory = std::make_shared<ecs::Registory>();
+
+        // 先にアセットの読み込み
+        this->asset_manager = this->system_scheduler.register_system<core::AssetManager>(10);
+        const auto asset_paths =
+            this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
+        for (const auto& path : asset_paths) {
+            this->asset_manager->load_asset(path);
+        }
+
         const auto window_size = types::WindowSize{
-            .width = 100,
-            .height = 200,
+            .width = 200,
+            .height = 400,
         };
         this->root_window = std::make_unique<platform_impl::SDL3Window>(
             "enishi", window_size, platform::WindowSystem::Windows, types::GraphicsAPI::DirectX11);
@@ -45,8 +55,6 @@ namespace enishi {
         }
 
         this->renderer = std::move(renderer.value());
-
-        this->rsegistory = std::make_shared<ecs::Registory>();
 
         // システムの追加
         this->system_scheduler.register_system<core::AssetManager>(50);

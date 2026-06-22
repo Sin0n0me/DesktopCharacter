@@ -18,19 +18,27 @@ namespace enishi::foundation {
                 return !this->has_value();
             }
         };
+
+        template <typename T, typename E>
+        class ResultBase<T&, E> : public std::expected<std::reference_wrapper<T>, E> {
+          public:
+            using std::expected<std::reference_wrapper<T>, E>::expected;
+
+            [[nodiscard]] constexpr bool is_ok(void) const {
+                return this->has_value();
+            }
+
+            [[nodiscard]] constexpr bool is_err(void) const {
+                return !this->has_value();
+            }
+
+            [[nodiscard]] T& unwrap(void) {
+                return this->value().get();
+            }
+        };
     } // namespace
 
-    template <typename T, typename E> class Result : public ResultBase<T, E> {
-      public:
-        using ResultBase<T, E>::ResultBase;
-    };
-
-    template <typename E> class Result<void, E> : public ResultBase<void, E> {
-      public:
-        using ResultBase<void, E>::ResultBase;
-    };
-
-    template <typename T, typename E> class Result<T, Error<E>> : public ResultBase<T, Error<E>> {
+    template <typename T, typename E> class Result : public ResultBase<T, Error<E>> {
       public:
         using ResultBase<T, Error<E>>::ResultBase;
 
@@ -52,7 +60,7 @@ namespace enishi::foundation {
         }
     };
 
-    template <typename E> class Result<void, Error<E>> : public ResultBase<void, Error<E>> {
+    template <typename E> class Result<void, E> : public ResultBase<void, Error<E>> {
       public:
         using ResultBase<void, Error<E>>::ResultBase;
 
@@ -74,6 +82,5 @@ namespace enishi::foundation {
         }
     };
 
-    template <typename T, typename E> using EngineResult = Result<T, Error<E>>;
-    template <typename E> using VoidResult = EngineResult<void, E>;
+    template <typename E> using VoidResult = Result<void, E>;
 } // namespace enishi::foundation

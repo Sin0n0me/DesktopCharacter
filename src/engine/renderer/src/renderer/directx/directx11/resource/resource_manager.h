@@ -2,10 +2,10 @@
 #include "../../../errors/errors.h"
 #include "gpu_resource.h"
 #include "mesh.h"
-#include <engine_types/assets/model/mesh_data.h>
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>
 #include <engine_types/handle/handle_allocator.h>
+#include <engine_types/renderer/mesh_data.h>
 #include <engine_types/renderer/render_data.h>
 #include <engine_types/renderer/render_handle.h>
 #include <foundation/option/option.h>
@@ -21,7 +21,7 @@ namespace enishi::renderer::directx {
         GPUResource resource;
 
       public:
-        using Result = foundation::EngineResult<types::RenderHandle, DirectXError>;
+        using Result = foundation::Result<types::RenderHandle, DirectXError>;
 
         [[nodiscard]] Result make_mesh(
             ID3D11Device* const device, const types::MeshData& mesh_data);

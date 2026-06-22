@@ -106,7 +106,7 @@ namespace enishi::renderer::directx {
         return {};
     }
 
-    foundation::EngineResult<ShaderReflection, DirectXError> ShaderReflection::make(
+    foundation::Result<ShaderReflection, DirectXError> ShaderReflection::make(
         const types::ShaderData& data) {
         ShaderReflection reflection;
 
@@ -116,7 +116,7 @@ namespace enishi::renderer::directx {
             return foundation::Error(DirectXError::ShaderReflectionError);
         }
 
-        return foundation::EngineResult<ShaderReflection, DirectXError>();
+        return foundation::Result<ShaderReflection, DirectXError>();
     }
 
     std::optional<std::uint32_t> ShaderReflection::get_constant_buffer_slot(

@@ -27,7 +27,7 @@ namespace enishi::renderer::directx {
             const std::uint32_t index) noexcept;
 
       public:
-        static foundation::EngineResult<ShaderReflection, DirectXError> make(
+        static foundation::Result<ShaderReflection, DirectXError> make(
             const types::ShaderData& data);
 
         std::optional<std::uint32_t> get_constant_buffer_slot(

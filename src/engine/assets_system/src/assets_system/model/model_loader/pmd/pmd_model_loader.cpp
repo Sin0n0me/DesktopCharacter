@@ -465,30 +465,24 @@ namespace enishi::assets_system {
         return {};
     }
 
-    [[nodiscard]]
-    IOReuslt<std::unique_ptr<PMDData>> PMDModelLoader::load(
+    foundation::Result<ModelData, AssetError> PMDModelLoader::load(
         const std::filesystem::path& path) noexcept {
         auto reader = BinaryReader::make_reader(path);
         if (!reader.has_value()) {
-            return reader.error();
+            return reader.error().propagation(AssetError::IOError);
         }
         auto& binary_reader = reader.value();
 
-        PMDModelLoader loader = PMDModelLoader();
         std::unique_ptr<PMDData> pmd_data = std::make_unique<PMDData>();
-
-        auto result = loader.load_pmd(binary_reader, pmd_data.get());
+        auto result = this->load_pmd(binary_reader, pmd_data.get());
         if (result.is_err()) {
-            return result.error();
+            return reader.error().propagation(AssetError::IOError);
         }
 
         return pmd_data;
     }
 
-    bool PMDModelLoader::is_supported_extension(const std::filesystem::path& path) noexcept {
-        if (!path.has_extension()) {
-            return false;
-        }
-        return path.extension() == ".pmd";
+    foundation::UTF8 PMDModelLoader::get_supported_extension(void) const noexcept {
+        return ".pmd";
     }
 } // namespace enishi::assets_system

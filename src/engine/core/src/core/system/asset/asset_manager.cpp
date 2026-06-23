@@ -2,6 +2,10 @@
 #include <assets_system/model/model_loader/model_loader.h>
 
 namespace enishi::core {
+    core::AssetManager::AssetManager(void) {
+        this->extension_to_asset_type.insert();
+    }
+
     foundation::Result<assets_system::AssetHandle, assets_system::AssetError>
     AssetManager::load_asset(const std::filesystem::path& path) noexcept {
         // すでにAssetを保持している場合はそのまま保管しているハンドルを返す
@@ -10,7 +14,7 @@ namespace enishi::core {
             return iter->second;
         }
 
-        if (path.has_extension()) {
+        if (!path.has_extension()) {
             return foundation::Error(assets_system::AssetError::NotFound);
         }
 

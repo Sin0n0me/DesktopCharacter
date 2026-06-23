@@ -9,7 +9,11 @@ namespace enishi::core {
         std::shared_ptr<ecs::Registory> registory;
         types::RenderGraph render_graph;
 
+        explicit RenderSystem(void) = delete;
+
       public:
+        explicit RenderSystem(std::shared_ptr<ecs::Registory> registory);
+
         void update(const types::DeltaTime& delta_time) override;
 
         const types::RenderGraph& get_render_graph(void) const;

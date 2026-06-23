@@ -14,12 +14,10 @@ namespace enishi::ecs {
             auto& entities = this->base_pool().entities();
             const auto entities_size = entities.size();
 
-            for (;;) {
-                if (this->current_id < entities_size &&
-                    !this->has_all(entities[this->current_id])) {
+            for (; this->current_id < entities_size; ++this->current_id) {
+                if (!this->has_all(entities[this->current_id])) {
                     break;
                 }
-                ++this->current_id;
             }
         }
 

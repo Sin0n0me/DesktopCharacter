@@ -3,6 +3,10 @@
 #include <component/model_component.h>
 
 namespace enishi::core {
+    RenderSystem::RenderSystem(std::shared_ptr<ecs::Registory> registory)
+        : registory(registory) {
+    }
+
     void RenderSystem::update(const types::DeltaTime& delta_time) {
         auto view =
             this->registory->view<component::AnimationComponent, component::ModelComponent>();

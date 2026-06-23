@@ -26,7 +26,12 @@ namespace enishi {
         const auto asset_paths =
             this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
         for (const auto& path : asset_paths) {
-            this->asset_manager->load_asset(path);
+            const auto result = this->asset_manager->load_asset(path);
+            if (result.is_err()) {
+                foundation::Logger::error(result.error().get_message("\n"));
+            } else {
+                foundation::Logger::info(std::format("loaded path: {}", path.string<char>()));
+            }
         }
 
         const auto window_size = types::WindowSize{
@@ -59,14 +64,15 @@ namespace enishi {
         // システムの追加
         this->system_scheduler.register_system<core::AssetManager>(50);
         this->system_scheduler.register_system<core::AnimationSystem>(80, this->rsegistory);
-        this->render_system = this->system_scheduler.register_system<core::RenderSystem>(100);
+        this->render_system =
+            this->system_scheduler.register_system<core::RenderSystem>(100, this->rsegistory);
 
         return true;
     }
 
     void Application::run(void) {
         const auto init_time = this->app_timer.tick_unclamp();
-        foundation::Logger::info(std::format("初期化時間: {:%S}秒", init_time.delta_time));
+        foundation::Logger::info(std::format("初期化時間: {:%S}s", init_time.delta_time));
 
         for (; this->root_window->should_close();) {
             this->root_window->poll_events();

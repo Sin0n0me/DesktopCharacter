@@ -1,6 +1,8 @@
 #pragma once
 #include "../str/str.h"
 #include <expected>
+#include <format>
+#include <ranges>
 #include <vector>
 
 namespace enishi ::foundation {
@@ -25,6 +27,14 @@ namespace enishi ::foundation {
 
         void add_message(const UTF8& message) {
             this->message.push_back(message);
+        }
+
+        UTF8 get_message(const UTF8& sep) const {
+            return this->message | std::views::join_with(sep) | std::ranges::to<std::string>();
+        }
+
+        UTF8 get_message(void) const {
+            return this->message | std::ranges::to<std::string>();
         }
 
         template <typename T> Error<T> propagation(const T new_error) const {

@@ -16,6 +16,8 @@ namespace enishi::core {
         std::unordered_map<foundation::UTF8, assets_system::AssetType> extension_to_asset_type;
 
       public:
+        explicit AssetManager(void);
+
         foundation::Result<assets_system::AssetHandle, assets_system::AssetError> load_asset(
             const std::filesystem::path& path) noexcept override;
 

@@ -1,12 +1,13 @@
 #pragma once
 #include "../../../utility/binary_reader.h"
+#include "../interface_model_loader.h"
 #include "pmd_data.h"
 #include "pmd_file_struct.h"
 #include <filesystem>
 #include <memory>
 
 namespace enishi::assets_system {
-    class PMDModelLoader {
+    class PMDModelLoader : public IModelLoader {
       private:
         using Result = IOReuslt<void>;
 
@@ -38,10 +39,8 @@ namespace enishi::assets_system {
         explicit PMDModelLoader(void) = default;
 
       public:
-        [[nodiscard]] static IOReuslt<std::unique_ptr<PMDData>> load(
-            const std::filesystem::path& path) noexcept;
-
-        [[nodiscard]] static bool is_supported_extension(
-            const std::filesystem::path& path) noexcept;
+        foundation::Result<ModelData, AssetError> load(
+            const std::filesystem::path& path) noexcept override;
+        foundation::UTF8 get_supported_extension(void) const noexcept override;
     };
 } // namespace enishi::assets_system

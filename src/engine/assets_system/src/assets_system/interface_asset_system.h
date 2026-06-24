@@ -2,6 +2,7 @@
 #include "asset_handle.h"
 #include "asset_type.h"
 #include "errors/errors.h"
+#include <engine_types/assets/model/model_data.h>
 #include <filesystem>
 #include <foundation/option/option.h>
 #include <foundation/result/result.h>
@@ -23,6 +24,9 @@ namespace enishi::assets_system {
         virtual void release_asset(const AssetHandle& handle) noexcept = 0;
 
         virtual foundation::Option<const std::filesystem::path&> get_asset_file_name(
+            const AssetHandle& handle) const noexcept = 0;
+
+        virtual foundation::Option<const types::ModelData&> get_model_data(
             const AssetHandle& handle) const noexcept = 0;
     };
 } // namespace enishi::assets_system

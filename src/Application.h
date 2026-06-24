@@ -8,6 +8,8 @@
 #include <ui/ui.h>
 
 namespace enishi {
+    constexpr char APPLICATION_NAME[] = "enishi";
+
     class Application {
       private:
         std::unique_ptr<platform::IWindow> root_window;
@@ -23,5 +25,8 @@ namespace enishi {
         void run(void);
 
       private:
+        bool init_system(void);
+        bool init_window(void);
+        bool init_renderer(void);
     };
 } // namespace enishi

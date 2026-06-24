@@ -76,6 +76,10 @@ namespace enishi::ecs {
             return this->get_pool<T>().get(id);
         }
 
+        template <typename T> foundation::Option<const T&> get(const EntityID id) const {
+            return this->get_pool<T>().get(id);
+        }
+
         template <typename... Ts> View<Ts...> view(void) {
             return View<Ts...>(this->get_pool<Ts>()...);
         }

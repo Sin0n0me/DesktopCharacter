@@ -30,11 +30,13 @@ namespace enishi ::foundation {
         }
 
         UTF8 get_message(const UTF8& sep) const {
-            return this->message | std::views::join_with(sep) | std::ranges::to<std::string>();
+            const auto joined = this->message | std::views::join_with(sep);
+            return std::string{joined.begin(), joined.end()};
         }
 
         UTF8 get_message(void) const {
-            return this->message | std::ranges::to<std::string>();
+            const auto joined = this->message | std::views::join_with(std::string_view{"\n"});
+            return std::string{joined.begin(), joined.end()};
         }
 
         template <typename T> Error<T> propagation(const T new_error) const {

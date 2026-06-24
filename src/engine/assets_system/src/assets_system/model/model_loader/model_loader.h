@@ -18,6 +18,8 @@ namespace enishi::assets_system {
 
         foundation::Result<types::ModelData, AssetError> load(const std::filesystem::path& path);
 
+        std::vector<foundation::UTF8> get_supported_extensions(void) const noexcept;
+
       private:
         static types::ModelData to_model_data_from_pmd(const PMDData& data);
     };

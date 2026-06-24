@@ -1,7 +1,9 @@
 #pragma once
+#include "../../errors/errors.h"
 #include "../interface_system.h"
 #include <assets_system/asset_handle.h>
 #include <assets_system/interface_asset_system.h>
+#include <assets_system/model/model_loader/model_loader.h>
 #include <ecs/registory.h>
 #include <filesystem>
 #include <foundation/str/str.h>
@@ -14,6 +16,7 @@ namespace enishi::core {
         ecs::Registory asset_registory;
         std::unordered_map<std::filesystem::path, assets_system::AssetHandle> path_to_handle;
         std::unordered_map<foundation::UTF8, assets_system::AssetType> extension_to_asset_type;
+        assets_system::ModelLoader model_loader;
 
       public:
         explicit AssetManager(void);
@@ -30,29 +33,32 @@ namespace enishi::core {
             const std::unordered_set<std::filesystem::path>& target_extensions)
             const noexcept override;
 
+        foundation::Option<const types::ModelData&> get_model_data(
+            const assets_system::AssetHandle& handle) const noexcept override;
+
       public:
         void update(const types::DeltaTime& delta_time) override;
 
       private:
-        foundation::Result<types::HandleId, assets_system::IOError> load_model(
+        foundation::Result<types::HandleId, SystemError> load_model(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_animation(
+        foundation::Result<types::HandleId, SystemError> load_animation(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_shader(
+        foundation::Result<types::HandleId, SystemError> load_shader(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_texture(
+        foundation::Result<types::HandleId, SystemError> load_texture(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_video(
+        foundation::Result<types::HandleId, SystemError> load_video(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_sound(
+        foundation::Result<types::HandleId, SystemError> load_sound(
             const std::filesystem::path& path) noexcept;
 
-        foundation::Result<types::HandleId, assets_system::IOError> load_script(
+        foundation::Result<types::HandleId, SystemError> load_script(
             const std::filesystem::path& path) noexcept;
     };
 } // namespace enishi::core

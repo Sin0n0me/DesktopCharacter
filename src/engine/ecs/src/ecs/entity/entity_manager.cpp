@@ -3,6 +3,10 @@
 #include <vector>
 
 namespace enishi::ecs {
+    ecs::EntityManager::EntityManager(void)
+        : next_id(0) {
+    }
+
     EntityID EntityManager::create(void) {
         if (!this->free_list.empty()) {
             // 削除済みIDを再利用

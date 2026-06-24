@@ -3,7 +3,9 @@
 
 namespace enishi::core {
     core::AssetManager::AssetManager(void) {
-        this->extension_to_asset_type.insert();
+        for (const auto& extension : this->model_loader.get_supported_extensions()) {
+            this->extension_to_asset_type.emplace(extension, assets_system::AssetType::Model);
+        }
     }
 
     foundation::Result<assets_system::AssetHandle, assets_system::AssetError>
@@ -112,52 +114,59 @@ namespace enishi::core {
         return matched_files;
     }
 
+    foundation::Option<const types::ModelData&> core::AssetManager::get_model_data(
+        const assets_system::AssetHandle& handle) const noexcept {
+        return this->asset_registory.get<types::ModelData>(handle.id);
+    }
+
     void core::AssetManager::update(const types::DeltaTime& delta_time) {
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_model(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_model(
         const std::filesystem::path& path) noexcept {
-        auto model = assets_system::ModelLoader::load(path);
+        auto model = this->model_loader.load(path);
         if (model.is_err()) {
-            return model.error();
+            return model.add_message("モデルデータの読み込みに失敗しました")
+                .propagation(SystemError::AssetSystemError);
         }
 
         const auto id = this->asset_registory.create();
         auto result = this->asset_registory.insert(id, model.value());
         if (result.is_err()) {
-            // return model_.propagation();
+            return model.add_message("モデルデータの登録に失敗しました")
+                .propagation(SystemError::AssetSystemError);
         }
 
         return id;
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_animation(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_animation(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_shader(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_shader(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_texture(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_texture(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_video(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_video(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_sound(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_sound(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 
-    foundation::Result<types::HandleId, assets_system::IOError> AssetManager::load_script(
+    foundation::Result<types::HandleId, SystemError> AssetManager::load_script(
         const std::filesystem::path& path) noexcept {
-        return foundation::Result<types::HandleId, assets_system::IOError>();
+        return foundation::Result<types::HandleId, SystemError>();
     }
 } // namespace enishi::core

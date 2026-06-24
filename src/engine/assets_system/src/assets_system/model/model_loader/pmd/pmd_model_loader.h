@@ -36,9 +36,8 @@ namespace enishi::assets_system {
         [[nodiscard]] Result load_pmd_physics_joints(
             BinaryReader& binary_reader, PMDData* const pmd_data);
 
-        explicit PMDModelLoader(void) = default;
-
       public:
+        explicit PMDModelLoader(void) = default;
         foundation::Result<ModelData, AssetError> load(
             const std::filesystem::path& path) noexcept override;
         foundation::UTF8 get_supported_extension(void) const noexcept override;

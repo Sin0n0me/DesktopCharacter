@@ -19,53 +19,31 @@ int main(void) {
 
 namespace enishi {
     bool Application::init(void) {
-        this->rsegistory = std::make_shared<ecs::Registory>();
+        if (!this->init_system()) {
+            return false;
+        }
 
-        // 先にアセットの読み込み
-        this->asset_manager = this->system_scheduler.register_system<core::AssetManager>(10);
+        // 先にアセット読み込み
         const auto asset_paths =
             this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
         for (const auto& path : asset_paths) {
             const auto result = this->asset_manager->load_asset(path);
             if (result.is_err()) {
-                foundation::Logger::error(result.error().get_message("\n"));
+                foundation::Logger::error(std::format("load error path: {}, {}",
+                    path.string<char>(),
+                    result.error().get_message("\n")));
             } else {
                 foundation::Logger::info(std::format("loaded path: {}", path.string<char>()));
             }
         }
 
-        const auto window_size = types::WindowSize{
-            .width = 200,
-            .height = 400,
-        };
-        this->root_window = std::make_unique<platform_impl::SDL3Window>(
-            "enishi", window_size, platform::WindowSystem::Windows, types::GraphicsAPI::DirectX11);
-        if (!bool(this->root_window)) {
-            return false;
-        }
-        if (this->root_window->init().is_err()) {
+        if (!this->init_window()) {
             return false;
         }
 
-        const auto opt_handle = this->root_window->get_handle();
-        if (opt_handle.is_none()) {
+        if (!this->init_renderer()) {
             return false;
         }
-        const auto& window_handle = opt_handle.value();
-
-        auto renderer =
-            renderer::directx::D3D11RenderInitializer{}.init(window_handle, window_size);
-        if (renderer.is_err()) {
-            return false;
-        }
-
-        this->renderer = std::move(renderer.value());
-
-        // システムの追加
-        this->system_scheduler.register_system<core::AssetManager>(50);
-        this->system_scheduler.register_system<core::AnimationSystem>(80, this->rsegistory);
-        this->render_system =
-            this->system_scheduler.register_system<core::RenderSystem>(100, this->rsegistory);
 
         return true;
     }
@@ -87,5 +65,85 @@ namespace enishi {
             this->renderer->submit_render_graph(render_graph);
             this->renderer->present();
         }
+    }
+
+    bool Application::init_system(void) {
+        this->rsegistory = std::make_shared<ecs::Registory>();
+
+        // システムの追加
+        this->asset_manager = this->system_scheduler.register_system<core::AssetManager>(50);
+        this->system_scheduler.register_system<core::AnimationSystem>(80, this->rsegistory);
+        this->render_system =
+            this->system_scheduler.register_system<core::RenderSystem>(100, this->rsegistory);
+
+        return true;
+    }
+
+    bool Application::init_window(void) {
+        const auto window_size = types::WindowSize{
+            .width = 200,
+            .height = 400,
+        };
+        this->root_window = std::make_unique<platform_impl::SDL3Window>(
+            "enishi", window_size, platform::WindowSystem::Windows, types::GraphicsAPI::DirectX11);
+        if (!bool(this->root_window)) {
+            return false;
+        }
+
+        if (this->root_window->init().is_err()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Application::init_renderer(void) {
+        const auto opt_window_size = this->root_window->get_size();
+        if (opt_window_size.is_none()) {
+            return false;
+        }
+        const auto& window_size = opt_window_size.value();
+
+        const auto opt_handle = this->root_window->get_handle();
+        if (opt_handle.is_none()) {
+            return false;
+        }
+        const auto& window_handle = opt_handle.value();
+
+        auto initializer = renderer::directx::D3D11RenderInitializer{};
+        auto renderer = initializer.init(window_handle, window_size);
+        if (renderer.is_err()) {
+            return false;
+        }
+
+        this->renderer = std::move(renderer.value());
+
+        const auto asset_paths =
+            this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
+
+        for (const auto& path : asset_paths) {
+            const auto result = this->asset_manager->load_asset(path);
+            if (result.is_err()) {
+                foundation::Logger::error(std::format("load error path: {}, {}",
+                    path.string<char>(),
+                    result.error().get_message("\n")));
+                continue;
+            }
+
+            foundation::Logger::info(std::format("loaded path: {}", path.string<char>()));
+            const auto handle = result.value();
+
+            const auto opt_model_data = this->asset_manager->get_model_data(handle);
+            if (opt_model_data.is_none()) {
+                continue;
+            }
+            const auto& model_data = opt_model_data.unwrap();
+
+            this->renderer->create_mesh();
+        }
+
+        // this->renderer->create_shader();
+
+        return true;
     }
 } // namespace enishi

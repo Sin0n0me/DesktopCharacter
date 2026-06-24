@@ -10,6 +10,8 @@ namespace enishi::ecs {
         std::vector<EntityID> free_list;
 
       public:
+        EntityManager(void);
+
         EntityID create(void);
 
         void destroy(const EntityID id);

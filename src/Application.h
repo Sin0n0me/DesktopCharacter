@@ -9,6 +9,7 @@
 
 namespace enishi {
     constexpr char APPLICATION_NAME[] = "enishi";
+    constexpr glm::vec4 CLEAR_COLOR = glm::vec4{0.0f, 0.0f, 0.0f, 0.0f};
 
     class Application {
       private:

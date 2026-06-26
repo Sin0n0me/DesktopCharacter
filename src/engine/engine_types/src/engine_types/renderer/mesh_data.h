@@ -6,7 +6,7 @@
 
 namespace enishi::types {
     struct MeshData {
-        RenderData vertices;
-        RenderData indices;
+        std::weak_ptr<const RenderData> vertices;
+        std::weak_ptr<const RenderData> indices;
     };
 } // namespace enishi::types

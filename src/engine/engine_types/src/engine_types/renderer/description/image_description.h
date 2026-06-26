@@ -30,8 +30,8 @@ namespace enishi::types {
         glm::ivec2 size;
         ImageFormat format;
         ImageUsage usage;
-        std::uint32_t mipLevels = 1;
-        std::uint32_t arrayLayers = 1;
+        std::uint32_t mip_levels = 1;
+        std::uint32_t array_layers = 1;
         std::uint32_t samples = 1; // MSAA サンプル数
 
         [[nodiscard]]
@@ -57,12 +57,12 @@ namespace enishi::types {
         [[nodiscard]]
         static constexpr ImageDescription make_texture(const glm::ivec2& size,
             const ImageFormat format = ImageFormat::RGBA8_UNORM,
-            const std::uint32_t mipLevels = 1) noexcept {
+            const std::uint32_t mip_levels = 1) noexcept {
             return ImageDescription{
                 .size = size,
                 .format = format,
                 .usage = ImageUsage::ShaderResource | ImageUsage::TransferDst,
-                .mipLevels = mipLevels,
+                .mip_levels = mip_levels,
             };
         }
     };

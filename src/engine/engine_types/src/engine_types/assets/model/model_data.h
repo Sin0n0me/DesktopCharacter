@@ -1,4 +1,5 @@
 #pragma once
+#include "../../renderer/mesh_data.h"
 #include "../../renderer/render_data.h"
 #include "../texture/texture_data.h"
 #include "bone.h"
@@ -39,5 +40,7 @@ namespace enishi::types {
         std::vector<BindBone> bind_bones;
         std::vector<BoneNode> bone_nodes;
         std::vector<ModelAddon> addons;
+
+        [[nodiscard]] MeshData to_mesh_data(void) const;
     };
 } // namespace enishi::types

@@ -18,6 +18,6 @@ namespace enishi::types {
         BoneIndex parent;
         std::vector<BoneIndex> children;
 
-        bool has_parent(void) const;
+        [[nodiscard]] bool has_parent(void) const;
     };
 } // namespace enishi::types

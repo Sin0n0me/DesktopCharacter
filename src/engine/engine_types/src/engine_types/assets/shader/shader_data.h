@@ -14,11 +14,8 @@ namespace enishi::types {
         SPIR_V,
         DXIL,
         DXBC,
-    };
 
-    struct ShaderSource {
-        ShaderFileType binary_type;
-        std::vector<std::uint8_t> code;
+        SourceCode,
     };
 
     struct ShaderData {

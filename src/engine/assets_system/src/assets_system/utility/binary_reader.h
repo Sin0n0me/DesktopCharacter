@@ -28,6 +28,35 @@ namespace enishi::assets_system {
 
         [[nodiscard]] IOReuslt<std::vector<std::uint8_t>> read_all(void);
 
-        [[nodiscard]] IOReuslt<void> read_magic_number(const std::string& expect);
+        [[nodiscard]] IOReuslt<void> read_magic_number_from_str(const std::string& expect);
+
+        template <typename T> [[nodiscard]] IOReuslt<void> read_magic_number(const T expect) {
+            // 現在の読み込み位置を保存
+            const std::streampos saved_pos = file.tellg();
+            if (saved_pos == std::streampos(-1)) {
+                return foundation::Error(
+                    IOError::InvalidStreamPosition, "Streamが無効な位置を指しています");
+            }
+
+            // 先頭に戻す
+            this->file.seekg(0, std::ios::beg);
+
+            T found{};
+            const auto result = this->read_to(&found);
+            if (!result.has_value()) {
+                return result;
+            }
+
+            // 読み進めた分をもとに戻す
+            this->file.seekg(saved_pos);
+
+            // マジックナンバーの比較
+            if (found == expect) {
+                return foundation::Error(IOError::MismatchHeader,
+                    std::format("mismatch header. expect: {} found: {}", expect, found));
+            }
+
+            return {};
+        }
     };
 } // namespace enishi::assets_system

@@ -61,7 +61,7 @@ namespace enishi::assets_system {
         return vec;
     }
 
-    IOReuslt<void> BinaryReader::read_magic_number(const std::string& expect) {
+    IOReuslt<void> BinaryReader::read_magic_number_from_str(const std::string& expect) {
         // 現在の読み込み位置を保存
         const std::streampos saved_pos = file.tellg();
         if (saved_pos == std::streampos(-1)) {

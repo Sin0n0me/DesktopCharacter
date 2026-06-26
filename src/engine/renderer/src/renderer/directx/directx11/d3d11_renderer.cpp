@@ -1,13 +1,13 @@
 #include "d3d11_renderer.h"
+#include "view/render_target_view.h"
 
 namespace enishi::renderer::directx {
-    constexpr float CLEAR_COLOR[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-
     void D3D11Renderer::execute(
         ID3D11DeviceContext* const context, const types::DrawCommand& command) const {
+        const auto id = command.handle.id;
         switch (command.handle.type) {
             case types::RenderHandleType::Buffer: {
-                const auto& opt_buffer = this->resource_manager.get_buffer(command.handle.id);
+                const auto& opt_buffer = this->resource_manager.get_buffer(id);
                 if (!opt_buffer.has_value()) {
                     return;
                 }
@@ -15,14 +15,17 @@ namespace enishi::renderer::directx {
                 this->bind_buffer(context, buffer);
             } break;
             case types::RenderHandleType::Shader: {
-                this->bind_shader(context, command.handle.id);
+                this->bind_shader(context, id);
             } break;
             case types::RenderHandleType::Mesh: {
             } break;
             case types::RenderHandleType::Texture: {
             } break;
             case types::RenderHandleType::View: {
-                this->bind_render_target(context, command.handle.id);
+                this->bind_render_target(context, id);
+            } break;
+            case types::RenderHandleType::Rasterizer: {
+                this->bind_rasterizer(context, id);
             } break;
             default:
                 break;
@@ -34,8 +37,11 @@ namespace enishi::renderer::directx {
         switch (buffer.buffer_type) {
             case BufferType::Vertex: {
                 const auto& vertex = buffer.parameter.vertex;
-                context->IASetVertexBuffers(
-                    0, 1, buffer.buffer.GetAddressOf(), &vertex.stride, &vertex.offset);
+                context->IASetVertexBuffers(vertex.target_slot,
+                    1,
+                    buffer.buffer.GetAddressOf(),
+                    &vertex.stride,
+                    &vertex.offset);
             } break;
             case BufferType::Index: {
                 const auto& index = buffer.parameter.index;
@@ -127,9 +133,24 @@ namespace enishi::renderer::directx {
         }
     }
 
+    void D3D11Renderer::bind_rasterizer(
+        ID3D11DeviceContext* const context, const types::HandleId id) const {
+        const auto opt_rasterizer = this->resource_manager.get_rasterizer(id);
+        if (opt_rasterizer.is_none()) {
+            return;
+        }
+
+        context->RSSetState(opt_rasterizer.unwrap().Get());
+    }
+
     D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)
         : d3d11(std::move(d3d11))
         , resource_manager(ResourceManager{}) {
+    }
+
+    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_pipeline(
+        const types::PipelineDescription& description) {
+        return RenderResult<types::RenderHandle>();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_viewport(
@@ -144,40 +165,60 @@ namespace enishi::renderer::directx {
         return platform::RenderResult<std::unique_ptr<platform::IPipelineLayout>>();
     }
 
-    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_rasterizer(void) {
-        return platform::RenderResult<types::RenderHandle>();
+    platform::RenderResult<types::RenderHandle> D3D11Renderer::create_rasterizer(
+        const types::RasterizerDescription& description) {
+        const auto device = this->d3d11->get_device();
+        const auto result = this->resource_manager.make_rasterizer(device, description);
+        if (result.is_err()) {
+            return result.propagation(platform::RenderError::MakeError);
+        }
+
+        return result.value();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_image(
         const types::ImageDescription& description) {
-        return platform::RenderResult<types::RenderHandle>();
+        const auto device = this->d3d11->get_device();
+        const auto result = this->resource_manager.make_image(device, description);
+        if (result.is_err()) {
+            return result.propagation(platform::RenderError::MakeError);
+        }
+
+        return result.value();
     }
 
-    platform::RenderResult<std::unique_ptr<platform::IRenderTargetView>>
+    platform::RenderResult<std::weak_ptr<platform::IRenderTargetView>>
     D3D11Renderer::create_render_target_view(
         types::RenderHandle image_handle, const types::ImageViewDescription& description) {
-        return platform::RenderResult<std::unique_ptr<platform::IRenderTargetView>>();
+        const auto device = this->d3d11->get_device();
+        const auto result =
+            this->resource_manager.make_render_target_view(device, image_handle, description);
+        if (result.is_err()) {
+            return result.propagation(platform::RenderError::MakeError);
+        }
+
+        const auto rtv = std::make_shared<RenderTargetView>(result.value(), description);
+        this->render_targets.emplace_back(rtv);
+
+        return rtv;
     }
 
-    platform::RenderResult<std::unique_ptr<platform::IDepthStencilView>>
+    platform::RenderResult<std::weak_ptr<platform::IDepthStencilView>>
     D3D11Renderer::create_depth_stencil_view(
         types::RenderHandle image_handle, const types::ImageViewDescription& description) {
-        return platform::RenderResult<std::unique_ptr<platform::IDepthStencilView>>();
+        return foundation::Error(platform::RenderError::MakeError);
     }
 
-    platform::RenderResult<std::unique_ptr<platform::IShaderResourceView>>
+    platform::RenderResult<std::weak_ptr<platform::IShaderResourceView>>
     D3D11Renderer::create_shader_resource_view(
         types::RenderHandle image_handle, const types::ImageViewDescription& description) {
-        return platform::RenderResult<std::unique_ptr<platform::IShaderResourceView,
-            std::default_delete<platform::IShaderResourceView>>>();
+        return foundation::Error(platform::RenderError::MakeError);
     }
 
-    platform::RenderResult<std::unique_ptr<platform::IUnorderedAccessView,
-        std::default_delete<platform::IUnorderedAccessView>>>
+    platform::RenderResult<std::weak_ptr<platform::IUnorderedAccessView>>
     D3D11Renderer::create_unordered_access_view(
         types::RenderHandle image_handle, const types::ImageViewDescription& description) {
-        return platform::RenderResult<std::unique_ptr<platform::IUnorderedAccessView,
-            std::default_delete<platform::IUnorderedAccessView>>>();
+        return foundation::Error(platform::RenderError::MakeError);
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_mesh(
@@ -217,34 +258,22 @@ namespace enishi::renderer::directx {
         const auto& context = this->d3d11->get_context();
         const auto& view_pool = this->resource_manager.get_view_pool();
 
-        for (const auto& render_target : view_pool.get_render_targets()) {
-            context->ClearRenderTargetView(render_target.Get(), CLEAR_COLOR);
+        // レンダーターゲットのクリア
+        for (const auto& render_target : this->render_targets) {
+            const auto handle = render_target->get_handle();
+            const auto opt_target = view_pool.get_render_target_view(handle.id);
+            if (opt_target.is_none()) {
+                continue;
+            }
+            const auto target = opt_target.value();
+
+            const auto color = render_target->get_clear_color();
+            const float clear_color[4] = {color.r, color.g, color.b, color.a};
+            context->ClearRenderTargetView(target, clear_color);
         }
 
+        // 各パイプラインに応じた描画コマンド実行
         for (const auto& pass : graph.passes) {
-            switch (pass.pass_type) {
-                case types::RenderPassType::Lighting: {
-                } break;
-                case types::RenderPassType::Model: {
-                } break;
-                case types::RenderPassType::PostProcess: {
-                } break;
-                case types::RenderPassType::Shadow: {
-                } break;
-                case types::RenderPassType::Transparent: {
-                } break;
-                case types::RenderPassType::UI: {
-                } break;
-                default:
-                    break;
-            }
-
-            pass.render_target;
-
-            //
-
-            // context->RSSetState();
-
             for (const auto& command : pass.commands) {
                 this->execute(context, command);
             }

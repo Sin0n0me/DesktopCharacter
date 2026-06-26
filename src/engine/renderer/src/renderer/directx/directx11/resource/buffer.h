@@ -14,6 +14,7 @@ namespace enishi::renderer::directx {
     struct VertexParameter {
         std::uint32_t stride;
         std::uint32_t offset;
+        std::uint32_t target_slot;
     };
 
     struct IndexParameter {

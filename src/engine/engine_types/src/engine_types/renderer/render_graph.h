@@ -6,6 +6,7 @@
 namespace enishi::types {
     enum class SubCommand {
         Bind,
+        Unbind,
         Clear,
     };
 
@@ -14,17 +15,7 @@ namespace enishi::types {
         SubCommand sub_command;
     };
 
-    enum class RenderPassType {
-        Shadow,
-        Model,
-        Lighting,
-        Transparent,
-        PostProcess,
-        UI,
-    };
-
     struct RenderPass {
-        RenderPassType pass_type;
         RenderHandle render_target; // NullHandle でスワップチェーンに描く
         std::vector<DrawCommand> commands;
     };

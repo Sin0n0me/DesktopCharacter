@@ -156,8 +156,47 @@ namespace enishi::renderer::directx {
         return this->unordered_accesses[index].GetAddressOf();
     }
 
-    const std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>>& ViewPool::get_render_targets(
-        void) const noexcept {
-        return this->render_targets;
+    foundation::Option<ID3D11DepthStencilView**> ViewPool::get_address_depth_stencil_view(
+        const types::HandleId id) noexcept {
+        const auto opt_info = this->get_view_info(id);
+        if (opt_info.is_none()) {
+            return {};
+        }
+        const auto index = opt_info.unwrap().index;
+
+        return this->depth_stencils[index].GetAddressOf();
+    }
+
+    foundation::Option<ID3D11RenderTargetView**> ViewPool::get_address_render_target_view(
+        const types::HandleId id) noexcept {
+        const auto opt_info = this->get_view_info(id);
+        if (opt_info.is_none()) {
+            return {};
+        }
+        const auto index = opt_info.unwrap().index;
+
+        return this->render_targets[index].GetAddressOf();
+    }
+
+    foundation::Option<ID3D11ShaderResourceView**> ViewPool::get_address_shader_resource_view(
+        const types::HandleId id) noexcept {
+        const auto opt_info = this->get_view_info(id);
+        if (opt_info.is_none()) {
+            return {};
+        }
+        const auto index = opt_info.unwrap().index;
+
+        return this->shader_resources[index].GetAddressOf();
+    }
+
+    foundation::Option<ID3D11UnorderedAccessView**> ViewPool::get_address_unordered_access_view(
+        const types::HandleId id) noexcept {
+        const auto opt_info = this->get_view_info(id);
+        if (opt_info.is_none()) {
+            return {};
+        }
+        const auto index = opt_info.unwrap().index;
+
+        return this->unordered_accesses[index].GetAddressOf();
     }
 } // namespace enishi::renderer::directx

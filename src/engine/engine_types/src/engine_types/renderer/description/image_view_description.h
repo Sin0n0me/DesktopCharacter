@@ -36,6 +36,8 @@ namespace enishi::types {
         ImageViewType type;
         ImageFormat format;
         ImageAspect aspect;
+        std::uint32_t width;
+        std::uint32_t height;
         std::uint32_t base_mip_level;
         std::uint32_t mip_Level_count;
         std::uint32_t base_array_layer;

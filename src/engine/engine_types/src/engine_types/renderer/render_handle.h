@@ -11,6 +11,7 @@ namespace enishi::types {
         Shader,
         Buffer,
         View,
+        Rasterizer,
     };
 
     struct RenderHandle {

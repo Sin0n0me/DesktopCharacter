@@ -13,6 +13,7 @@ namespace enishi::renderer {
             ShaderReflectionError,
             BufferError,
             ViewError,
+            RasterizerError,
         };
     } // namespace directx
 

@@ -55,7 +55,13 @@ namespace enishi::renderer::directx {
         [[nodiscard]] foundation::Option<ID3D11UnorderedAccessView* const*>
         get_address_unordered_access_view(const types::HandleId id) const noexcept;
 
-        [[nodiscard]] const std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>>&
-        get_render_targets(void) const noexcept;
+        [[nodiscard]] foundation::Option<ID3D11DepthStencilView**> get_address_depth_stencil_view(
+            const types::HandleId id) noexcept;
+        [[nodiscard]] foundation::Option<ID3D11RenderTargetView**> get_address_render_target_view(
+            const types::HandleId id) noexcept;
+        [[nodiscard]] foundation::Option<ID3D11ShaderResourceView**>
+        get_address_shader_resource_view(const types::HandleId id) noexcept;
+        [[nodiscard]] foundation::Option<ID3D11UnorderedAccessView**>
+        get_address_unordered_access_view(const types::HandleId id) noexcept;
     };
 } // namespace enishi::renderer::directx

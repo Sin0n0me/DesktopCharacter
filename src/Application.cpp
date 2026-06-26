@@ -84,8 +84,10 @@ namespace enishi {
             .width = 200,
             .height = 400,
         };
-        this->root_window = std::make_unique<platform_impl::SDL3Window>(
-            "enishi", window_size, platform::WindowSystem::Windows, types::GraphicsAPI::DirectX11);
+        this->root_window = std::make_unique<platform_impl::SDL3Window>(APPLICATION_NAME,
+            window_size,
+            platform::WindowSystem::Windows,
+            types::GraphicsAPI::DirectX11);
         if (!bool(this->root_window)) {
             return false;
         }
@@ -118,6 +120,32 @@ namespace enishi {
 
         this->renderer = std::move(renderer.value());
 
+        //
+        {
+            const auto rtv_image_desc = types::ImageDescription::make_render_target(
+                {window_size.width, window_size.height});
+            auto result_image = this->renderer->create_image(rtv_image_desc);
+            if (result_image.is_err()) {
+                return false;
+            }
+
+            const auto image_view_desc = types::ImageViewDescription{};
+            auto result_rtv =
+                this->renderer->create_render_target_view(result_image.value(), image_view_desc);
+            if (result_rtv.is_err()) {
+                return false;
+            }
+
+            if (const auto& rtv = result_rtv.value().lock()) {
+                rtv->set_clear_color(CLEAR_COLOR);
+            }
+        }
+
+        {
+            this->renderer->create_rasterizer();
+        }
+
+        // モデル読み込み
         const auto asset_paths =
             this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
 
@@ -139,7 +167,12 @@ namespace enishi {
             }
             const auto& model_data = opt_model_data.unwrap();
 
-            this->renderer->create_mesh();
+            const auto result_mesh = this->renderer->create_mesh(model_data.to_mesh_data());
+            if (result_mesh.is_err()) {
+                foundation::Logger::error("メッシュの作成に失敗しました");
+                continue;
+            }
+            const auto a = result_mesh.value();
         }
 
         // this->renderer->create_shader();

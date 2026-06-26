@@ -1,21 +1,29 @@
 #include "resource_manager.h"
+#include "../d3d11_converter.h"
+#include <foundation/log/logger.h>
 
 namespace enishi::renderer::directx {
     ResourceManager::Result ResourceManager::make_mesh(
         ID3D11Device* const device, const types::MeshData& mesh_data) {
         // 頂点バッファ作成
-        auto result_vertex = this->make_vertex_buffer(device, mesh_data.vertices);
-        if (result_vertex.is_err()) {
-            return result_vertex.add_message("メッシュの作成に失敗しました").error();
+        auto vertex_handle = types::RenderHandle{.id = types::INVALID_HANDLE_ID};
+        if (auto vertices = mesh_data.vertices.lock()) {
+            auto result = this->make_vertex_buffer(device, *vertices);
+            if (result.is_err()) {
+                return result.add_message("メッシュの作成に失敗しました").error();
+            }
+            vertex_handle = result.value();
         }
-        const auto vertex_handle = result_vertex.value();
 
         // インデックスバッファ作成
-        const auto result_index = this->make_index_buffer(device, mesh_data.indices);
-        if (result_index.is_err()) {
-            return result_vertex.add_message("メッシュの作成に失敗しました").error();
+        auto index_handle = types::RenderHandle{.id = types::INVALID_HANDLE_ID};
+        if (auto indices = mesh_data.indices.lock()) {
+            auto result = this->make_index_buffer(device, *indices);
+            if (result.is_err()) {
+                return result.add_message("メッシュの作成に失敗しました").error();
+            }
+            index_handle = result.value();
         }
-        const auto index_handle = result_index.value();
 
         const types::HandleId handle = this->handle_allocator.create();
         const Mesh mesh{
@@ -175,7 +183,7 @@ namespace enishi::renderer::directx {
         const std::uint32_t height) {
         const D3D11_SUBRESOURCE_DATA subresource{
             .pSysMem = data.data,
-            .SysMemPitch = width * 4,
+            .SysMemPitch = width * data.byte_width,
         };
         constexpr DXGI_SAMPLE_DESC sample{.Count = 1};
         const D3D11_TEXTURE2D_DESC desc{
@@ -189,6 +197,7 @@ namespace enishi::renderer::directx {
             .BindFlags = D3D11_BIND_SHADER_RESOURCE,
         };
 
+        // 先に作成
         Texture texture{
             .texture_type = TextureType::Texture2D,
         };
@@ -207,10 +216,102 @@ namespace enishi::renderer::directx {
         };
     }
 
+    ResourceManager::Result ResourceManager::make_image(
+        ID3D11Device* const device, const types::ImageDescription& description) {
+        const auto desc = D3D11Converter::to_texture2d_desc(description);
+
+        // 先に作成
+        Texture texture{
+            .texture_type = TextureType::Texture2D,
+        };
+        const HRESULT hr = device->CreateTexture2D(&desc, nullptr, texture.texture.GetAddressOf());
+        if (FAILED(hr)) {
+            return foundation::Error(DirectXError::BufferError, "イメージの作成に失敗しました");
+        }
+
+        const types::HandleId handle = this->handle_allocator.create();
+        this->resource.textures.emplace(handle, texture);
+
+        return types::RenderHandle{
+            .id = handle,
+            .type = types::RenderHandleType::Texture,
+        };
+    }
+
+    ResourceManager::Result ResourceManager::make_rasterizer(
+        ID3D11Device* const device, const types::RasterizerDescription& description) {
+        const auto desc = D3D11Converter::to_rasterizer_desc(description);
+
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizer;
+        const HRESULT hr = device->CreateRasterizerState(&desc, rasterizer.GetAddressOf());
+        if (FAILED(hr)) {
+            return foundation::Error(
+                DirectXError::RasterizerError, "ラスタライザの作成に失敗しました");
+        }
+
+        const types::HandleId handle = this->handle_allocator.create();
+        this->resource.textures.emplace(handle, rasterizer);
+
+        return types::RenderHandle{
+            .id = handle,
+            .type = types::RenderHandleType::Rasterizer,
+        };
+
+        return Result();
+    }
+
+    ResourceManager::Result ResourceManager::make_render_target_view(ID3D11Device* const device,
+        const types::RenderHandle& image_handle,
+        const types::ImageViewDescription& description) {
+        //
+        if (image_handle.type != types::RenderHandleType::Texture) {
+            return foundation::Error(DirectXError::TargetError, "不正なハンドルです");
+        }
+
+        const auto iter = this->resource.textures.find(image_handle.id);
+        if (iter == this->resource.textures.end()) {
+            return foundation::Error(DirectXError::TargetError, "イメージが見つかりませんでした");
+        }
+        const auto& texture = iter->second.texture;
+
+        // 先にリソースの作成
+        const types::HandleId handle = this->handle_allocator.create();
+        auto result = this->resource.views.create(handle, types::ImageViewType::RenderTarget);
+        if (result.is_err()) {
+            return result.propagation(DirectXError::TargetError);
+        }
+
+        // RenderTargetViewの作成
+        const auto opt_rtv = this->resource.views.get_address_render_target_view(handle);
+        if (opt_rtv.is_none()) {
+            return result.propagation(DirectXError::TargetError);
+        }
+        auto rtv = opt_rtv.value();
+        const HRESULT hr = device->CreateRenderTargetView(texture.Get(), nullptr, rtv);
+        if (FAILED(hr)) {
+            return foundation::Error(
+                DirectXError::TargetError, "レンダーターゲットの作成に失敗しました");
+        }
+
+        return types::RenderHandle{
+            .id = handle,
+            .type = types::RenderHandleType::View,
+        };
+    }
+
     foundation::Option<const Buffer&> ResourceManager::get_buffer(
         const types::HandleId handle) const {
         const auto& iter = this->resource.buffers.find(handle);
         if (iter == this->resource.buffers.end()) {
+            return {};
+        }
+        return iter->second;
+    }
+
+    foundation::Option<const Microsoft::WRL::ComPtr<ID3D11RasterizerState>&>
+    ResourceManager::get_rasterizer(const types::HandleId handle) const {
+        const auto& iter = this->resource.rasterizers.find(handle);
+        if (iter == this->resource.rasterizers.end()) {
             return {};
         }
         return iter->second;

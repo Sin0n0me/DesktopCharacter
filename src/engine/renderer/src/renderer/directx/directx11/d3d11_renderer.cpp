@@ -4,8 +4,13 @@
 namespace enishi::renderer::directx {
     void D3D11Renderer::execute(
         ID3D11DeviceContext* const context, const types::DrawCommand& command) const {
-        const auto id = command.handle.id;
-        switch (command.handle.type) {
+        this->bind_handle(context, command.handle);
+    }
+
+    void D3D11Renderer::bind_handle(
+        ID3D11DeviceContext* const context, const types::RenderHandle handle) const {
+        const auto id = handle.id;
+        switch (handle.type) {
             case types::RenderHandleType::Buffer: {
                 const auto& opt_buffer = this->resource_manager.get_buffer(id);
                 if (!opt_buffer.has_value()) {
@@ -18,6 +23,7 @@ namespace enishi::renderer::directx {
                 this->bind_shader(context, id);
             } break;
             case types::RenderHandleType::Mesh: {
+                this->bind_mesh(context, id);
             } break;
             case types::RenderHandleType::Texture: {
             } break;
@@ -34,40 +40,31 @@ namespace enishi::renderer::directx {
 
     void D3D11Renderer::bind_buffer(
         ID3D11DeviceContext* const context, const Buffer& buffer) const {
-        switch (buffer.buffer_type) {
-            case BufferType::Vertex: {
-                const auto& vertex = buffer.parameter.vertex;
-                context->IASetVertexBuffers(vertex.target_slot,
-                    1,
-                    buffer.buffer.GetAddressOf(),
-                    &vertex.stride,
-                    &vertex.offset);
-            } break;
-            case BufferType::Index: {
-                const auto& index = buffer.parameter.index;
-                context->IASetIndexBuffer(buffer.buffer.Get(), index.format, index.offset);
-            } break;
-            case BufferType::Constant: {
-                const auto& constant = buffer.parameter.constant;
-                switch (constant.target_shader) {
-                    case ShaderType::Vertex: {
-                        context->VSSetConstantBuffers(
-                            constant.target_slot, 1, buffer.buffer.GetAddressOf());
-                    } break;
-                    case ShaderType::Pixcel: {
-                        context->PSSetConstantBuffers(
-                            constant.target_slot, 1, buffer.buffer.GetAddressOf());
-                    } break;
-                    case ShaderType::Compute: {
-                        context->CSSetConstantBuffers(
-                            constant.target_slot, 1, buffer.buffer.GetAddressOf());
-                    } break;
-                    default:
-                        break;
-                }
-            } break;
-            default:
-                break;
+        if (const auto vertex = std::get_if<VertexParameter>(&buffer.parameter)) {
+            context->IASetVertexBuffers(vertex->target_slot,
+                1,
+                buffer.buffer.GetAddressOf(),
+                &vertex->stride,
+                &vertex->offset);
+        } else if (const auto index = std::get_if<IndexParameter>(&buffer.parameter)) {
+            context->IASetIndexBuffer(buffer.buffer.Get(), index->format, index->offset);
+        } else if (const auto uniform = std::get_if<UniformParameter>(&buffer.parameter)) {
+            switch (uniform->target_shader) {
+                case ShaderType::Vertex: {
+                    context->VSSetConstantBuffers(
+                        uniform->target_slot, 1, buffer.buffer.GetAddressOf());
+                } break;
+                case ShaderType::Pixcel: {
+                    context->PSSetConstantBuffers(
+                        uniform->target_slot, 1, buffer.buffer.GetAddressOf());
+                } break;
+                case ShaderType::Compute: {
+                    context->CSSetConstantBuffers(
+                        uniform->target_slot, 1, buffer.buffer.GetAddressOf());
+                } break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -116,6 +113,12 @@ namespace enishi::renderer::directx {
 
         switch (opt_type.value()) {
             case types::ImageViewType::DepthStencil: {
+                const auto opt_view = view_pool.get_depth_stencil_view(id);
+                if (opt_view.is_none()) {
+                    return;
+                }
+
+                context->OMSetRenderTargets(1, nullptr, opt_view.value());
             } break;
             case types::ImageViewType::RenderTarget: {
                 const auto opt_view = view_pool.get_address_render_target_view(id);
@@ -143,6 +146,18 @@ namespace enishi::renderer::directx {
         context->RSSetState(opt_rasterizer.unwrap().Get());
     }
 
+    void D3D11Renderer::bind_mesh(
+        ID3D11DeviceContext* const context, const types::HandleId id) const {
+        const auto& opt_mesh = this->resource_manager.get_mesh(id);
+        if (opt_mesh.is_none()) {
+            return;
+        }
+        const auto& mesh = opt_mesh.unwrap();
+
+        this->bind_handle(context, mesh.vertex_handle);
+        this->bind_handle(context, mesh.index_handle);
+    }
+
     D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)
         : d3d11(std::move(d3d11))
         , resource_manager(ResourceManager{}) {
@@ -150,12 +165,14 @@ namespace enishi::renderer::directx {
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_pipeline(
         const types::PipelineDescription& description) {
-        return RenderResult<types::RenderHandle>();
+        return platform::RenderResult<types::RenderHandle>();
     }
 
     platform::RenderResult<types::RenderHandle> D3D11Renderer::create_viewport(
         const types::ViewportRect& config) {
-        return platform::RenderResult<types::RenderHandle>();
+        const auto result = this->create_viewport(config);
+
+        return result;
     }
 
     platform::RenderResult<std::unique_ptr<platform::IPipelineLayout>>
@@ -257,6 +274,10 @@ namespace enishi::renderer::directx {
     void D3D11Renderer::submit_render_graph(const types::RenderGraph& graph) {
         const auto& context = this->d3d11->get_context();
         const auto& view_pool = this->resource_manager.get_view_pool();
+
+        // ビューポートのセット
+        const auto& viewports = this->resource_manager.get_viewports();
+        context->RSSetViewports(viewports.size(), viewports.data());
 
         // レンダーターゲットのクリア
         for (const auto& render_target : this->render_targets) {

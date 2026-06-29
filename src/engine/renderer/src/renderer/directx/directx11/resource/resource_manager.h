@@ -12,6 +12,7 @@
 #include <engine_types/renderer/mesh_data.h>
 #include <engine_types/renderer/render_data.h>
 #include <engine_types/renderer/render_handle.h>
+#include <engine_types/renderer/viewport.h>
 #include <foundation/option/option.h>
 #include <foundation/result/result.h>
 #include <platform/renderer/interface_image_view.h>
@@ -54,6 +55,7 @@ namespace enishi::renderer::directx {
         [[nodiscard]] Result make_render_target_view(ID3D11Device* const device,
             const types::RenderHandle& image_handle,
             const types::ImageViewDescription& description);
+        [[nodiscard]] Result make_viewport(const types::ViewportRect& config);
 
         [[nodiscard]] foundation::Option<const Buffer&> get_buffer(
             const types::HandleId handle) const;
@@ -61,7 +63,9 @@ namespace enishi::renderer::directx {
             const types::HandleId handle) const;
         [[nodiscard]] foundation::Option<const Microsoft::WRL::ComPtr<ID3D11RasterizerState>&>
         get_rasterizer(const types::HandleId handle) const;
+        [[nodiscard]] foundation::Option<const Mesh&> get_mesh(const types::HandleId handle) const;
         [[nodiscard]] const ShaderPool& get_shader_pool(void) const;
         [[nodiscard]] const ViewPool& get_view_pool(void) const;
+        [[nodiscard]] const std::vector<D3D11_VIEWPORT>& get_viewports(void) const;
     };
 } // namespace enishi::renderer::directx

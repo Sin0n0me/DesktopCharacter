@@ -1,5 +1,6 @@
 #include "asset_manager.h"
 #include <assets_system/model/model_loader/model_loader.h>
+#include <foundation/log/logger.h>
 
 namespace enishi::core {
     core::AssetManager::AssetManager(void) {
@@ -81,6 +82,8 @@ namespace enishi::core {
         // 初期ディレクトリの存在, 走査確認
         std::filesystem::path root_path(target_path);
         if (!std::filesystem::is_directory(root_path, ec) || ec) {
+            foundation::Logger::warning(
+                std::format("not a directory. find path: {}", target_path.string<char>()));
             return matched_files;
         }
 
@@ -92,6 +95,8 @@ namespace enishi::core {
 
             auto it = std::filesystem::directory_iterator(current_dir, ec);
             if (ec) {
+                foundation::Logger::error(
+                    std::format("access error. find path: {}", current_dir.string<char>()));
                 continue; // アクセス権限エラーなどはスキップ
             }
 

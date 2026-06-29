@@ -17,10 +17,13 @@ namespace enishi::renderer::directx {
 
       private:
         void execute(ID3D11DeviceContext* const context, const types::DrawCommand& command) const;
+        void bind_handle(
+            ID3D11DeviceContext* const context, const types::RenderHandle handle) const;
         void bind_buffer(ID3D11DeviceContext* const context, const Buffer& buffer) const;
         void bind_shader(ID3D11DeviceContext* const context, const types::HandleId id) const;
         void bind_render_target(ID3D11DeviceContext* const context, const types::HandleId id) const;
         void bind_rasterizer(ID3D11DeviceContext* const context, const types::HandleId id) const;
+        void bind_mesh(ID3D11DeviceContext* const context, const types::HandleId id) const;
 
       public:
         explicit D3D11Renderer(std::unique_ptr<D3D11> d3d11);

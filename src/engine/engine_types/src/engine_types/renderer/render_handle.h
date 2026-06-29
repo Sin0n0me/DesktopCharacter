@@ -12,6 +12,7 @@ namespace enishi::types {
         Buffer,
         View,
         Rasterizer,
+        ViewPort,
     };
 
     struct RenderHandle {

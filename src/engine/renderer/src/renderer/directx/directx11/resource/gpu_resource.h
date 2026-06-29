@@ -6,6 +6,7 @@
 #include <d3d11.h>
 #include <engine_types/handle/handle_type.h>
 #include <unordered_map>
+#include <vector>
 #include <wrl/client.h>
 
 namespace enishi::renderer::directx {
@@ -19,5 +20,6 @@ namespace enishi::renderer::directx {
         ResourceMap<Texture> textures;
         ShaderPool shaders;
         ViewPool views;
+        std::vector<D3D11_VIEWPORT> viewports;
     };
 } // namespace enishi::renderer::directx

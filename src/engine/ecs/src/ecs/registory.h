@@ -39,31 +39,35 @@ namespace enishi::ecs {
 
         template <typename T, typename... Args>
         foundation::Result<T&, ECSError> emplace(const EntityID id, Args&&... args) {
-            return this->get_pool<T>().emplace(id, std::forward<Args>(args)...);
+            return this->get_mut_or_emplace_pool<T>().emplace(id, std::forward<Args>(args)...);
         }
 
         template <typename T>
         foundation::Result<T&, ECSError> insert(const EntityID id, T& component) {
-            return this->get_pool<T>().insert(id, component);
+            return this->get_mut_or_emplace_pool<T>().insert(id, component);
         }
 
         template <typename T>
         foundation::Result<T&, ECSError> insert(const EntityID id, T&& component) {
-            return this->get_pool<T>().insert(id, component);
+            return this->get_mut_or_emplace_pool<T>().insert(id, component);
         }
 
         template <typename T>
         foundation::Result<T&, ECSError> insert_or_replace(const EntityID id, T& component) {
-            return this->get_pool<T>().insert_or_replace(id, std::move(component));
+            return this->get_mut_or_emplace_pool<T>().insert_or_replace(id, std::move(component));
         }
 
         template <typename T>
         foundation::Result<T&, ECSError> insert_or_ignore(const EntityID id, T& component) {
-            return this->get_pool<T>().insert_or_ignore(id, std::move(component));
+            return this->get_mut_or_emplace_pool<T>().insert_or_ignore(id, std::move(component));
         }
 
         template <typename T> void remove(const EntityID id) {
-            this->get_pool<T>().remove(id);
+            const auto opt_pool = this->get_mut_pool<T>();
+            if (opt_pool.is_none()) {
+                return;
+            }
+            opt_pool.unwrap().remove(id);
         }
 
         template <typename T> bool has(const EntityID id) const {
@@ -73,19 +77,27 @@ namespace enishi::ecs {
         }
 
         template <typename T> foundation::Option<T&> get(const EntityID id) {
-            return this->get_pool<T>().get(id);
+            const auto opt_pool = this->get_mut_pool<T>();
+            if (opt_pool.is_none()) {
+                return {};
+            }
+            return opt_pool.unwrap().get(id);
         }
 
         template <typename T> foundation::Option<const T&> get(const EntityID id) const {
-            return this->get_pool<T>().get(id);
+            const auto opt_pool = this->get_pool<T>();
+            if (opt_pool.is_none()) {
+                return {};
+            }
+            return opt_pool.unwrap().get(id);
         }
 
         template <typename... Ts> View<Ts...> view(void) {
-            return View<Ts...>(this->get_pool<Ts>()...);
+            return View<Ts...>(this->get_mut_or_emplace_pool<Ts>()...);
         }
 
       private:
-        template <typename T> ComponentPool<T>& get_pool(void) {
+        template <typename T> ComponentPool<T>& get_mut_or_emplace_pool(void) {
             const auto key = get_component_id<T>();
             auto it = this->pools.find(key);
             if (it == this->pools.end()) {
@@ -94,6 +106,24 @@ namespace enishi::ecs {
                 it = ins;
             }
             return static_cast<ComponentPool<T>&>(*it->second);
+        }
+
+        template <typename T> foundation::Option<ComponentPool<T>&> get_mut_pool(void) {
+            const auto key = get_component_id<T>();
+            auto it = this->pools.find(key);
+            if (it == this->pools.end()) {
+                return {};
+            }
+            return static_cast<ComponentPool<T>&>(*it->second);
+        }
+
+        template <typename T> foundation::Option<const ComponentPool<T>&> get_pool(void) const {
+            const auto key = get_component_id<T>();
+            auto it = this->pools.find(key);
+            if (it == this->pools.end()) {
+                return {};
+            }
+            return static_cast<const ComponentPool<T>&>(*it->second);
         }
     };
 } // namespace enishi::ecs

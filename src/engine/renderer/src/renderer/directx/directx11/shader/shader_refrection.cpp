@@ -116,7 +116,7 @@ namespace enishi::renderer::directx {
             return foundation::Error(DirectXError::ShaderReflectionError);
         }
 
-        return foundation::Result<ShaderReflection, DirectXError>();
+        return reflection;
     }
 
     std::optional<std::uint32_t> ShaderReflection::get_constant_buffer_slot(

@@ -142,12 +142,15 @@ namespace enishi {
         }
 
         {
-            this->renderer->create_rasterizer();
+            // this->renderer->create_rasterizer();
         }
 
         // モデル読み込み
         const auto asset_paths =
             this->asset_manager->find_assets("./assets/models/", {".pmd", ".pmx"});
+        if (asset_paths.empty()) {
+            foundation::Logger::warning("モデルファイルが見つかりません");
+        }
 
         for (const auto& path : asset_paths) {
             const auto result = this->asset_manager->load_asset(path);
@@ -172,7 +175,8 @@ namespace enishi {
                 foundation::Logger::error("メッシュの作成に失敗しました");
                 continue;
             }
-            const auto a = result_mesh.value();
+            const auto mesh_handle = result_mesh.value();
+            foundation::Logger::info("メッシュの作成に成功しました");
         }
 
         // this->renderer->create_shader();

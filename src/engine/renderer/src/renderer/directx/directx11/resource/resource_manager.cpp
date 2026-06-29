@@ -73,17 +73,11 @@ namespace enishi::renderer::directx {
             .pSysMem = data.data,
         };
 
-        const BufferParameter parameter = BufferParameter{
-            .vertex =
-                VertexParameter{
-                    .stride = data.stride,
-                    .offset = 0,
-                },
-        };
-        Buffer buffer{
-            .buffer_type = BufferType::Vertex,
-            .parameter = parameter,
-        };
+        Buffer buffer{VertexParameter{
+            .stride = data.stride,
+            .offset = 0,
+        }};
+
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
             return foundation::Error(DirectXError::BufferError, "頂点バッファの作成に失敗しました");
@@ -124,13 +118,7 @@ namespace enishi::renderer::directx {
             return DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
         }(data.stride);
 
-        const BufferParameter parameter = BufferParameter{
-            .index = IndexParameter{.format = format},
-        };
-        Buffer buffer{
-            .buffer_type = BufferType::Index,
-            .parameter = parameter,
-        };
+        Buffer buffer{IndexParameter{.format = format}};
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
             return foundation::Error(
@@ -160,9 +148,11 @@ namespace enishi::renderer::directx {
             .SysMemSlicePitch = data.stride,
         };
 
-        Buffer buffer{
-            .buffer_type = BufferType::Constant,
-        };
+        // TODO
+        Buffer buffer{UniformParameter{
+            .target_shader = ShaderType::Vertex,
+            .target_slot = 0,
+        }};
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());
         if FAILED (hr) {
             return foundation::Error(DirectXError::BufferError, "定数バッファの作成に失敗しました");
@@ -250,7 +240,7 @@ namespace enishi::renderer::directx {
         }
 
         const types::HandleId handle = this->handle_allocator.create();
-        this->resource.textures.emplace(handle, rasterizer);
+        this->resource.rasterizers.emplace(handle, rasterizer);
 
         return types::RenderHandle{
             .id = handle,
@@ -299,6 +289,23 @@ namespace enishi::renderer::directx {
         };
     }
 
+    ResourceManager::Result ResourceManager::make_viewport(const types::ViewportRect& config) {
+        const auto id = this->resource.viewports.size();
+        this->resource.viewports.emplace_back(D3D11_VIEWPORT{
+            .TopLeftX = static_cast<FLOAT>(config.left_top_x),
+            .TopLeftY = static_cast<FLOAT>(config.left_top_y),
+            .Width = static_cast<FLOAT>(config.width),
+            .Height = static_cast<FLOAT>(config.height),
+            .MinDepth = static_cast<FLOAT>(config.min_depth),
+            .MaxDepth = static_cast<FLOAT>(config.max_depth),
+        });
+
+        return types::RenderHandle{
+            .id = static_cast<types::HandleId>(id),
+            .type = types::RenderHandleType::ViewPort,
+        };
+    }
+
     foundation::Option<const Buffer&> ResourceManager::get_buffer(
         const types::HandleId handle) const {
         const auto& iter = this->resource.buffers.find(handle);
@@ -317,11 +324,23 @@ namespace enishi::renderer::directx {
         return iter->second;
     }
 
+    foundation::Option<const Mesh&> ResourceManager::get_mesh(const types::HandleId handle) const {
+        const auto& iter = this->meshes.find(handle);
+        if (iter == this->meshes.end()) {
+            return {};
+        }
+        return iter->second;
+    }
+
     const ShaderPool& ResourceManager::get_shader_pool(void) const {
         return this->resource.shaders;
     }
 
     const ViewPool& ResourceManager::get_view_pool(void) const {
         return this->resource.views;
+    }
+
+    const std::vector<D3D11_VIEWPORT>& ResourceManager::get_viewports(void) const {
+        return this->resource.viewports;
     }
 } // namespace enishi::renderer::directx

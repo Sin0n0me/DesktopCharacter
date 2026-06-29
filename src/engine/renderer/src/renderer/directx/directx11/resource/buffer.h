@@ -2,15 +2,10 @@
 #include "../shader/shader_type.h"
 #include <cstdint>
 #include <d3d11.h>
+#include <variant>
 #include <wrl/client.h>
 
 namespace enishi::renderer::directx {
-    enum class BufferType {
-        Vertex,
-        Index,
-        Constant,
-    };
-
     struct VertexParameter {
         std::uint32_t stride;
         std::uint32_t offset;
@@ -22,21 +17,20 @@ namespace enishi::renderer::directx {
         std::uint32_t offset;
     };
 
-    struct ConstantParameter {
+    struct UniformParameter {
         ShaderType target_shader;
         std::uint32_t target_slot;
     };
 
     // parameter
-    union BufferParameter {
-        VertexParameter vertex;
-        IndexParameter index;
-        ConstantParameter constant;
-    };
+    using BufferParameter = std::variant<VertexParameter, IndexParameter, UniformParameter>;
 
     struct Buffer {
         Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
-        BufferType buffer_type;
         BufferParameter parameter;
+
+        explicit Buffer(const VertexParameter& parameter);
+        explicit Buffer(const IndexParameter& parameter);
+        explicit Buffer(const UniformParameter& parameter);
     };
 } // namespace enishi::renderer::directx

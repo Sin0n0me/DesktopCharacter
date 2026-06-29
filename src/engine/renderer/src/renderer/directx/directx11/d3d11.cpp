@@ -1,4 +1,5 @@
 #include "d3d11.h"
+#include <foundation/debug/debug.h>
 
 namespace enishi::renderer::directx {
     foundation::VoidResult<DirectXError> D3D11::init(
@@ -40,7 +41,8 @@ namespace enishi::renderer::directx {
         const HRESULT result_device = D3D11CreateDevice(nullptr,
             D3D_DRIVER_TYPE_HARDWARE,
             nullptr,
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT | (_DEBUG ? D3D11_CREATE_DEVICE_DEBUG : 0),
+            D3D11_CREATE_DEVICE_BGRA_SUPPORT |
+                (foundation::IS_DEBUG_MODE ? D3D11_CREATE_DEVICE_DEBUG : 0),
             nullptr,
             0,
             D3D11_SDK_VERSION,

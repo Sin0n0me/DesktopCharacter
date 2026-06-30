@@ -1,5 +1,4 @@
 #pragma once
-#include "../shader/shader_type.h"
 #include <cstdint>
 #include <d3d11.h>
 #include <variant>
@@ -25,7 +24,7 @@ namespace enishi::renderer::directx {
     // parameter
     using BufferParameter = std::variant<VertexParameter, IndexParameter, UniformParameter>;
 
-    struct Buffer {
+    struct alignas(8) Buffer {
         Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
         BufferParameter parameter;
 

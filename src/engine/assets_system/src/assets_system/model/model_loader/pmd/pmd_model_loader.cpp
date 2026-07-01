@@ -115,7 +115,7 @@ namespace enishi::assets_system {
             return result.add_message("ヘッダを読み込めませんでした");
         }
 
-        result = binary_reader.read_magic_number("Pmd");
+        result = binary_reader.read_magic_number_from_str("Pmd");
         if (result.is_err()) {
             return result;
         }

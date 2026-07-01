@@ -14,9 +14,14 @@ namespace enishi::assets_system {
         }
 
         auto bones = PMDToModelData::make_bone(data.bones);
+        if (bones.is_err()) {
+            return bones.error();
+        }
+        auto& bone_resolver = bones.value();
 
         auto vertices = PMDToModelData::make_vertices(data.vertices);
         auto indices = PMDToModelData::make_indices(data.indices);
+        auto iks = PMDToModelData::make_iks(data.iks, &bone_resolver);
 
         return types::ModelData{
             .name = utf8_name.value_or(sjis_name),
@@ -144,5 +149,47 @@ namespace enishi::assets_system {
         }
 
         return vertex_indices;
+    }
+
+    std::vector<types::IK> PMDToModelData::make_iks(
+        const std::vector<PMDIK>& iks, const IBoneResolver* bone_resolver) {
+        const auto ik_size = iks.size();
+        std::vector<types::IK> ik_vec(ik_size);
+
+        for (const auto& ik : iks) {
+            const auto ccdik = types::CCDIK{
+                .iterations = ik.iterations,
+                .target = ik.target_bone,
+                .ik_bone = ik.ik_bone,
+                .chain = ik.chain,
+                .limit = ik.limit,
+            };
+            types::IK convert_ik{};
+
+            const auto bone_name = bone_resolver->resolve_name(ik.ik_bone);
+            const auto condition = [](const foundation::UTF8& name) -> std::optional<bool> {
+                if (name.contains("膝") || name.contains("ひざ")) {
+                    return true; // has_value()がtrueになるなら何を返してもいい
+                }
+                return {};
+            };
+            const bool is_limited_bone = bone_name.and_then(condition).has_value();
+
+            if (is_limited_bone) {
+                convert_ik.method = types::LimitedCCDIK{
+                    .limit =
+                        types::IKLimit{
+                            .axis = MMD_KNEE_AXIS,
+                        },
+                    .ccdik = ccdik,
+                };
+            } else {
+                convert_ik.method = ccdik;
+            }
+
+            ik_vec.emplace_back(convert_ik);
+        }
+
+        return ik_vec;
     }
 } // namespace enishi::assets_system

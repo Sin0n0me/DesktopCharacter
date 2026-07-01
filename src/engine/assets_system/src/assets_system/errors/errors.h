@@ -21,5 +21,5 @@ namespace enishi::assets_system {
         IOError,
     };
 
-    template <typename T> using IOReuslt = foundation::Result<T, IOError>;
+    template <typename T> using IOResult = foundation::Result<T, IOError>;
 } // namespace enishi::assets_system

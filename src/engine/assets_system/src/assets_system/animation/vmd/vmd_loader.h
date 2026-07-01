@@ -8,7 +8,7 @@
 namespace enishi::assets_system {
     class VMDLoader {
       private:
-        using Result = IOReuslt<void>;
+        using Result = IOResult<void>;
 
          [[nodiscard]] Result load_vmd(BinaryReader& binary_reader, VMDData* const vmd_data);
          [[nodiscard]] Result load_vmd_header(BinaryReader& binary_reader, VMDData* const vmd_data);
@@ -22,6 +22,6 @@ namespace enishi::assets_system {
         explicit VMDLoader(void) noexcept = default;
 
       public:
-        static IOReuslt<std::unique_ptr<VMDData>> load(const std::filesystem::path& path) noexcept;
+        static IOResult<std::unique_ptr<VMDData>> load(const std::filesystem::path& path) noexcept;
     };
 } // namespace enishi::assets_system

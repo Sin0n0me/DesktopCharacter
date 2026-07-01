@@ -9,7 +9,7 @@
 namespace enishi::assets_system {
     class PMDModelLoader : public IModelLoader {
       private:
-        using Result = IOReuslt<void>;
+        using Result = IOResult<void>;
 
         [[nodiscard]] Result load_pmd(BinaryReader& binary_reader, PMDData* const pmd_data);
         [[nodiscard]] Result load_pmd_header(BinaryReader& binary_reader, PMDData* const pmd_data);

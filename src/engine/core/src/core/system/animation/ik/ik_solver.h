@@ -16,8 +16,6 @@ namespace enishi::core {
             const component::ModelComponent& model,
             const types::BoneIndex index);
 
-        static glm::vec3 get_mmd_knee_axis(void);
-
       private:
         static void ccd_ik(component::AnimationComponent& animation,
             const component::ModelComponent& model,

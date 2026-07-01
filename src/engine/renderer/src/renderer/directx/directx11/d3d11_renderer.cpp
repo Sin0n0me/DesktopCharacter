@@ -154,8 +154,9 @@ namespace enishi::renderer::directx {
         }
         const auto& mesh = opt_mesh.unwrap();
 
-        this->bind_handle(context, mesh.vertex_handle);
-        this->bind_handle(context, mesh.index_handle);
+        for (const auto handle : mesh.mesh_handles) {
+            this->bind_handle(context, handle);
+        }
     }
 
     D3D11Renderer::D3D11Renderer(std::unique_ptr<D3D11> d3d11)

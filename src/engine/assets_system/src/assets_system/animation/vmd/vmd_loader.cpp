@@ -188,7 +188,7 @@ namespace enishi::assets_system {
         return {};
     }
 
-    IOReuslt<std::unique_ptr<VMDData>> VMDLoader::load(const std::filesystem::path& path) noexcept {
+    IOResult<std::unique_ptr<VMDData>> VMDLoader::load(const std::filesystem::path& path) noexcept {
         auto reader = BinaryReader::make_reader(path);
         if (!reader.has_value()) {
             return std::unexpected(std::move(reader.error()));

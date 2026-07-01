@@ -15,7 +15,6 @@ namespace enishi::types {
 
     struct IKLimit {
         glm::vec3 axis; // 回転を制限する軸
-        float limit;    // 制限する量
     };
 
     struct CCDIK {
@@ -23,6 +22,7 @@ namespace enishi::types {
         BoneIndex target;
         BoneIndex ik_bone;
         std::vector<BoneIndex> chain;
+        float limit; // 制限する量
     };
 
     struct LimitedCCDIK {
@@ -33,7 +33,6 @@ namespace enishi::types {
     using IkMethod = std::variant<CCDIK, LimitedCCDIK>;
 
     struct IK {
-        IKType ik_type;
         IkMethod method; // 他のCCDIK以外のIKSolverを作るときはunionで纏めるなどが必要
     };
 } // namespace enishi::types

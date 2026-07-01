@@ -26,10 +26,10 @@ namespace enishi::renderer::directx {
         }
 
         const types::HandleId handle = this->handle_allocator.create();
-        const Mesh mesh{
-            .vertex_handle = vertex_handle,
-            .index_handle = index_handle,
-        };
+        Mesh mesh{};
+        mesh.mesh_handles.push_back(vertex_handle);
+        mesh.mesh_handles.push_back(index_handle);
+
         this->meshes.emplace(handle, mesh);
 
         return types::RenderHandle{
@@ -76,6 +76,7 @@ namespace enishi::renderer::directx {
         Buffer buffer{VertexParameter{
             .stride = data.stride,
             .offset = 0,
+            .target_slot = 0,
         }};
 
         const HRESULT hr = device->CreateBuffer(&desc, &init_data, buffer.buffer.GetAddressOf());

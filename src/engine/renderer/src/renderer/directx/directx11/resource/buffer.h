@@ -1,4 +1,5 @@
 #pragma once
+#include "../shader/shader_type.h"
 #include <cstdint>
 #include <d3d11.h>
 #include <variant>

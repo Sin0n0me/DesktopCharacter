@@ -150,10 +150,6 @@ namespace enishi::core {
         );
     }
 
-    glm::vec3 IKSolver::get_mmd_knee_axis(void) {
-        return glm::normalize(glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f)); // X軸固定
-    }
-
     glm::quat IKSolver::decompose_swing_twist(const glm::quat& q,
         const glm::vec3& twist_axis,
         const float twist_min,

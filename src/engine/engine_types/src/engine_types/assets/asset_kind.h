@@ -6,7 +6,7 @@ namespace enishi::types {
         Animation,
         Model,
         Shader,
-        Sound,
+        Audio,
         Texture,
         Script,
         Video,

@@ -1,5 +1,5 @@
 #include "animation_player.h"
-#include "ik/ik_solver.h"
+#include <core/system/animation/ik/ik_solver.h>
 
 namespace enishi::core {
     void AnimationPlayer::update_local(
@@ -29,6 +29,7 @@ namespace enishi::core {
     void AnimationPlayer::update_global(component::AnimationComponent& animation,
         const component::ModelComponent& model,
         const types::BoneIndex index) {
+        /*
         const auto& bone_node = model.bone_node[index];
         auto& bone = animation.bone_buffer[index];
         if (bone_node.has_parent()) {
@@ -41,15 +42,18 @@ namespace enishi::core {
         for (const auto& child : bone_node.children) {
             AnimationPlayer::update_global(animation, model, child);
         }
+        */
     }
 
     void AnimationPlayer::update_children_global(component::AnimationComponent& animation,
         const component::ModelComponent& model,
         const types::BoneIndex index) {
+        /*
         const auto& bone_node = model.bone_node[index];
         for (const auto& child : bone_node.children) {
             AnimationPlayer::update_global(animation, model, child);
         }
+        */
     }
 
     void AnimationPlayer::global_to_bone_matrices(

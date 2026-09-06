@@ -92,6 +92,14 @@ namespace enishi::ecs {
             return opt_pool.unwrap().get(id);
         }
 
+        template <typename T> foundation::Option<const T&> get_const(const EntityID id) {
+            const auto opt_pool = this->get_pool<T>();
+            if (opt_pool.is_none()) {
+                return {};
+            }
+            return opt_pool.unwrap().get(id);
+        }
+
         template <typename... Ts> View<Ts...> view(void) {
             return View<Ts...>(this->get_mut_or_emplace_pool<Ts>()...);
         }

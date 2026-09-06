@@ -1,7 +1,7 @@
 #include "ik_solver.h"
-#include "../animation_player.h"
 #include <algorithm>
 #include <cmath>
+#include <core/system/animation/animation/animation_player.h>
 
 namespace enishi::core {
     constexpr float EPSILON = 1e-5f;

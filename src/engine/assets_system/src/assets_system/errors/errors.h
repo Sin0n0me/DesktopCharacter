@@ -26,6 +26,7 @@ namespace enishi::assets_system {
         MissingDependency,  // 依存アセットの不足
         OutOfMemory,        // メモリ不足
         AccessDenied,       // 権限エラー
+        InitError,
     };
 
     template <typename T> using IOResult = foundation::Result<T, IOError>;

@@ -1,6 +1,5 @@
 #include "animation_system.h"
-#include "animation_player.h"
-#include "animation_system.h"
+#include "animation/animation_player.h"
 
 namespace enishi::core {
     AnimationSystem::AnimationSystem(const std::shared_ptr<ecs::Registory> registory)

@@ -31,15 +31,16 @@ namespace enishi::foundation {
                 lock, [this] { return !this->is_running || !this->tasks.empty(); });
 
             while (!this->tasks.empty()) {
-                const auto&& task = std::move(this->tasks.front());
-                this->tasks.pop();
                 lock.unlock();
+                auto&& task = this->tasks.front();
 
-                // タスク内で例外が送出されてもワーカースレッド自体は落とさない
+                // タスク内で仮に例外が送出されてもワーカースレッド自体は落とさない
                 try {
                     task();
                 } catch (...) {
                 }
+
+                this->tasks.pop();
 
                 lock.lock();
             }

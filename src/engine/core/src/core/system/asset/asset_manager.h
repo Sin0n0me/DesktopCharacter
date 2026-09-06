@@ -4,6 +4,7 @@
 #include <assets_system/asset_handle.h>
 #include <assets_system/interface_asset_loader.h>
 #include <assets_system/interface_asset_system.h>
+#include <condition_variable>
 #include <ecs/registory.h>
 #include <engine_types/assets/asset_state.h>
 #include <engine_types/assets/model/model_data.h>
@@ -18,6 +19,7 @@
 #include <queue>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace enishi::core {
@@ -46,8 +48,10 @@ namespace enishi::core {
         foundation::SingleThreadExecutor io_executor;
         mutable std::mutex state_mutex;
         std::unordered_map<assets_system::AssetHandle, types::AssetState> asset_states;
-        std::mutex completed_loads_mutex;
+        mutable std::mutex completed_loads_mutex;
         std::queue<CompletedLoad> completed_loads;
+        mutable std::condition_variable load_condition;
+        std::unordered_set<assets_system::AssetHandle> completed_load_handles;
 
       public:
         explicit AssetManager(void);
@@ -158,7 +162,11 @@ namespace enishi::core {
         // メインスレッド側で完了結果を1件取り出す(スレッドセーフ)
         [[nodiscard]] foundation::Option<CompletedLoad> dequeue_completed_load(void) noexcept;
 
-        // 読み込み結果1件をRegistoryへ反映し、状態をLoaded/Failedへ確定する(メインスレッド専用)
+        // 読み込み結果1件をRegistoryへ反映し, 状態をLoaded/Failedへ確定する(メインスレッド専用)
         void finalize_load(CompletedLoad&& completed) noexcept;
+
+        // データ取得要求が来た時点で非同期読み込みが未完了なら
+        // IO完了とRegistryへの反映まで待機してから取得する
+        void ensure_asset_loaded(const assets_system::AssetHandle& handle) const noexcept;
     };
 } // namespace enishi::core

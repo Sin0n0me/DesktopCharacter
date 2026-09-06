@@ -56,9 +56,9 @@ namespace enishi::core {
             return foundation::Error(assets_system::AssetError::NotFound);
         }
 
-        // ハンドルはIOの完了を待たずにこの場で発行する
-        // (typeは最有力候補である先頭ローダーの対応アセット種別を暫定的に採用する。
-        //  1拡張子に複数ローダーが対応するケースは稀であり、通常はここで確定する)
+        // ハンドルはIOの完了を待たずにこの場で発行
+        // typeは最有力候補である先頭ローダーの対応アセット種別を暫定的に採用する
+        // 1拡張子に複数ローダーが対応するケースは稀であり, 通常はここで確定する
         const auto handle = assets_system::AssetHandle{
             .id = this->asset_registory.create(),
             .type = candidates.front()->get_target_asset_type(),
@@ -129,8 +129,6 @@ namespace enishi::core {
     void AssetManager::request_load(const std::filesystem::path& path,
         const assets_system::AssetHandle& handle,
         const std::vector<AssetLoader>& candidates) {
-        // candidatesはthis->extension_to_loaderが保持するvectorへの参照であり、
-        // ワーカースレッド上で安全に使えるようコピーしてキャプチャする(shared_ptrのコピーなので軽量)
         this->io_executor.submit([this, path, handle, candidates] {
             this->set_asset_state(handle, types::AssetState::Loading);
 
@@ -224,6 +222,37 @@ namespace enishi::core {
         this->set_asset_state(completed.handle, types::AssetState::Loaded);
     }
 
+    void AssetManager::ensure_asset_loaded(
+        const assets_system::AssetHandle& handle) const noexcept {
+        if (types::is_inactive_state(this->get_asset_state(handle))) {
+            return; // 既にRegistryへ反映済みなら待機しない
+        }
+
+        for (;;) {
+            {
+                std::unique_lock<std::mutex> lock(this->completed_loads_mutex);
+                // IOスレッドが結果を生成済みならメインスレッド側でRegistryへ反映するために待機を終了
+                const auto is_ready = [this, &handle] {
+                    if (types::is_inactive_state(this->get_asset_state(handle))) {
+                        return true;
+                    }
+                    return this->completed_load_handles.contains(handle);
+                };
+
+                if (!is_ready()) {
+                    this->load_condition.wait(lock, is_ready);
+                }
+            }
+
+            // Registryへの挿入はComponentPoolがスレッドセーフではないため既存の完了処理を通して反映する
+            this->drain_completed_loads();
+
+            if (types::is_inactive_state(this->get_asset_state(handle))) {
+                return;
+            }
+        }
+    }
+
     assets_system::PathObjects AssetManager::find_assets(const std::filesystem::path& target_path,
         const types::AssetKind asset_kind) const noexcept {
         const auto& extensions = this->get_extensions(asset_kind);
@@ -249,16 +278,34 @@ namespace enishi::core {
 
     foundation::Option<const assets_system::AssetModelData&> core::AssetManager::get_model_data(
         const assets_system::AssetHandle& handle) const noexcept {
+        auto data = this->asset_registory.get<assets_system::AssetModelData>(handle.id);
+        if (data.is_some()) {
+            return data;
+        }
+
+        this->ensure_asset_loaded(handle);
         return this->asset_registory.get<assets_system::AssetModelData>(handle.id);
     }
 
     foundation::Option<const assets_system::AssetShaderData&> AssetManager::get_shader_data(
         const assets_system::AssetHandle& handle) const noexcept {
+        auto data = this->asset_registory.get<assets_system::AssetShaderData>(handle.id);
+        if (data.is_some()) {
+            return data;
+        }
+
+        this->ensure_asset_loaded(handle);
         return this->asset_registory.get<assets_system::AssetShaderData>(handle.id);
     }
 
     foundation::Option<const assets_system::AssetTextureData&> AssetManager::get_texture_data(
         const assets_system::AssetHandle& handle) const noexcept {
+        auto data = this->asset_registory.get<assets_system::AssetTextureData>(handle.id);
+        if (data.is_some()) {
+            return data;
+        }
+
+        this->ensure_asset_loaded(handle);
         return this->asset_registory.get<assets_system::AssetTextureData>(handle.id);
     }
 

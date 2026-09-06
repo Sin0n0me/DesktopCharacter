@@ -9,4 +9,9 @@ namespace enishi::types {
         Loaded,    // 読み込み完了
         Failed     // エラーにより読み込み失敗
     };
-}
+
+    constexpr bool is_inactive_state(const AssetState state) noexcept {
+        return state == AssetState::Loaded || state == AssetState::Failed ||
+               state == AssetState::NotLoaded;
+    }
+} // namespace enishi::types

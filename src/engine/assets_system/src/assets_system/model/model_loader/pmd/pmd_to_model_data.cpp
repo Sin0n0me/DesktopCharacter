@@ -2,6 +2,7 @@
 #include <engine_types/renderer/texture/model_texture.h>
 #include <engine_types/renderer/uniform_buffer/material.h>
 #include <foundation/log/logger.h>
+#include <foundation/option/option.h>
 #include <foundation/str/str.h>
 #include <foundation/str/to_utf8.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -182,36 +183,33 @@ namespace enishi::assets_system {
         std::vector<types::IK> ik_vec(ik_size);
 
         for (const auto& ik : iks) {
-            const auto ccdik = types::CCDIK{
+            auto&& ccdik = types::CCDIK{
                 .iterations = ik.iterations,
                 .target = ik.target_bone,
                 .ik_bone = ik.ik_bone,
                 .chain = ik.chain | std::views::transform([](const std::uint16_t x) {
                     return static_cast<decltype(types::CCDIK::chain)::value_type>(x);
                 }) | std::ranges::to<std::vector<std::size_t>>(),
-                .limit = ik.limit,
+                .limit = types::IKLimitAngle{},
             };
             types::IK convert_ik{};
 
             const auto bone_name = bone_resolver->resolve_name(ik.ik_bone);
-            const auto condition = [](const foundation::UTF8& name) -> std::optional<bool> {
+            const auto condition = [](const foundation::UTF8& name) -> foundation::Option<bool> {
                 if (name.contains("膝") || name.contains("ひざ")) {
                     return true; // has_value()がtrueになるなら何を返してもいい
                 }
                 return {};
             };
-            const bool is_limited_bone = bone_name.and_then(condition).has_value();
+            const bool is_limited_bone = bone_name.and_then(condition).is_some();
 
             if (is_limited_bone) {
-                convert_ik.method = types::LimitedCCDIK{
-                    .limit =
-                        types::IKLimit{
-                            .axis = PMDToModelData::MMD_KNEE_AXIS,
-                        },
-                    .ccdik = ccdik,
+                ccdik.limit = types::IKLimitAxis{
+                    .axis = PMDToModelData::MMD_KNEE_AXIS,
+                    .limit = ik.limit,
                 };
             } else {
-                convert_ik.method = ccdik;
+                ccdik.limit = types::IKLimitAngle{.limit = ik.limit};
             }
 
             ik_vec.emplace_back(convert_ik);

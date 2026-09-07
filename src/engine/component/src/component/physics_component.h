@@ -1,12 +1,10 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace enishi::component {
-    enum class ShapeType {};
-
-    struct RigidBody {
-        glm::mat4 offset; // bulletとのオフセット
+    struct PhysicsComponent {
+        std::vector<glm::mat4> local;
+        std::vector<glm::mat4> global;
     };
-
-    struct PhysicsComponent {};
 } // namespace enishi::component

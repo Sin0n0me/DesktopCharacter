@@ -16,6 +16,8 @@ namespace enishi::platform {
 
         [[nodiscard]] virtual types::RenderHandle get_render_target(void) const noexcept = 0;
 
-        [[nodiscard]] virtual void update(void) = 0;
+        virtual void add_mesh(const types::RenderHandle&) noexcept = 0;
+
+        virtual void update(void) = 0;
     };
 } // namespace enishi::platform

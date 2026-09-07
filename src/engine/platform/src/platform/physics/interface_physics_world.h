@@ -6,12 +6,12 @@
 #include <foundation/result/result.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include <platform/animation/interface_bone_updater.h>
-#include <platform/bone_ststem/interface_bone_view.h>
 #include <platform/errors/physics_errors.h>
 #include <platform/physics/bone/interface_physics_bone_view.h>
+#include <platform/physics/bone/interface_physics_bone_view_list.h>
 #include <platform/physics/interface_physics_world_config_writer.h>
 #include <platform/physics/rigid_body/interface_rigid_body.h>
+#include <platform/skinning_system/interface_bone_updater.h>
 
 namespace enishi::platform {
     class IPhysicsWorld {
@@ -40,7 +40,7 @@ namespace enishi::platform {
         [[nodiscard]] virtual foundation::Result<types::PhysicsHandle, PhysicsError> add_rigid_body(
             const types::PhysicsHandle& object_handle,
             types::PhysicsRigidBody&& rigid_body,
-            std::shared_ptr<platform::IBoneView> bone_view,
+            std::shared_ptr<platform::IPhysicsBoneViewList> view_list,
             std::shared_ptr<platform::IBoneUpdater> updater,
             std::shared_ptr<platform::IPhysicsBoneView> physics_bone_view) noexcept = 0;
 

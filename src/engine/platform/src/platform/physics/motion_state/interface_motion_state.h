@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <glm/glm.hpp>
-#include <platform/animation/interface_bone_updater.h>
 #include <platform/physics/bone/interface_physics_bone_view.h>
+#include <platform/skinning_system/interface_bone_updater.h>
 
 namespace enishi::platform {
     class IMotionState {

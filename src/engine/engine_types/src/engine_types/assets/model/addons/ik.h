@@ -10,29 +10,30 @@ namespace enishi::types {
 
     enum class IKType {
         CCDIK,
-        LimitedCCDIK,
     };
 
-    struct IKLimit {
-        glm::vec3 axis; // 回転を制限する軸
+    struct IKLimitAngle {
+        float limit; // 制限する量
     };
+
+    struct IKLimitAxis {
+        glm::vec3 axis; // 回転を制限する軸
+        float limit;    // 制限する量
+    };
+
+    using IkLimit = std::variant<IKLimitAngle, IKLimitAxis>;
 
     struct CCDIK {
         std::uint32_t iterations;
         BoneIndex target;
         BoneIndex ik_bone;
         std::vector<BoneIndex> chain;
-        float limit; // 制限する量
+        IkLimit limit;
     };
 
-    struct LimitedCCDIK {
-        IKLimit limit;
-        CCDIK ccdik;
-    };
-
-    using IkMethod = std::variant<CCDIK, LimitedCCDIK>;
+    using IkMethod = std::variant<CCDIK>;
 
     struct IK {
-        IkMethod method; // 他のCCDIK以外のIKSolverを作るときはunionで纏めるなどが必要
+        IkMethod method;
     };
 } // namespace enishi::types

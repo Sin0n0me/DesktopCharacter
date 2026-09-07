@@ -1,5 +1,6 @@
 #include "animation_system.h"
 #include "animation/animation_player.h"
+#include <engine_types/skinning/skinning_command.h>
 
 namespace enishi::core {
     AnimationSystem::AnimationSystem(const std::shared_ptr<ecs::Registory> registory)
@@ -17,14 +18,13 @@ namespace enishi::core {
     }
 
     void AnimationSystem::update(const types::DeltaTime& delta_time) {
-        // TODO マルチスレッドで複数entityの更新
-        auto view = this->registory->view<component::AnimationComponent,
-            component::ModelComponent,
-            component::IKComponent>();
+        auto view = this->registory->view<int>();
 
+        /*
         for (auto [entity, animation, model, ik] : view) {
             this->animation(animation, model, ik);
         }
+        */
     }
 
     void enishi::core::AnimationSystem::render(void) const {
@@ -33,32 +33,32 @@ namespace enishi::core {
     void AnimationSystem::animation(component::AnimationComponent& animation,
         const component::ModelComponent& model,
         const component::IKComponent& ik) {
+        /*
         const auto size = animation.bone_buffer.size();
         for (const auto command : animation.commands) {
             switch (command) {
-                case component::AnimationCommand::Animation: {
+                case types::SkinningCommand::Animation: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::apply_animation(animation, model, i);
                     }
                 } break;
-                case component::AnimationCommand::IK: {
+                case types::SkinningCommand::IK: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::apply_ik(animation, ik, model, i);
                     }
                 } break;
-
-                case component::AnimationCommand::PhysicsSimulate: {
+                case types::SkinningCommand::PhysicsSimulate: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::apply_physics(animation, model, i);
                     }
                 } break;
-                case component::AnimationCommand::WriteBackPhysicsSimulate: {
+                case types::SkinningCommand::WriteBackPhysicsSimulate: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         // AnimationPlayer::apply_physics(animation, model, i);
                     }
                 } break;
 
-                case component::AnimationCommand::ResetLocalTransform: {
+                case types::SkinningCommand::ResetLocalTransform: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         auto& buffer = animation.bone_buffer[i];
                         buffer.position = glm::vec3(0.0f);
@@ -68,13 +68,13 @@ namespace enishi::core {
                         buffer.scale = glm::vec3(0.0f);
                     }
                 } break;
-                case component::AnimationCommand::ResetPosition: {
+                case types::SkinningCommand::ResetPosition: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         auto& buffer = animation.bone_buffer[i];
                         buffer.position = glm::vec3(0.0f);
                     }
                 } break;
-                case component::AnimationCommand::ResetRotate: {
+                case types::SkinningCommand::ResetRotate: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         auto& buffer = animation.bone_buffer[i];
                         for (auto& rotation : buffer.rotations) {
@@ -82,30 +82,30 @@ namespace enishi::core {
                         }
                     }
                 } break;
-                case component::AnimationCommand::ResetScale: {
+                case types::SkinningCommand::ResetScale: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         auto& buffer = animation.bone_buffer[i];
                         buffer.scale = glm::vec3(0.0f);
                     }
                 } break;
 
-                case component::AnimationCommand::UpdateGlobal: {
+                case types::SkinningCommand::UpdateGlobal: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::update_global(animation, model, i);
                     }
                 } break;
-                case component::AnimationCommand::UpdateLocal: {
+                case types::SkinningCommand::UpdateLocal: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::update_local(animation, i);
                     }
                 } break;
 
-                case component::AnimationCommand::WriteBoneMatrices: {
+                case types::SkinningCommand::WriteBoneMatrices: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::global_to_bone_matrices(animation, i);
                     }
                 } break;
-                case component::AnimationCommand::ReadBoneMatrices: {
+                case types::SkinningCommand::ReadBoneMatrices: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::bone_matrices_to_global(animation, i);
                     }
@@ -115,5 +115,6 @@ namespace enishi::core {
                     break;
             }
         }
+        */
     }
 } // namespace enishi::core

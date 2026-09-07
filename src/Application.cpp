@@ -1,12 +1,15 @@
 #include "application.h"
-#include "render_pass/constructor/back_ground_render_pass_constructor.h"
-#include "render_pass/constructor/model_render_pass_constructor.h"
-#include "render_pass/constructor/shadow_map_render_pass_constructor.h"
 #include <core/system/animation/animation_system.h>
 #include <core/system/asset/asset_system.h>
 #include <core/system/physics/physics_system.h>
 #include <foundation/log/logger.h>
+#include <foundation/str/string_builder.h>
 #include <platform_impl/physics/physics_config.h>
+#include <render_pass/constructor/back_ground/back_ground_render_pass_constructor.h>
+// #include <render_pass/constructor/debug/debug_render_pass_constructor.h>
+#include <render_pass/constructor/model/model_render_pass_constructor.h>
+#include <render_pass/constructor/shadow/shadow_map_render_pass_constructor.h>
+#include <render_pass/render_pass_constructor.h>
 
 #include <physics/bullet3/physics_engine.h>
 
@@ -134,27 +137,33 @@ namespace enishi {
             return {};
         }
 
-        // レンダーパスの作成
         const auto render_system = this->system_scheduler.register_system<core::RenderSystem>(
             100, this->rsegistory, renderer, renderer);
-        auto result = {
-            render_system->add_render_pass_constructor(
-                std::make_shared<ModelRenderPassConstructor>()),
 
-            /*
-        render_system->add_render_pass_constructor(
-            std::make_shared<BackGroundRenderPassConstructor>()),
-        render_system->add_render_pass_constructor(
-            std::make_shared<ShadowMapRenderPassConstructor>()),
-            */
-        };
+        // レンダーパスの作成
+        render_pass::RenderPassConstructor constructor;
+        constructor.add_render_pass_constructor(
+            std::make_shared<render_pass::ModelRenderPassConstructor>());
+        constructor.add_render_pass_constructor(
+            std::make_shared<render_pass::BackGroundRenderPassConstructor>());
+        constructor.add_render_pass_constructor(
+            std::make_shared<render_pass::ShadowMapRenderPassConstructor>());
+
+        constructor.use_asset_paths();
 
         // 一括構築
-        const auto result_passes = render_system->create_render_passes(asset_system.get());
+        auto&& result_passes = constructor.create_render_passes(
+            {
+                render_pass::ModelRenderPassConstructor::RENDER_PASS_NAME,
+            },
+            render_system->get_renderer().get());
         if (result_passes.is_err()) {
             foundation::Logger::error(result_passes.unwrap_err().get_message());
             return {};
         }
+
+        // レンダーパスのセット
+        render_system->set_render_passes(std::move(result_passes).unwrap_mut());
 
         return renderer;
     }
@@ -163,4 +172,90 @@ namespace enishi {
         std::shared_ptr<platform::IPhysicsEngine> physics_engine) {
         physics_engine->init_world();
     }
+
+    foundation::Result<std::tuple<foundation::UTF8, types::RenderHandle>,
+        render_pass::ConstructError>
+    ModelRenderPassConstructor::make_mesh(platform::IRenderer* const renderer,
+        const std::vector<types::RenderHandle>& shader_reflections) {
+        const auto pattern_model_extensions =
+            asset_system->get_extensions_pattern(types::AssetKind::Model);
+        const auto path = MODEL_PATH / "";
+        const std::regex pattern(
+            std::format("{}.*{}", foundation::path_to_regex_str(path), pattern_model_extensions));
+        const auto model_paths = asset_system->find_assets(MODEL_PATH, types::AssetKind::Model);
+        const auto asset_paths = model_paths.find(pattern);
+
+        if (asset_paths.empty()) {
+            return foundation::Error(ConstructError::Construct, "モデルデータが見つかりません");
+        }
+
+        // モデルからメッシュへ変換
+        foundation::StringBuilder error_message;
+        for (const auto& path : asset_paths) {
+            error_message.push_back(std::format("loaded path: {}", path.string<char>()));
+            const auto asset_handle = asset_system->load_asset(path);
+            if (asset_handle.is_err()) {
+                error_message.push_back(asset_handle.unwrap_err().get_message());
+                continue;
+            }
+            const auto opt_model_data = asset_system->get_model_data(asset_handle.unwrap());
+            if (opt_model_data.is_none()) {
+                continue;
+            }
+            const auto& model_data = opt_model_data.unwrap();
+
+            // 先にテクスチャ読み込み
+            for (const auto& material : model_data->materials) {
+                for (const auto& material_texture : material.textures) {
+                    const auto asset_handle = asset_system->load_asset(material_texture.path);
+                    if (asset_handle.is_err()) {
+                        error_message.push_back(asset_handle.unwrap_err().get_message());
+                    }
+                }
+            }
+
+            // メッシュ作成
+            const auto mesh_handle = renderer->create_mesh(*model_data, shader_reflections);
+            if (mesh_handle.is_err()) {
+                error_message.push_back(mesh_handle.unwrap_err().get_message());
+                continue;
+            }
+
+            return std::tuple{
+                model_data->name,
+                mesh_handle.unwrap(),
+            };
+        }
+
+        return foundation::Error(ConstructError::Construct, error_message.join("\n"));
+    }
+
+    /*
+    std::shared_ptr<types::ShaderData> get_shaders(
+        assets_system::IAssetSystem* asset_system, const std::filesystem::path& path) {
+        const auto shader_paths = asset_system->find_assets(SHADER_PATH, types::AssetKind::Shader);
+        const auto pattern_shader_extensions =
+            asset_system->get_extensions_pattern(types::AssetKind::Shader);
+        const auto make_paths = [&](const std::filesystem::path& file_path) {
+            const auto str_pattern = std::format(
+                "{}{}", foundation::path_to_regex_str(file_path), pattern_shader_extensions);
+            const std::regex pattern(str_pattern);
+            return shader_paths.find(pattern);
+        };
+    }
+
+    std::shared_ptr<types::ShaderData> get_shader(
+        assets_system::IAssetSystem* asset_system, const std::filesystem::path& path) {
+        const auto asset_handle =
+            asset_system->load_asset(path).add_message("シェーダーの読み込みに失敗しました");
+        if (asset_handle.is_err()) {
+            return asset_handle.propagation(ConstructError::Construct);
+        }
+        const auto shader_data = asset_system->get_shader_data(asset_handle.unwrap());
+        if (shader_data.is_none()) {
+            return foundation::Error(ConstructError::Construct, "シェーダーデータが存在しません");
+        }
+        shader_data.unwrap();
+    }
+    */
 } // namespace enishi

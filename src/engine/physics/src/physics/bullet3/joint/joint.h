@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <physics/bullet3/rigid_body/rigid_body.h>
-#include <platform/animation/interface_bone_updater.h>
+#include <platform/skinning_system/interface_bone_updater.h>
 
 namespace enishi::physics::bullet3 {
     class BulletJoint {

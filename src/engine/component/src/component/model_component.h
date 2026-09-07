@@ -4,10 +4,7 @@
 
 namespace enishi::component {
     struct ModelComponent {
-        std::vector<types::AnimationBone> animation;
-        std::vector<types::PhysicsBone> physics;
-        std::vector<types::BindBone> bind;
-        std::vector<types::SkinningBone> skinning;
-        std::vector<types::BoneNode> node;
+        std::vector<types::BoneNode> bone_node; // 接続先などの情報
+        std::vector<types::BindBone> bind_bone; // バインドボーン
     };
 } // namespace enishi::component

@@ -75,7 +75,7 @@ namespace enishi::physics::bullet3 {
 
     void BulletRigidBody::apply_local_transform(void) {
         // 物理状態の反映(ローカル空間)
-        const auto opt_parent = this->views.bone_view->get_parent_view();
+        const auto opt_parent = this->views.views->get_parent_view();
         const auto& global = this->views.physics_bone_view->get_physics_global();
         if (opt_parent.is_some()) {
             const auto& parent = opt_parent.unwrap();

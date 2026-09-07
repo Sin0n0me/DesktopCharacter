@@ -36,7 +36,7 @@ namespace enishi::physics::bullet3 {
         foundation::Result<types::PhysicsHandle, platform::PhysicsError> add_rigid_body(
             const types::PhysicsHandle& object_handle,
             types::PhysicsRigidBody&& rigid_body,
-            std::shared_ptr<platform::IBoneView> bone_view,
+            std::shared_ptr<platform::IPhysicsBoneViewList> view_list,
             std::shared_ptr<platform::IBoneUpdater> updater,
             std::shared_ptr<platform::IPhysicsBoneView> physics_bone_view) noexcept override;
         foundation::Result<types::PhysicsHandle, platform::PhysicsError> add_joint(

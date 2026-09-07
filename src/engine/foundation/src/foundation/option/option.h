@@ -32,6 +32,12 @@ namespace enishi::foundation {
             OptionBase(const T& option)
                 : option(option) {
             }
+            OptionBase(std::nullopt_t&& nullopt)
+                : option(std::move(nullopt)) {
+            }
+            OptionBase(const std::nullopt_t& nullopt)
+                : option(nullopt) {
+            }
 
           public:
             [[nodiscard]] constexpr bool is_some(void) const {
@@ -81,7 +87,7 @@ namespace enishi::foundation {
                 }
             }
 
-            template <typename U> [[nodiscard]] T unwrap_or_default(void) const& {
+            [[nodiscard]] T unwrap_or_default(void) const& {
                 if constexpr (std::is_reference_v<T>) {
                     return this->option.value_or(T{}).get();
                 } else {
@@ -89,7 +95,7 @@ namespace enishi::foundation {
                 }
             }
 
-            template <typename U> [[nodiscard]] T unwrap_or_default(void) && {
+            [[nodiscard]] T unwrap_or_default(void) && {
                 if constexpr (std::is_reference_v<T>) {
                     return this->option.value_or(T{}).get();
                 } else {
@@ -104,6 +110,12 @@ namespace enishi::foundation {
         using details::OptionBase<Option<T>, T>::OptionBase;
 
         Option(void) noexcept = default;
+        Option(std::nullopt_t&& nullopt)
+            : details::OptionBase<Option<T>, T>(std::move(nullopt)) {
+        }
+        Option(const std::nullopt_t& nullopt)
+            : details::OptionBase<Option<T>, T>(nullopt) {
+        }
 
         template <typename F>
         [[nodiscard]]

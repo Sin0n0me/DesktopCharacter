@@ -3,7 +3,6 @@
 #include <component/ik_component.h>
 #include <component/model_component.h>
 #include <component/transform_component.h>
-#include <core/system/animation/animation/animation_player.h>
 #include <core/system/interface_system.h>
 #include <ecs/registory.h>
 #include <engine_types/assets/model/addons/bone.h>

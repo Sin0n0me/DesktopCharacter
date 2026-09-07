@@ -96,7 +96,7 @@ namespace enishi::physics::bullet3 {
     foundation::Result<types::PhysicsHandle, platform::PhysicsError> PhysicsWorld::add_rigid_body(
         const types::PhysicsHandle& object_handle,
         types::PhysicsRigidBody&& rigid_body_description,
-        std::shared_ptr<platform::IBoneView> bone_view,
+        std::shared_ptr<platform::IPhysicsBoneViewList> view_list,
         std::shared_ptr<platform::IBoneUpdater> updater,
         std::shared_ptr<platform::IPhysicsBoneView> physics_bone_view) noexcept {
         const auto mask = rigid_body_description.group_mask;
@@ -138,7 +138,7 @@ namespace enishi::physics::bullet3 {
         auto opt_rigid_body = rigid_body_view->link_rigid_body(rigid_body_handle,
             std::make_unique<BulletRigidBody>(this->resource_pool,
                 PhysicsBoneViews{
-                    .bone_view = bone_view,
+                    .views = view_list,
                     .updater = updater,
                     .physics_bone_view = physics_bone_view,
                 },
@@ -239,11 +239,9 @@ namespace enishi::physics::bullet3 {
         for (auto& rb : rigid_bodies) {
             rb->apply_local_transform();
         }
-        /*
-        for (auto& node : this->root_nodes) {
-            node->update_global();
-        }
-        */
+
+        updater->update_global_form_roots();
+
         for (auto& rb : rigid_bodies) {
             const auto cache = world->getPairCache();
             if (cache != nullptr) {
@@ -265,11 +263,7 @@ namespace enishi::physics::bullet3 {
         for (auto& rb : rigid_bodies) {
             rb->apply_local_transform();
         }
-        /*
-        for (auto& node : this->root_nodes) {
-            node->update_global();
-        }
-        */
+        updater->update_global_form_roots();
     }
 
     platform::IPhysicsWorldConfigWriter* enishi::physics::bullet3::PhysicsWorld::get_config_writer(

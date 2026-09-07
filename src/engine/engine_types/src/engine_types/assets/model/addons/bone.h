@@ -10,7 +10,6 @@ namespace enishi::types {
         Animation,
         Physics,
         Skinning,
-        Cache,
     };
 
     using BoneIndex = std::size_t;

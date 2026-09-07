@@ -3,7 +3,7 @@
 #include <cmath>
 #include <core/system/animation/animation/animation_player.h>
 
-namespace enishi::core {
+namespace enishi::ik {
     constexpr float EPSILON = 1e-5f;
 
     void IKSolver::apply_ik(component::AnimationComponent& animation,
@@ -237,4 +237,4 @@ namespace enishi::core {
         const glm::quat axis = glm::normalize(glm::cross(from, to));
         return glm::angleAxis(std::acos(dot), glm::vec3(axis.x, axis.y, axis.z));
     }
-} // namespace enishi::core
+} // namespace enishi::ik

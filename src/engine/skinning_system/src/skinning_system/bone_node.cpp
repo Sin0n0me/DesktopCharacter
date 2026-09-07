@@ -187,6 +187,16 @@ namespace enishi::platform_impl {
     const types::SkinningBone& BoneNode::get_skinning_bone(void) const noexcept {
         return this->skinning;
     }
+    const types::BoneNode& BoneNode::get_bone_node(void) const noexcept {
+        return this->node;
+    }
+    foundation::Option<const platform::IBoneView*> BoneNode::get_parent_view(void) const noexcept {
+        auto tree = this->node_tree.lock();
+        if (!bool(tree)) {
+            return {};
+        }
+        return tree->get_node(this->node.parent).get();
+    }
 
     foundation::Option<glm::mat4> BoneNode::get_local(const types::BoneKind kind) const {
         switch (kind) {
@@ -194,8 +204,6 @@ namespace enishi::platform_impl {
                 return this->get_animation_local_transform();
             case types::BoneKind::Bind:
                 return this->bind.local;
-            case types::BoneKind::Cache:
-                return this->cache.local;
             case types::BoneKind::Physics:
                 return this->physics.local;
             default:
@@ -209,8 +217,6 @@ namespace enishi::platform_impl {
                 return this->get_animation_global_transform();
             case types::BoneKind::Bind:
                 return this->bind.global;
-            case types::BoneKind::Cache:
-                return this->cache.global;
             case types::BoneKind::Physics:
                 return this->physics.global;
             case types::BoneKind::Skinning:
@@ -223,19 +229,6 @@ namespace enishi::platform_impl {
     }
     void BoneNode::set_local(const MatrixOperator op, const types::BoneKind kind, glm::mat4&& mat) {
         switch (kind) {
-            case types::BoneKind::Cache: {
-                switch (op) {
-                    case MatrixOperator::Assign: {
-                        this->cache.local = mat;
-                    } break;
-                    case MatrixOperator::LeftMulAssign: {
-                        this->cache.local = mat * this->cache.local;
-                    } break;
-                    case MatrixOperator::MulAssign: {
-                        this->cache.local *= mat;
-                    } break;
-                }
-            } break;
             case types::BoneKind::Physics: {
                 switch (op) {
                     case MatrixOperator::Assign: {
@@ -266,19 +259,6 @@ namespace enishi::platform_impl {
                     } break;
                     case MatrixOperator::MulAssign: {
                         this->animation.global *= mat;
-                    } break;
-                }
-            } break;
-            case types::BoneKind::Cache: {
-                switch (op) {
-                    case MatrixOperator::Assign: {
-                        this->cache.global = mat;
-                    } break;
-                    case MatrixOperator::LeftMulAssign: {
-                        this->cache.global = mat * this->cache.global;
-                    } break;
-                    case MatrixOperator::MulAssign: {
-                        this->cache.global *= mat;
                     } break;
                 }
             } break;

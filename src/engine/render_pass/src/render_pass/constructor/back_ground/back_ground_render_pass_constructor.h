@@ -1,10 +1,10 @@
 #pragma once
-#include <core/system/render/interface_render_pass_construstor.h>
 #include <foundation/constexpr/hash/char_array_to_hash.h>
+#include <platform/render_pass/interface_render_pass_construstor.h>
 #include <vector>
 
 namespace enishi {
-    class BackGroundRenderPassConstructor : public core::IRenderPassConstructor {
+    class BackGroundRenderPassConstructor : public platform::IRenderPassConstructor {
       public:
         static constexpr char RENDER_PASS_NAME[] = "BackGround";
         static constexpr types::DependencyNode NODE{foundation::hash_size_t(RENDER_PASS_NAME)};

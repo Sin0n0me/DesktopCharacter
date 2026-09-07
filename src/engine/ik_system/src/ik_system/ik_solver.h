@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-namespace enishi::core {
+namespace enishi::ik {
     // 純粋なロジックのみ
     // 状態などを持たない
     class IKSolver {
@@ -48,4 +48,4 @@ namespace enishi::core {
 
         static glm::quat quaternion_from_to(const glm::quat& from, const glm::quat& to);
     };
-} // namespace enishi::core
+} // namespace enishi::ik

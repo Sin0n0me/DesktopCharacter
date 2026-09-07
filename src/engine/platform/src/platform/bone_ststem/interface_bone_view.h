@@ -16,6 +16,8 @@ namespace enishi::platform {
 
         virtual const types::SkinningBone& get_skinning_bone(void) const noexcept = 0;
 
+        virtual const types::BoneNode& get_bone_node(void) const noexcept = 0;
+
         virtual foundation::Option<const IBoneView*> get_parent_view(void) const noexcept = 0;
     };
 } // namespace enishi::platform

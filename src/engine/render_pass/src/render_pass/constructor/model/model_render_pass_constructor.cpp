@@ -13,9 +13,8 @@ namespace enishi {
     constexpr char VS_FILE_NAME[] = "vs_model";
     constexpr char PS_FILE_NAME[] = "ps_model";
 
-    foundation::Result<std::shared_ptr<platform::IRenderPass>, core::SystemError>
-    ModelRenderPassConstructor::make(
-        platform::IRenderer* const renderer, assets_system::IAssetSystem* const asset_system) {
+    foundation::Result<std::shared_ptr<platform::IRenderPass>, platform::RenderError>
+    ModelRenderPassConstructor::make(platform::IRenderer* const renderer) {
         auto render_pass = std::make_shared<renderer::RenderPass>();
 
         types::PipelineDescription description{

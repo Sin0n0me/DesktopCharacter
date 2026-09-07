@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace enishi::types {
+namespace enishi::foundation {
     struct DependencyNode {
         std::size_t id;
 
@@ -18,12 +18,17 @@ namespace enishi::types {
     struct DependencyBounds {
         std::vector<DependencyNode> precedents; // 自身の前に必要なもの
     };
-} // namespace enishi::types
+
+    struct DependencyDescription {
+        DependencyNode node;
+        DependencyBounds bounds;
+    };
+} // namespace enishi::foundation
 
 // ハッシュマップなどのキーとして使用できるようにする
 namespace std {
-    template <> struct hash<enishi::types::DependencyNode> {
-        std::size_t operator()(const enishi::types::DependencyNode& h) const noexcept {
+    template <> struct hash<enishi::foundation::DependencyNode> {
+        std::size_t operator()(const enishi::foundation::DependencyNode& h) const noexcept {
             return std::hash<decltype(h.id)>{}(h.id);
         }
     };

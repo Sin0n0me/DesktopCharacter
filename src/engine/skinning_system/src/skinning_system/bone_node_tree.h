@@ -6,10 +6,16 @@
 namespace enishi::platform_impl {
     class BoneNode;
     class BoneNodeTree {
+        using BoneNodes = std::vector<std::shared_ptr<BoneNode>>;
+
       private:
-        std::vector<std::shared_ptr<BoneNode>> bone_nodes;
+        BoneNodes bone_nodes;
+        BoneNodes root_nodes;
 
       public:
         std::shared_ptr<BoneNode> get_node(const types::BoneIndex& index) const;
+
+      private:
+        static BoneNodes get_root_nodes(const BoneNodes& nodes);
     };
 } // namespace enishi::platform_impl

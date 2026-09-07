@@ -137,6 +137,8 @@ namespace enishi {
         // レンダーパスの作成
         const auto render_system = this->system_scheduler.register_system<core::RenderSystem>(
             100, this->rsegistory, renderer, renderer);
+        render_system->set_render_passes();
+
         auto result = {
             render_system->add_render_pass_constructor(
                 std::make_shared<ModelRenderPassConstructor>()),

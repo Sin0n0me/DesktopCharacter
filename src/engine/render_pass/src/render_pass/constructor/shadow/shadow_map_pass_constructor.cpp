@@ -11,9 +11,8 @@ namespace enishi {
     constexpr char PS_FILE_NAME[] = "ps_shadow_map";
     constexpr std::uint32_t SHADOW_MAP_SIZE = 2048;
 
-    foundation::Result<std::shared_ptr<platform::IRenderPass>, core::SystemError>
-    ShadowMapRenderPassConstructor::make(
-        platform::IRenderer* const renderer, assets_system::IAssetSystem* const asset_system) {
+    foundation::Result<std::shared_ptr<platform::IRenderPass>, platform::RenderError>
+    ShadowMapRenderPassConstructor::make(platform::IRenderer* const renderer) {
         auto render_pass = std::make_shared<renderer::RenderPass>();
 
         types::PipelineDescription description{

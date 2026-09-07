@@ -18,9 +18,7 @@ namespace enishi::core {
 
     void AnimationSystem::update(const types::DeltaTime& delta_time) {
         // TODO マルチスレッドで複数entityの更新
-        auto view = this->registory->view<component::AnimationComponent,
-            component::ModelComponent,
-            component::IKComponent>();
+        auto view = this->registory->view<int>();
 
         for (auto [entity, animation, model, ik] : view) {
             this->animation(animation, model, ik);
@@ -46,7 +44,6 @@ namespace enishi::core {
                         AnimationPlayer::apply_ik(animation, ik, model, i);
                     }
                 } break;
-
                 case component::AnimationCommand::PhysicsSimulate: {
                     for (std::uint32_t i = 0; i < size; ++i) {
                         AnimationPlayer::apply_physics(animation, model, i);

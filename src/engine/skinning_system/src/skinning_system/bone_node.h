@@ -19,7 +19,6 @@ namespace enishi::platform_impl {
                      public platform::IBoneView {
       private:
         std::weak_ptr<BoneNodeTree> node_tree;
-        types::CacheBone cache;
         types::AnimationBone animation;
         types::PhysicsBone physics;
         types::BindBone bind;
@@ -83,6 +82,8 @@ namespace enishi::platform_impl {
         const types::AnimationBone& get_animation_bone(void) const noexcept override;
         const types::PhysicsBone& get_physics_bone(void) const noexcept override;
         const types::SkinningBone& get_skinning_bone(void) const noexcept override;
+        const types::BoneNode& get_bone_node(void) const noexcept override;
+        foundation::Option<const IBoneView*> get_parent_view(void) const noexcept override;
 
       private:
         foundation::Option<glm::mat4> get_local(const types::BoneKind kind) const;

@@ -1,7 +1,7 @@
 #include "animation.h"
 
-namespace enishi::core {
+namespace enishi::animation {
     void Animation::apply_animation(
         component::AnimationComponent& animation, const float elapsed_time) {
     }
-} // namespace enishi::core
+} // namespace enishi::animation

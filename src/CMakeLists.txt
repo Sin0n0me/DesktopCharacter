@@ -14,10 +14,6 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "application.h"
     "application.cpp"
     "settings.h"
-    "render_pass/*.h"
-    "render_pass/*.c"
-    "render_pass/*.hpp"
-    "render_pass/*.cpp"
 )
 set(DEPEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/engine)
 
@@ -53,6 +49,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(RENDERER)
 
 FetchContent_Declare(
+    RENDER_PASS
+    SOURCE_DIR ${DEPEND_DIR}/render_pass
+)
+FetchContent_MakeAvailable(RENDER_PASS)
+
+FetchContent_Declare(
     UI
     SOURCE_DIR ${DEPEND_DIR}/ui
 )
@@ -68,7 +70,9 @@ set(DEPENDENCIES
     core
     platform
     platform_impl
+    physics
     renderer
+    render_pass
     script
     ui
     engine_types

@@ -22,7 +22,7 @@ FetchContent_MakeAvailable(FOUNDATION)
 set(NOTHINGS_STD_SOURCE_DIR "${ASSET_DEPENDENT_LIBS}/nothings_std")
 FetchContent_Declare(
     NOTHINGS_STD
-    GIT_REPOSITORY git@github.com:nothings/stb.git
+    GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG "master"
     GIT_SHALLOW TRUE
     GIT_PROGRESS ON
@@ -30,9 +30,20 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(NOTHINGS_STD)
 
+
+FetchContent_Declare(
+    MINI_AUDIO
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG "0.11.25"
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS ON
+)
+FetchContent_MakeAvailable(MINI_AUDIO)
+
 set(DEPENDENCIES
-    foundation
-    engine_types
+    PUBLIC miniaudio
+    PUBLIC foundation
+    PUBLIC engine_types
     PUBLIC ${ASSET_DEPENDENT_LIBS}
 )
 
@@ -58,7 +69,7 @@ add_library(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 target_include_directories(${PROJECT_NAME} PUBLIC ${ASSET_DEPENDENT_LIBS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 23

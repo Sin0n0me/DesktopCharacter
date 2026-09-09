@@ -1,61 +1,10 @@
-cmake_minimum_required (VERSION 3.12)
-project(physics)
-
-# 以下依存設定
-set(DEPENDENCIES)
-include(FetchContent)
-
-FetchContent_Declare(
-    ENGINE_TYPES
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../engine_types
-)
-FetchContent_MakeAvailable(ENGINE_TYPES)
-
-FetchContent_Declare(
-    FOUNDATION
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../foundation
-)
-FetchContent_MakeAvailable(FOUNDATION)
-
-FetchContent_Declare(
-    PLATFORM
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../platform
-)
-FetchContent_MakeAvailable(PLATFORM)
-
-
-# forked
-set(BULLET_DIR "${CMAKE_BINARY_DIR}/libs/bullet3")
-set(BULLET_SOURCE_DIR "${BULLET_DIR}/src")
-set(BUILD_BULLET_TESTS OFF CACHE BOOL "Build Bullet tests" FORCE)
-set(BUILD_UNIT_TESTS OFF CACHE BOOL "Build Bullet unit tests" FORCE)
-FetchContent_Declare(
-    BULLET3
-    GIT_REPOSITORY git@github.com:sin0n0me/bullet3.git
-    #GIT_TAG 3.25
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS ON
-    SOURCE_DIR ${BULLET_DIR}
-)
-FetchContent_MakeAvailable(BULLET3)
-
-set(DEPENDENCIES
-    PUBLIC ${BULLET_DIR}
-    PRIVATE platform
-    PRIVATE engine_types
-    PRIVATE foundation
-    PRIVATE glm
-)
-
-#
-# 以降は触らなくて良い
-#
+cmake_minimum_required (VERSION 3.14)
+project(model_controller)
 
 # MSVCコンパイラの場合のみ、ソースコードと実行バイナリの文字セットをUTF-8に設定
 if(MSVC)
     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
@@ -67,8 +16,67 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 
 add_library(${PROJECT_NAME} ${SOURCES})
 
+# 以下依存設定
+
+set(DEPENDENCIES)
+include(FetchContent)
+
+FetchContent_Declare(
+    ANIMATION
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../animation
+)
+FetchContent_MakeAvailable(ANIMATION)
+
+FetchContent_Declare(
+    ASSETS_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../assets_system
+)
+FetchContent_MakeAvailable(ASSETS_SYSTEM)
+
+FetchContent_Declare(
+    SKINNING_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../skinning_system
+)
+FetchContent_MakeAvailable(SKINNING_SYSTEM)
+
+FetchContent_Declare(
+    IK_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ik_system
+)
+FetchContent_MakeAvailable(IK_SYSTEM)
+
+FetchContent_Declare(
+    PLATFORM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../platform
+)
+FetchContent_MakeAvailable(PLATFORM)
+
+FetchContent_Declare(
+    COMPONENT
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../component
+)
+FetchContent_MakeAvailable(COMPONENT)
+
+set(DEPENDENCIES
+    PRIVATE component
+    PRIVATE animation
+    PRIVATE assets_system
+    PRIVATE skinning_system
+    PRIVATE ik_system
+    PRIVATE physics
+    PRIVATE platform
+    PRIVATE engine_types
+    PRIVATE foundation
+    PRIVATE glm
+)
+
+
+#
+# 以降は触らなくて良い
+#
+
+
 target_include_directories(${PROJECT_NAME} PUBLIC src)
-target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
 
@@ -98,6 +106,9 @@ if(BUILD_TESTING)
         "tests/*.cpp"
     )
     add_executable(${PROJECT_NAME}_test ${SOURCES} ${TEST_SOURCES})
+
+    # テスト用exeにメインのライブラリ(lib)をリンクする
+    #target_link_libraries(tests PRIVATE my_lib)
 
     # CTestにテストケースを登録
     add_test(NAME RunAllTests COMMAND tests)

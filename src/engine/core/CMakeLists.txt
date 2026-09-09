@@ -36,6 +36,24 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(ASSETS_SYSTEM)
 
 FetchContent_Declare(
+    SKINNING_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../skinning_system
+)
+FetchContent_MakeAvailable(SKINNING_SYSTEM)
+
+FetchContent_Declare(
+    IK_SYSTEM
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ik_system
+)
+FetchContent_MakeAvailable(IK_SYSTEM)
+
+FetchContent_Declare(
+    MODEL_CONTROLLER
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../model_controller
+)
+FetchContent_MakeAvailable(MODEL_CONTROLLER)
+
+FetchContent_Declare(
     PHYSICS
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../physics
 )
@@ -45,12 +63,15 @@ set(DEPENDENCIES
     PUBLIC platform
     PUBLIC ecs
     PUBLIC component
-    animation
-    assets_system
-    physics
-    glm
-    engine_types
-    foundation
+    PUBLIC animation
+    PUBLIC assets_system
+    PUBLIC skinning_system
+    PUBLIC ik_system
+    PUBLIC model_controller
+    PUBLIC physics
+    PRIVATE glm
+    PRIVATE engine_types
+    PRIVATE foundation
 )
 
 #

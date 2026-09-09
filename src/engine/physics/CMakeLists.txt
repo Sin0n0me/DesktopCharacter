@@ -29,6 +29,11 @@ set(BULLET_DIR "${CMAKE_BINARY_DIR}/libs/bullet3")
 set(BULLET_SOURCE_DIR "${BULLET_DIR}/src")
 set(BUILD_BULLET_TESTS OFF CACHE BOOL "Build Bullet tests" FORCE)
 set(BUILD_UNIT_TESTS OFF CACHE BOOL "Build Bullet unit tests" FORCE)
+set(BUILD_DEMOS OFF CACHE BOOL "Build Bullet demos" FORCE)
+set(BUILD_CPU_DEMOS OFF CACHE BOOL "Disable Bullet3 CPU demos/examples" FORCE)
+set(BUILD_OPENGL3_DEMOS OFF CACHE BOOL "Disable Bullet3 OpenGL3 demos/examples" FORCE)
+set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "Disable Bullet2 demos" FORCE)
+
 FetchContent_Declare(
     BULLET3
     GIT_REPOSITORY git@github.com:sin0n0me/bullet3.git

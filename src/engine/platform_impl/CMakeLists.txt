@@ -38,6 +38,8 @@ set(DEPENDENCIES
 if(USE_SDL3)
     target_compile_definitions(${PROJECT_NAME} PUBLIC "USE_SDL3")
 
+    set(SDL_TESTS OFF CACHE BOOL "Disable SDL3 tests" FORCE)
+    set(SDL_TESTS_BUILD OFF CACHE BOOL "Disable SDL3 test builds" FORCE)
     FetchContent_Declare(
         SDL3
         GIT_REPOSITORY git@github.com:libsdl-org/SDL.git

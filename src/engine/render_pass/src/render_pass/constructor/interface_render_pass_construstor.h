@@ -18,12 +18,7 @@ namespace enishi::render_pass {
 
         [[nodiscard]] virtual foundation::Result<std::shared_ptr<platform::IRenderPass>,
             ConstructError>
-        make(platform::IRenderPass* const render_pass,
-            platform::IRenderer* const renderer,
-            const platform::IWindow* window) = 0;
-
-        [[nodiscard]] virtual void import_shader(const types::ShaderKind& shader_kind,
-            const types::ShaderData& shader) const noexcept = 0;
+        make(platform::IRenderer* const renderer, const platform::IWindow* window) = 0;
 
         // 拡張子は含めないこと
         [[nodiscard]] virtual std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>

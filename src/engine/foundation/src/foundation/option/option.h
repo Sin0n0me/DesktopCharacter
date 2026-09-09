@@ -117,6 +117,15 @@ namespace enishi::foundation {
             : details::OptionBase<Option<T>, T>(nullopt) {
         }
 
+        Option& operator=(T&& value) {
+            this->option = value;
+            return *this;
+        }
+        Option& operator=(std::nullopt_t&& nullopt) {
+            this->option = nullopt;
+            return *this;
+        }
+
         template <typename F>
         [[nodiscard]]
         constexpr auto and_then(F&& f) && {

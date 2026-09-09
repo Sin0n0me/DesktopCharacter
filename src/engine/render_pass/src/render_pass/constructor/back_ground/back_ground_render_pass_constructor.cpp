@@ -5,7 +5,7 @@
 #include <foundation/path/path_utility.h>
 #include <foundation/str/string_builder.h>
 #include <render_pass/constructor/shadow/shadow_map_render_pass_constructor.h>
-#include <renderer/common/render_pass/render_pass.h>
+#include <render_pass/render_pass.h>
 
 namespace enishi::render_pass {
     constexpr char VS_FILE_NAME[] = "vs_clear_wall";
@@ -14,15 +14,13 @@ namespace enishi::render_pass {
     foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError>
     enishi::render_pass::BackGroundRenderPassConstructor::make(
         platform::IRenderer* const renderer, const platform::IWindow* window) {
-        auto render_pass = std::make_shared<renderer::RenderPass>();
-
         types::PipelineDescription description{
             .topology = types::PrimitiveTopology::TriangleList,
         };
 
         const auto opt_window_size = window->get_size();
         if (opt_window_size.is_none()) {
-            return;
+            return foundation::Error(ConstructError::Construct);
         }
         auto window_size = opt_window_size.unwrap().to_glm_ivec2();
 
@@ -71,6 +69,14 @@ namespace enishi::render_pass {
         }
         description.rasterizer_state = rasterizer.unwrap();
 
+        // レンダーパスの生成
+        auto render_pass = std::make_shared<RenderPass>();
+        const auto render_pass_result = render_pass->make_from_description(
+            description, this->get_render_pass_name(), this->get_node(), this->get_dependencies());
+        if (render_pass_result.is_err()) {
+            return render_pass_result.propagation(ConstructError::Construct);
+        }
+
         return render_pass;
     }
 
@@ -83,9 +89,6 @@ namespace enishi::render_pass {
         return foundation::DependencyBounds{.precedents = {
                                                 ShadowMapRenderPassConstructor::NODE,
                                             }};
-    }
-    void enishi::render_pass::BackGroundRenderPassConstructor::import_shader(
-        const types::ShaderKind& shader_kind, const types::ShaderData& shader) const noexcept {
     }
 
     std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>

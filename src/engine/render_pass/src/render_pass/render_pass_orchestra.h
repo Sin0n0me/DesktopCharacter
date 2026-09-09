@@ -13,7 +13,6 @@ namespace enishi::render_pass {
     class RenderPassOrchestra {
       private:
         struct RenderPassInfo {
-            foundation::UTF8 pass_name;
             std::shared_ptr<platform::IRenderPass> render_pass;
             foundation::Option<std::size_t> index;
         };
@@ -35,6 +34,8 @@ namespace enishi::render_pass {
         foundation::Option<std::shared_ptr<platform::IRenderPass>> get_render_pass(
             const foundation::UTF8& pass_name);
 
+        void set_render_passes(std::vector<foundation::UTF8>&& pass_names);
+
         void add_render_pass(const foundation::UTF8& pass_name);
 
         void remove_render_pass(const foundation::UTF8& pass_name);
@@ -42,8 +43,9 @@ namespace enishi::render_pass {
         std::span<const std::shared_ptr<platform::IRenderPass>> get_passes(void) const;
 
       private:
-        foundation::VoidResult<ConstructError> update_dependency(
-            const std::vector<std::shared_ptr<platform::IRenderPass>>& passes);
+        void silent_add_render_pass(const foundation::UTF8& pass_name);
+
+        foundation::VoidResult<ConstructError> update_dependency(void);
 
         foundation::VoidResult<ConstructError> resoulve_mesh(
             platform::IRenderPass* const render_pass);

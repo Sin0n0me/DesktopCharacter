@@ -3,7 +3,7 @@
 #include <foundation/path/path_utility.h>
 #include <foundation/str/string_builder.h>
 #include <render_pass/constructor/helper.h>
-#include <renderer/common/render_pass/render_pass.h>
+#include <render_pass/render_pass.h>
 
 namespace enishi::render_pass {
     constexpr char VS_FILE_NAME[] = "vs_shadow_map";
@@ -13,15 +13,13 @@ namespace enishi::render_pass {
     foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError>
     enishi::render_pass::ShadowMapRenderPassConstructor::make(
         platform::IRenderer* const renderer, const platform::IWindow* window) {
-        auto render_pass = std::make_shared<renderer::RenderPass>();
-
         types::PipelineDescription description{
             .topology = types::PrimitiveTopology::TriangleList,
         };
 
         const auto opt_window_size = window->get_size();
         if (opt_window_size.is_none()) {
-            return;
+            return foundation::Error(ConstructError::Construct);
         }
         auto window_size = opt_window_size.unwrap().to_glm_ivec2();
 
@@ -57,8 +55,9 @@ namespace enishi::render_pass {
         description.rasterizer_state = rasterizer.unwrap();
 
         // レンダーパスの生成
-        const auto render_pass_result =
-            render_pass->make_render_pass(description, this->get_node(), this->get_dependencies());
+        auto render_pass = std::make_shared<RenderPass>();
+        const auto render_pass_result = render_pass->make_from_description(
+            description, this->get_render_pass_name(), this->get_node(), this->get_dependencies());
         if (render_pass_result.is_err()) {
             return render_pass_result.propagation(ConstructError::Construct);
         }
@@ -75,24 +74,6 @@ namespace enishi::render_pass {
         return {};
     }
 
-    void enishi::render_pass::ShadowMapRenderPassConstructor::import_shader(
-        const types::ShaderKind& shader_kind, const types::ShaderData& shader) const noexcept {
-        // シェーダーの作成
-        auto shader_result = make_shader(shader_kind, shader, renderer)
-                                 .add_message("シェーダーの作成に失敗しました");
-        if (shader_result.is_err()) {
-            return shader_result.propagation(ConstructError::Construct);
-        }
-        std::vector<types::RenderHandle> shader_refrections;
-        for (auto& s : shader_result.unwrap()) {
-            if (s.input_layout.is_valid()) {
-                description.vertex_layout = s.input_layout;
-            }
-            description.shaders.emplace_back(s.shader);
-            shader_refrections.emplace_back(s.shader_reflection);
-        }
-    }
-
     std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>
     enishi::render_pass::ShadowMapRenderPassConstructor::get_paths(void) const noexcept {
         return {
@@ -103,6 +84,6 @@ namespace enishi::render_pass {
 
     foundation::UTF8 enishi::render_pass::ShadowMapRenderPassConstructor::get_render_pass_name(
         void) const noexcept {
-        return foundation::UTF8();
+        return RENDER_PASS_NAME;
     }
 } // namespace enishi::render_pass

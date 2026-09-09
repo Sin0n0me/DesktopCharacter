@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 
 // constexprなchar[]からconstexprなハッシュ値を求める

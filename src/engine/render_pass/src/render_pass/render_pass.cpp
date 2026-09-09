@@ -1,6 +1,6 @@
 #include "render_pass.h"
 
-namespace enishi::renderer {
+namespace enishi::render_pass {
     std::span<const types::DrawCommand> RenderPass::get_commands(void) const noexcept {
         return this->commands;
     }
@@ -15,8 +15,9 @@ namespace enishi::renderer {
         }
     }
 
-    foundation::VoidResult<platform::RenderError> RenderPass::make_render_pass(
+    foundation::VoidResult<platform::RenderError> RenderPass::make_from_description(
         const types::PipelineDescription& description,
+        foundation::UTF8&& pass_name,
         foundation::DependencyNode&& node,
         foundation::DependencyBounds&& dependencies) noexcept {
         // RTVの追加
@@ -67,6 +68,14 @@ namespace enishi::renderer {
             .sub_command = types::SubCommand::Bind,
         });
     }
+
+    void RenderPass::add_shader(const types::RenderHandle& shader) noexcept {
+        this->add_command(shader);
+    }
+
+    foundation::UTF8 RenderPass::get_name(void) const noexcept {
+        return foundation::UTF8();
+    }
     void RenderPass::add_mesh(const types::RenderHandle& mesh) noexcept {
         this->add_command(mesh);
     }
@@ -76,4 +85,4 @@ namespace enishi::renderer {
     foundation::DependencyBounds RenderPass::get_dependencies(void) const noexcept {
         return this->dependencies;
     }
-} // namespace enishi::renderer
+} // namespace enishi::render_pass

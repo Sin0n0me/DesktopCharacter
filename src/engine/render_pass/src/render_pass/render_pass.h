@@ -7,7 +7,7 @@
 #include <platform/renderer/updater/interface_uniform_updater.h>
 #include <unordered_map>
 
-namespace enishi::renderer {
+namespace enishi::render_pass {
     class RenderPass : public platform::IRenderPass {
       private:
         foundation::DependencyNode node;
@@ -18,10 +18,13 @@ namespace enishi::renderer {
         std::vector<std::shared_ptr<platform::IResourceUpdater>> resource_updater;
 
       public:
-        foundation::VoidResult<platform::RenderError> make_render_pass(
+        RenderPass(void) = default;
+
+        foundation::VoidResult<platform::RenderError> make_from_description(
             const types::PipelineDescription& description,
+            foundation::UTF8&& pass_name,
             foundation::DependencyNode&& node,
-            foundation::DependencyBounds&& dependencies) noexcept;
+            foundation::DependencyBounds&& dependencies) noexcept override;
 
         void add_mesh(const foundation::UTF8& mesh_name, const types::RenderHandle handle);
 
@@ -37,5 +40,8 @@ namespace enishi::renderer {
 
       private:
         void add_command(const types::RenderHandle handle);
+
+        void add_shader(const types::RenderHandle& shader) noexcept override;
+        foundation::UTF8 get_name(void) const noexcept override;
     };
-} // namespace enishi::renderer
+} // namespace enishi::render_pass

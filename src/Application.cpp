@@ -147,7 +147,7 @@ namespace enishi {
         orchestra.add_constructor(std::make_shared<render_pass::BackGroundRenderPassConstructor>());
         orchestra.add_constructor(std::make_shared<render_pass::ShadowMapRenderPassConstructor>());
 
-        orchestra.make_render_passes();
+        orchestra.make_render_passes(root_window.get());
 
         /*
         constructor.use_asset_paths();

@@ -6,6 +6,9 @@ namespace enishi::foundation {
     struct DependencyNode {
         std::size_t id;
 
+        constexpr DependencyNode(void)
+            : id(0xFFFF'FFFF) {
+        }
         constexpr DependencyNode(const std::size_t id)
             : id(id) {
         }

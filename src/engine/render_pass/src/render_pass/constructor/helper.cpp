@@ -109,8 +109,7 @@ namespace enishi::render_pass {
 
     foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
         platform::IRenderer* const renderer,
-        std::unordered_map<types::ShaderKind, std::vector<const types::ShaderData&>>&&
-            shaders_map) {
+        std::unordered_map<types::ShaderKind, std::span<const types::ShaderData>>&& shaders_map) {
         auto shader_result = std::vector<ShaderResult>();
 
         for (const auto& [kind, shaders] : shaders_map) {

@@ -56,7 +56,7 @@ namespace enishi::render_pass {
 
     [[nodiscard]] foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
         platform::IRenderer* const renderer,
-        std::unordered_map<types::ShaderKind, std::vector<const types::ShaderData&>>&& shaders_map);
+        std::unordered_map<types::ShaderKind, std::span<const types::ShaderData>>&& shaders_map);
 
     [[nodiscard]] foundation::Result<ShaderResult, ConstructError> make_shader(
         const types::ShaderKind kind,

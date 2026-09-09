@@ -1,3 +1,4 @@
+#include "render_pass_orchestra.h"
 #pragma once
 #include "render_pass_orchestra.h"
 #include <filesystem>
@@ -26,61 +27,7 @@ namespace enishi::render_pass {
         if (iter == this->name_to_pass.end()) {
             return {};
         }
-        return iter->second;
-    }
-
-    void RenderPassOrchestra::add_render_pass(const foundation::UTF8& pass_name) {
-        const auto iter = this->name_to_pass.find(pass_name);
-        if (iter == this->name_to_pass.end()) {
-            return;
-        }
-        auto& pass_info = iter->second;
-
-        if (pass_info.index.is_some()) {
-            return;
-        }
-
-        pass_info.index = this->render_passes.size();
-        auto passes{this->render_passes};
-        passes.emplace_back(pass_info.render_pass);
-
-        this->update_dependency(passes);
-    }
-
-    void RenderPassOrchestra::remove_render_pass(const foundation::UTF8& pass_name) {
-    }
-
-    std::span<const std::shared_ptr<platform::IRenderPass>> RenderPassOrchestra::get_passes(
-        void) const {
-        return this->render_passes;
-    }
-
-    foundation::VoidResult<ConstructError> RenderPassOrchestra::update_dependency(
-        const std::vector<std::shared_ptr<platform::IRenderPass>>& passes) {
-        // 依存解決
-        std::vector<foundation::DependencyDescription> dependencies;
-        for (const auto& pass : passes) {
-            dependencies.emplace_back(foundation::DependencyDescription{
-                .node = pass->get_node(),
-                .bounds = pass->get_dependencies(),
-            });
-        }
-        auto&& result = foundation::resolve_dependencies(dependencies)
-                            .add_message("レンダーパスの依存解決に失敗しました");
-        if (result.is_err()) {
-            return result.propagation(ConstructError::Construct);
-        }
-
-        // Topological order に従って RenderPass を生成
-        this->render_passes.clear();
-        auto& sorted_indices = result.unwrap();
-        std::vector<std::shared_ptr<platform::IRenderPass>> render_passes;
-        for (const auto& index : sorted_indices) {
-            const auto& pass = passes[index];
-            this->render_passes.emplace_back(pass);
-        }
-
-        return {};
+        return iter->second.render_pass;
     }
 
     void RenderPassOrchestra::make_render_passes(const platform::IWindow* window) {
@@ -97,10 +44,79 @@ namespace enishi::render_pass {
 
             this->name_to_pass.emplace(pass_name,
                 RenderPassInfo{
-                    .pass_name = pass_name,
                     .render_pass = result.unwrap(),
                 });
         }
+    }
+
+    void RenderPassOrchestra::set_render_passes(std::vector<foundation::UTF8>&& pass_names) {
+        for (const auto& name : pass_names) {
+            this->silent_add_render_pass(name);
+        }
+        this->update_dependency();
+    }
+
+    void RenderPassOrchestra::add_render_pass(const foundation::UTF8& pass_name) {
+        this->silent_add_render_pass(pass_name);
+        this->update_dependency();
+    }
+
+    void RenderPassOrchestra::remove_render_pass(const foundation::UTF8& pass_name) {
+    }
+
+    std::span<const std::shared_ptr<platform::IRenderPass>> RenderPassOrchestra::get_passes(
+        void) const {
+        return this->render_passes;
+    }
+
+    foundation::VoidResult<ConstructError> RenderPassOrchestra::update_dependency(void) {
+        auto passes{this->render_passes};
+
+        // 依存解決
+        std::vector<foundation::DependencyDescription> dependencies;
+        for (const auto& pass : passes) {
+            dependencies.emplace_back(foundation::DependencyDescription{
+                .node = pass->get_node(),
+                .bounds = pass->get_dependencies(),
+            });
+        }
+        auto&& result = foundation::resolve_dependencies(dependencies)
+                            .add_message("レンダーパスの依存解決に失敗しました");
+        if (result.is_err()) {
+            return result.propagation(ConstructError::Construct);
+        }
+
+        // 生成前に初期化
+        this->render_passes.clear();
+        for (auto& [name, info] : this->name_to_pass) {
+            info.index = {};
+        }
+
+        // Topological order に従って RenderPass を生成
+        auto& sorted_indices = result.unwrap();
+        std::vector<std::shared_ptr<platform::IRenderPass>> render_passes;
+        for (const auto& index : sorted_indices) {
+            const auto& pass = passes[index];
+            this->name_to_pass[pass->get_name()].index = this->render_passes.size();
+            this->render_passes.emplace_back(pass);
+        }
+
+        return {};
+    }
+
+    void RenderPassOrchestra::silent_add_render_pass(const foundation::UTF8& pass_name) {
+        const auto iter = this->name_to_pass.find(pass_name);
+        if (iter == this->name_to_pass.end()) {
+            return;
+        }
+        auto& pass_info = iter->second;
+
+        if (pass_info.index.is_some()) {
+            return;
+        }
+
+        pass_info.index = this->render_passes.size();
+        this->render_passes.emplace_back(pass_info.render_pass);
     }
 
     foundation::VoidResult<ConstructError> RenderPassOrchestra::resoulve_mesh(

@@ -11,7 +11,7 @@ namespace enishi::core {
       public:
         explicit AssetSystem(void);
 
-        std::shared_ptr<assets_system::IAssetSystem> get_asset_system(void);
+        std::shared_ptr<platform::IAssetSystem> get_asset_system(void);
 
       public:
         bool should_close(void) override;

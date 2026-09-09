@@ -4,7 +4,7 @@
 #include <engine_types/handle/handle_type.h>
 #include <functional>
 
-namespace enishi::assets_system {
+namespace enishi::types {
     struct AssetHandle {
         types::HandleId id;
         types::AssetKind type;
@@ -13,12 +13,12 @@ namespace enishi::assets_system {
 
         bool operator==(const AssetHandle&) const noexcept = default;
     };
-} // namespace enishi::assets_system
+} // namespace enishi::types
 
 // ハッシュマップなどのキーとして使用できるようにする
 namespace std {
-    template <> struct hash<enishi::assets_system::AssetHandle> {
-        std::size_t operator()(const enishi::assets_system::AssetHandle& h) const noexcept {
+    template <> struct hash<enishi::types::AssetHandle> {
+        std::size_t operator()(const enishi::types::AssetHandle& h) const noexcept {
             const auto h1 = std::hash<decltype(h.id)>{}(h.id);
             const auto h2 = std::hash<decltype(h.type)>{}(h.type);
             return h1 ^ (h2 << 1);

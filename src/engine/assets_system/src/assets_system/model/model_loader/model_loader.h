@@ -1,7 +1,6 @@
 #pragma once
 #include "../../errors/errors.h"
 #include "../../interface_asset_loader.h"
-#include "../../interface_asset_system.h"
 #include "../../texture/texture_loader.h"
 #include "interface_model_loader.h"
 #include "pmd/pmd_data.h"
@@ -19,7 +18,7 @@ namespace enishi::assets_system {
       public:
         ModelLoader(std::shared_ptr<TextureLoader> texture_loader);
 
-        foundation::Result<AssetData, AssetError> load(
+        foundation::Result<types::AssetData, AssetError> load(
             const std::filesystem::path& path) noexcept override;
         std::vector<foundation::UTF8> get_supported_extension(void) const noexcept override;
 

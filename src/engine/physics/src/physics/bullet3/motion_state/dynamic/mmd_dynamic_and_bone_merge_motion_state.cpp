@@ -54,6 +54,6 @@ namespace enishi::physics::bullet3 {
         global[position_index] = physics_bone->get_physics_global()[position_index];
 
         physics_bone->set_physics_global(std::move(global));
-        bone_updater->update_animation_children_global();
+        bone_updater->update_children_global(this->index);
     }
 } // namespace enishi::physics::bullet3

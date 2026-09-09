@@ -15,7 +15,7 @@ namespace enishi::assets_system {
           }) {
     }
 
-    foundation::Result<AssetData, AssetError> ShaderLoader::load(
+    foundation::Result<types::AssetData, AssetError> ShaderLoader::load(
         const std::filesystem::path& path) noexcept {
         auto reader = BinaryReader::make_reader(path);
         if (reader.is_err()) {
@@ -58,7 +58,7 @@ namespace enishi::assets_system {
         return extensions;
     }
 
-    foundation::Result<AssetShaderData, AssetError> ShaderLoader::load_spir_v(
+    foundation::Result<types::AssetShaderData, AssetError> ShaderLoader::load_spir_v(
         BinaryReader& reader) noexcept {
         auto result = reader.read_all();
         if (result.is_err()) {
@@ -75,7 +75,7 @@ namespace enishi::assets_system {
         });
     }
 
-    foundation::Result<AssetShaderData, AssetError> ShaderLoader::load_dxbc(
+    foundation::Result<types::AssetShaderData, AssetError> ShaderLoader::load_dxbc(
         BinaryReader& reader) noexcept {
         auto result = reader.read_all();
         if (result.is_err()) {

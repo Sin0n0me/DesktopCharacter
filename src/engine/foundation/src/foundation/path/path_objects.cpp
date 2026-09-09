@@ -1,6 +1,6 @@
 #include "path_objects.h"
 
-namespace enishi::assets_system {
+namespace enishi::foundation {
     PathObjects::PathObjects(void) {
     }
 
@@ -22,4 +22,4 @@ namespace enishi::assets_system {
 
         return result;
     }
-} // namespace enishi::assets_system
+} // namespace enishi::foundation

@@ -12,6 +12,7 @@ namespace enishi::physics::bullet3 {
         glm::mat4 inverse_offset;
         btTransform transform;
         bool override_with_physics;
+        types::BoneIndex index;
 
       public:
         explicit MMDDynamicAndBoneMergeMotionState(

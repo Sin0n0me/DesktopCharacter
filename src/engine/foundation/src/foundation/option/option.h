@@ -161,4 +161,16 @@ namespace enishi::foundation {
             }
         }
     };
+
+#define OPTION_RETURN(value_name, option)                                                          \
+    if (option.is_none()) {                                                                        \
+        return {};                                                                                 \
+    }                                                                                              \
+    const auto& value_name = option.unwrap()
+
+#define MUT_OPTION_RETURN(value_name, option)                                                      \
+    if (option.is_none()) {                                                                        \
+        return {};                                                                                 \
+    }                                                                                              \
+    auto& value_name = option.unwrap_mut()
 } // namespace enishi::foundation

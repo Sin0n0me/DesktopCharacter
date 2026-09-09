@@ -36,12 +36,12 @@ namespace enishi::assets_system {
         return ma_decoder_init_file(path.string<char>().c_str(), &config, decoder);
     }
 
-    foundation::Result<AssetData, AssetError> AudioLoader::load(
+    foundation::Result<types::AssetData, AssetError> AudioLoader::load(
         const std::filesystem::path& path) noexcept {
         // キャッシュがあれば使用
         const auto iter = this->cache.find(path.lexically_normal());
         if (iter != this->cache.end()) {
-            return AssetData{iter->second};
+            return types::AssetData{iter->second};
         }
 
         constexpr ma_format output_format = ma_format_f32;
@@ -110,7 +110,7 @@ namespace enishi::assets_system {
             audio_data->samples.resize(actual_sample_count);
         }
 
-        return AssetData{audio_data};
+        return types::AssetData{audio_data};
     }
 
     std::vector<foundation::UTF8> AudioLoader::get_supported_extension(void) const noexcept {

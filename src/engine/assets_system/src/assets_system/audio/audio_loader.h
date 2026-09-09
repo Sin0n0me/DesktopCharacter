@@ -10,11 +10,11 @@
 namespace enishi::assets_system {
     class AudioLoader : public IAssetLoader {
       private:
-        std::unordered_map<std::filesystem::path, AssetAudioData> cache;
+        std::unordered_map<std::filesystem::path, types::AssetAudioData> cache;
 
       public:
       public:
-        foundation::Result<AssetData, AssetError> load(
+        foundation::Result<types::AssetData, AssetError> load(
             const std::filesystem::path& path) noexcept override;
         std::vector<foundation::UTF8> get_supported_extension(void) const noexcept override;
         types::AssetKind get_target_asset_type(void) const noexcept override;

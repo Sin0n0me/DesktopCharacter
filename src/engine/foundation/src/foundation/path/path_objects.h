@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace enishi::assets_system {
+namespace enishi::foundation {
     class PathObjects {
       private:
         struct PathEntry {
@@ -23,4 +23,4 @@ namespace enishi::assets_system {
 
         std::vector<std::filesystem::path> find(const std::regex& pattern) const;
     };
-} // namespace enishi::assets_system
+} // namespace enishi::foundation

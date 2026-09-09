@@ -4,7 +4,7 @@ namespace enishi::core {
     AssetSystem::AssetSystem(void)
         : asset_manager(std::make_shared<AssetManager>()) {
     }
-    std::shared_ptr<assets_system::IAssetSystem> AssetSystem::get_asset_system(void) {
+    std::shared_ptr<platform::IAssetSystem> AssetSystem::get_asset_system(void) {
         return this->asset_manager;
     }
     bool AssetSystem::should_close(void) {

@@ -1,15 +1,15 @@
 #pragma once
 #include <platform/skinning_system/interface_bone_updater.h>
-#include <skinning_system/cache/animation_bone_cache.h>
-#include <skinning_system/views/animation_bone_view.h>
+#include <skinning_system/cache/physics_bone_cache.h>
+#include <skinning_system/views/physics_bone_view.h>
 #include <span>
 #include <vector>
 
 namespace enishi::skinning_system {
-    class AnimationBonesUpdater : public platform::IBoneUpdater {
+    class PhysicsBonesUpdater : public platform::IBoneUpdater {
       private:
         std::span<const types::BoneNode> bone_nodes;
-        AnimationBonesCache* const animation_view;
+        PhysicsBonesCache* const physics_view;
 
       public:
         void update_local(const types::BoneIndex index) noexcept override;

@@ -1,6 +1,6 @@
 #pragma once
-#include "asset_data.h"
 #include "errors/errors.h"
+#include <engine_types/assets/asset_data.h>
 #include <engine_types/assets/asset_kind.h>
 #include <filesystem>
 #include <foundation/result/result.h>
@@ -12,7 +12,7 @@ namespace enishi::assets_system {
       public:
         virtual ~IAssetLoader(void) noexcept = default;
 
-        [[nodiscard]] virtual foundation::Result<AssetData, AssetError> load(
+        [[nodiscard]] virtual foundation::Result<types::AssetData, AssetError> load(
             const std::filesystem::path& path) noexcept = 0;
 
         [[nodiscard]] virtual std::vector<foundation::UTF8> get_supported_extension(

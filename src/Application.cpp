@@ -9,7 +9,7 @@
 // #include <render_pass/constructor/debug/debug_render_pass_constructor.h>
 #include <render_pass/constructor/model/model_render_pass_constructor.h>
 #include <render_pass/constructor/shadow/shadow_map_render_pass_constructor.h>
-#include <render_pass/render_pass_constructor.h>
+#include <render_pass/render_pass_orchestra.h>
 
 #include <physics/bullet3/physics_engine.h>
 
@@ -106,7 +106,7 @@ namespace enishi {
 
     std::shared_ptr<platform::IRenderer> Application::init_renderer(
         std::shared_ptr<platform::IWindow> root_window,
-        std::shared_ptr<assets_system::IAssetSystem> asset_system) {
+        std::shared_ptr<platform::IAssetSystem> asset_system) {
         if (!bool(root_window)) {
             return {};
         }
@@ -140,15 +140,16 @@ namespace enishi {
         const auto render_system = this->system_scheduler.register_system<core::RenderSystem>(
             100, this->rsegistory, renderer, renderer);
 
-        // レンダーパスの作成
-        render_pass::RenderPassConstructor constructor;
-        constructor.add_render_pass_constructor(
-            std::make_shared<render_pass::ModelRenderPassConstructor>());
-        constructor.add_render_pass_constructor(
-            std::make_shared<render_pass::BackGroundRenderPassConstructor>());
-        constructor.add_render_pass_constructor(
-            std::make_shared<render_pass::ShadowMapRenderPassConstructor>());
+        render_pass::RenderPassOrchestra orchestra(render_system->get_renderer());
 
+        // レンダーパスの作成
+        orchestra.add_constructor(std::make_shared<render_pass::ModelRenderPassConstructor>());
+        orchestra.add_constructor(std::make_shared<render_pass::BackGroundRenderPassConstructor>());
+        orchestra.add_constructor(std::make_shared<render_pass::ShadowMapRenderPassConstructor>());
+
+        orchestra.make_render_passes();
+
+        /*
         constructor.use_asset_paths();
 
         // 一括構築
@@ -164,70 +165,14 @@ namespace enishi {
 
         // レンダーパスのセット
         render_system->set_render_passes(std::move(result_passes).unwrap_mut());
+        */
 
         return renderer;
     }
 
-    void Application::init_physics(std::shared_ptr<assets_system::IAssetSystem> asset_system,
+    void Application::init_physics(std::shared_ptr<platform::IAssetSystem> asset_system,
         std::shared_ptr<platform::IPhysicsEngine> physics_engine) {
         physics_engine->init_world();
-    }
-
-    foundation::Result<std::tuple<foundation::UTF8, types::RenderHandle>,
-        render_pass::ConstructError>
-    ModelRenderPassConstructor::make_mesh(platform::IRenderer* const renderer,
-        const std::vector<types::RenderHandle>& shader_reflections) {
-        const auto pattern_model_extensions =
-            asset_system->get_extensions_pattern(types::AssetKind::Model);
-        const auto path = MODEL_PATH / "";
-        const std::regex pattern(
-            std::format("{}.*{}", foundation::path_to_regex_str(path), pattern_model_extensions));
-        const auto model_paths = asset_system->find_assets(MODEL_PATH, types::AssetKind::Model);
-        const auto asset_paths = model_paths.find(pattern);
-
-        if (asset_paths.empty()) {
-            return foundation::Error(ConstructError::Construct, "モデルデータが見つかりません");
-        }
-
-        // モデルからメッシュへ変換
-        foundation::StringBuilder error_message;
-        for (const auto& path : asset_paths) {
-            error_message.push_back(std::format("loaded path: {}", path.string<char>()));
-            const auto asset_handle = asset_system->load_asset(path);
-            if (asset_handle.is_err()) {
-                error_message.push_back(asset_handle.unwrap_err().get_message());
-                continue;
-            }
-            const auto opt_model_data = asset_system->get_model_data(asset_handle.unwrap());
-            if (opt_model_data.is_none()) {
-                continue;
-            }
-            const auto& model_data = opt_model_data.unwrap();
-
-            // 先にテクスチャ読み込み
-            for (const auto& material : model_data->materials) {
-                for (const auto& material_texture : material.textures) {
-                    const auto asset_handle = asset_system->load_asset(material_texture.path);
-                    if (asset_handle.is_err()) {
-                        error_message.push_back(asset_handle.unwrap_err().get_message());
-                    }
-                }
-            }
-
-            // メッシュ作成
-            const auto mesh_handle = renderer->create_mesh(*model_data, shader_reflections);
-            if (mesh_handle.is_err()) {
-                error_message.push_back(mesh_handle.unwrap_err().get_message());
-                continue;
-            }
-
-            return std::tuple{
-                model_data->name,
-                mesh_handle.unwrap(),
-            };
-        }
-
-        return foundation::Error(ConstructError::Construct, error_message.join("\n"));
     }
 
     /*

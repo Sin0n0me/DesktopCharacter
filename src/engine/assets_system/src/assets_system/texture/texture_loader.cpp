@@ -4,12 +4,12 @@
 #include <nothings_std/stb_image.h>
 
 namespace enishi::assets_system {
-    foundation::Result<AssetData, AssetError> TextureLoader::load(
+    foundation::Result<types::AssetData, AssetError> TextureLoader::load(
         const std::filesystem::path& path) noexcept {
         // キャッシュがあれば使用
         const auto iter = this->cache.find(path.lexically_normal());
         if (iter != this->cache.end()) {
-            return AssetData{iter->second};
+            return types::AssetData{iter->second};
         }
 
         // TODO
@@ -48,7 +48,7 @@ namespace enishi::assets_system {
 
         stbi_image_free(pixels);
 
-        return AssetData{data};
+        return types::AssetData{data};
     }
 
     std::vector<foundation::UTF8> TextureLoader::get_supported_extension(void) const noexcept {

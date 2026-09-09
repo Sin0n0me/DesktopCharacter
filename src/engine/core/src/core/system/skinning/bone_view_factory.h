@@ -26,9 +26,6 @@ namespace enishi::core {
         [[nodiscard]] static skinning_system::AnimationBoneView make_animation_view(
             component::AnimationComponent& animation, const types::BoneIndex index) noexcept;
 
-        [[nodiscard]] static skinning_system::IKBoneView make_ik_view(
-            component::IKComponent& ik, const types::BoneIndex index) noexcept;
-
         [[nodiscard]] static skinning_system::PhysicsBoneView make_physics_view(
             component::PhysicsComponent& physics, const types::BoneIndex index) noexcept;
 

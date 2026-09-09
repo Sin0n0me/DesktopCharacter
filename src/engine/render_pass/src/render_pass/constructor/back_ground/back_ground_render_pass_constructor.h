@@ -11,18 +11,13 @@ namespace enishi::render_pass {
 
       public:
         foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError> make(
-            platform::IRenderer* const renderer) override;
-
-      private:
-        foundation::DependencyNode get_node(void) const noexcept override;
-        foundation::DependencyBounds get_dependencies(void) const noexcept override;
-
-        // IRenderPassConstructor を介して継承されました
-        foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError> make(
             platform::IRenderer* const renderer, const platform::IWindow* window) override;
         void import_shader(const types::ShaderKind& shader_kind,
             const types::ShaderData& shader) const noexcept override;
-        std::vector<std::filesystem::path> get_paths(void) const noexcept override;
+        std::vector<std::tuple<types::ShaderKind, std::filesystem::path>> get_paths(
+            void) const noexcept override;
         foundation::UTF8 get_render_pass_name(void) const noexcept override;
+        foundation::DependencyNode get_node(void) const noexcept override;
+        foundation::DependencyBounds get_dependencies(void) const noexcept override;
     };
 } // namespace enishi::render_pass

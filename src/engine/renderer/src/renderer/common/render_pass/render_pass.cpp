@@ -16,7 +16,9 @@ namespace enishi::renderer {
     }
 
     foundation::VoidResult<platform::RenderError> RenderPass::make_render_pass(
-        const types::PipelineDescription& description) noexcept {
+        const types::PipelineDescription& description,
+        foundation::DependencyNode&& node,
+        foundation::DependencyBounds&& dependencies) noexcept {
         // RTVの追加
         this->render_target = description.render_target_view;
 
@@ -40,6 +42,9 @@ namespace enishi::renderer {
             this->add_command(shader);
         }
 
+        this->dependencies = std::move(dependencies);
+        this->node = std::move(node);
+
         return {};
     }
 
@@ -48,7 +53,7 @@ namespace enishi::renderer {
         this->add_command(handle);
     }
 
-    void RenderPass::add_updater(std::shared_ptr<platform::IResourceUpdater> updater) {
+    void RenderPass::add_updater(std::shared_ptr<platform::IResourceUpdater> updater) noexcept {
         if (!bool(updater)) {
             return;
         }
@@ -61,5 +66,14 @@ namespace enishi::renderer {
             .handle = handle,
             .sub_command = types::SubCommand::Bind,
         });
+    }
+    void RenderPass::add_mesh(const types::RenderHandle& mesh) noexcept {
+        this->add_command(mesh);
+    }
+    foundation::DependencyNode RenderPass::get_node(void) const noexcept {
+        return this->node;
+    }
+    foundation::DependencyBounds RenderPass::get_dependencies(void) const noexcept {
+        return this->dependencies;
     }
 } // namespace enishi::renderer

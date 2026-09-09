@@ -61,71 +61,11 @@ namespace enishi::render_pass {
         }
         description.rasterizer_state = rasterizer.unwrap();
 
-        // シェーダーの作成
-        ShaderPaths paths = {
-            {types::ShaderKind::Vertex, {VS_FILE_NAME}},
-            {types::ShaderKind::Pixel, {PS_FILE_NAME}},
-        };
-        auto shader_result =
-            make_shaders(renderer, std::move(paths)).add_message("シェーダーの作成に失敗しました");
-        if (shader_result.is_err()) {
-            return shader_result.propagation(ConstructError::Construct);
-        }
-        std::vector<types::RenderHandle> shader_refrections;
-        for (auto& s : shader_result.unwrap()) {
-            if (s.input_layout.is_valid()) {
-                description.vertex_layout = s.input_layout;
-            }
-            description.shaders.emplace_back(s.shader);
-            shader_refrections.emplace_back(s.shader_reflection);
-        }
-
         // レンダーパスの生成
-        const auto render_pass_result = render_pass->make_render_pass(description);
+        const auto render_pass_result =
+            render_pass->make_render_pass(description, this->get_node(), this->get_dependencies());
         if (render_pass_result.is_err()) {
             return render_pass_result.propagation(ConstructError::Construct);
-        }
-
-        // モデルのみ初期モデル追加
-        // TODO: ファイルからの読み取り初期モデルを選択するように
-        const auto mesh_result = this->make_mesh(renderer, shader_refrections)
-                                     .add_message("メッシュデータの作成に失敗しました");
-        if (mesh_result.is_err()) {
-            return mesh_result.propagation(ConstructError::Construct);
-        }
-        const auto& [name, mesh_handle] = mesh_result.unwrap();
-        render_pass->add_mesh(name, mesh_handle);
-
-        const auto& mapper = renderer->get_handle_mapper();
-        auto accessor = renderer->get_resource_accessor()->get_resource_accessor();
-
-        const auto opt_mapped_mesh_handle = mapper->get(mesh_handle);
-        if (opt_mapped_mesh_handle.is_none()) {
-            return foundation::Error(ConstructError::Construct);
-        }
-        const auto& mapped_mesh_handle = opt_mapped_mesh_handle.unwrap();
-        const auto opt_mesh_handles =
-            accessor->get_mesh_accessor()->get_mesh_handle(mapped_mesh_handle.resource);
-        if (opt_mesh_handles.is_none()) {
-            return foundation::Error(ConstructError::Construct);
-        }
-
-        // メッシュのバッファを外部から更新できるようにインターフェイスの取得
-        const auto& mesh = opt_mesh_handles.unwrap();
-        for (const auto& handle : mesh.mesh_handles) {
-            const auto opt_buffer_handle = mapper->get(handle);
-            if (opt_buffer_handle.is_none()) {
-                return foundation::Error(ConstructError::Construct);
-            }
-            const auto& buffer_handle = opt_buffer_handle.unwrap();
-
-            const auto& opt_buffer_interface =
-                accessor->get_buffer_accessor()->get_bufer(buffer_handle.configurable);
-            if (opt_buffer_interface.is_none()) {
-                continue;
-            }
-
-            render_pass->add_updater(opt_buffer_interface.unwrap());
         }
 
         return render_pass;
@@ -145,10 +85,15 @@ namespace enishi::render_pass {
     void enishi::render_pass::ModelRenderPassConstructor::import_shader(
         const types::ShaderKind& shader_kind, const types::ShaderData& shader) const noexcept {
     }
-    std::vector<std::filesystem::path> enishi::render_pass::ModelRenderPassConstructor::get_paths(
-        void) const noexcept {
-        return std::vector<std::filesystem::path>();
+
+    std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>
+    enishi::render_pass::ModelRenderPassConstructor::get_paths(void) const noexcept {
+        return {
+            {types::ShaderKind::Vertex, VS_FILE_NAME},
+            {types::ShaderKind::Pixel, PS_FILE_NAME},
+        };
     }
+
     foundation::UTF8 enishi::render_pass::ModelRenderPassConstructor::get_render_pass_name(
         void) const noexcept {
         return foundation::UTF8();

@@ -7,16 +7,16 @@
 namespace enishi::ik {
     constexpr float EPSILON = 1e-5f;
 
-    void IKSolver::apply_ik(const types::IK& ik_component,
-        platform::IIKBoneView* const ik_view,
+    void IKSolver::apply_ik(const types::IK& ik,
+        platform::IIKBoneViewList* const ik_view_list,
         platform::IBoneUpdater* const updater,
         const types::BoneIndex index) {
-        if (const auto& ik = std::get_if<types::CCDIK>(&ik_component.method)) {
-            IKSolver::ccd_ik(ik_view, updater, *ik, index);
+        if (const auto& ccd_ik = std::get_if<types::CCDIK>(&ik.method)) {
+            IKSolver::ccd_ik(ik_view_list, updater, *ccd_ik, index);
         }
     }
 
-    void IKSolver::ccd_ik(platform::IIKBoneView* const ik_view,
+    void IKSolver::ccd_ik(platform::IIKBoneViewList* const ik_view_list,
         platform::IBoneUpdater* const updater,
         const types::CCDIK& ik,
         const types::BoneIndex index) {
@@ -25,15 +25,15 @@ namespace enishi::ik {
             return;
         }
 
-        const auto opt_ik_bone = ik_view->get_ik_global(ik.ik_bone);
-        const auto opt_target_bone = ik_view->get_ik_global(ik.target);
-        const auto opt_bone = ik_view->get_ik_global(index);
+        const auto opt_ik_bone = ik_view_list->get(ik.ik_bone);
+        const auto opt_target_bone = ik_view_list->get(ik.target);
+        auto opt_bone = ik_view_list->get(index);
         if (opt_bone.is_none() || opt_target_bone.is_none() || opt_ik_bone.is_none()) {
             return;
         }
         const auto& ik_bone = opt_ik_bone.unwrap();
         const auto& target_bone = opt_target_bone.unwrap();
-        const auto& bone = opt_bone.unwrap();
+        auto& bone = opt_bone.unwrap_mut();
 
         const auto chain_size = ik.chain.size();
 
@@ -59,18 +59,24 @@ namespace enishi::ik {
         float max_distance = std::numeric_limits<float>::max();
         for (std::uint32_t i = 0; i < ik.iterations; ++i) {
             for (const auto chain_index : ik.chain) {
-                const auto& opt_chain_bone = ik_view->get_ik_global(chain_index);
+                const auto& opt_chain_bone = ik_view_list->get(chain_index);
                 if (opt_chain_bone.is_none()) {
                     continue;
                 }
                 const auto& chain_bone = opt_chain_bone.unwrap();
 
                 if (has_limited_axis) {
-                    ik_view->set_ik_rotation(IKSolver::limited_solve_ik(
-                        chain_bone, ik_bone, target_bone, limited_axis, limit));
+                    bone->set_ik_rotation(
+                        IKSolver::limited_solve_ik(chain_bone->get_ik_global_transform(),
+                            ik_bone->get_ik_global_transform(),
+                            target_bone->get_ik_global_transform(),
+                            limited_axis,
+                            limit));
                 } else {
-                    ik_view->set_ik_rotation(
-                        IKSolver::solve_ik(chain_bone, ik_bone, target_bone, limit));
+                    bone->set_ik_rotation(IKSolver::solve_ik(chain_bone->get_ik_global_transform(),
+                        ik_bone->get_ik_global_transform(),
+                        target_bone->get_ik_global_transform(),
+                        limit));
                 }
 
                 updater->update_local(chain_index);
@@ -78,20 +84,20 @@ namespace enishi::ik {
             }
 
             // 発散防止
-            const glm::vec4 ik_pos = ik_bone[3];
-            const glm::vec4 target_pos = target_bone[3];
+            const glm::vec4 ik_pos = ik_bone->get_ik_global_transform()[3];
+            const glm::vec4 target_pos = target_bone->get_ik_global_transform()[3];
             const float distance = glm::length(target_pos - ik_pos);
             if (distance < max_distance) {
                 max_distance = distance;
                 for (std::uint32_t j = 0; j < chain_size; j++) {
                     const auto& chain_index = ik.chain[j];
-                    const auto& chain_buffer = ik_view->get_ik_global(chain_index);
-                    rotate_buffer[j] = ik_view->get_ik_rotation();
+                    const auto& chain_buffer = ik_view_list->get(chain_index);
+                    rotate_buffer[j] = bone->get_ik_rotation();
                 }
             } else {
                 for (std::uint32_t j = 0; j < chain_size; j++) {
                     const auto& chain_index = ik.chain[j];
-                    ik_view->set_ik_rotation(rotate_buffer[j]);
+                    bone->set_ik_rotation(rotate_buffer[j]);
                     updater->update_local(chain_index);
                     updater->update_global(chain_index);
                 }

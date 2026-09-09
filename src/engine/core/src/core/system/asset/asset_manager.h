@@ -1,25 +1,25 @@
 #pragma once
 #include "../../errors/errors.h"
-#include <assets_system/asset_handle.h>
 #include <assets_system/asset_load_scheduler.h>
 #include <assets_system/interface_asset_loader.h>
-#include <assets_system/interface_asset_system.h>
 #include <ecs/registory.h>
 #include <engine_types/assets/asset_state.h>
 #include <engine_types/assets/model/model_data.h>
 #include <engine_types/assets/shader/shader_data.h>
 #include <engine_types/assets/texture/texture_data.h>
+#include <engine_types/handle/asset/asset_handle.h>
 #include <filesystem>
 #include <foundation/option/option.h>
 #include <foundation/str/str.h>
 #include <memory>
 #include <mutex>
+#include <platform/asset/interface_asset_system.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace enishi::core {
-    class AssetManager : public assets_system::IAssetSystem {
+    class AssetManager : public platform::IAssetSystem {
       private:
         using AssetLoader = std::shared_ptr<assets_system::IAssetLoader>;
         using LoaderMap = std::unordered_map<foundation::UTF8, std::vector<AssetLoader>>;
@@ -31,10 +31,9 @@ namespace enishi::core {
         // そのため、データ取得系のAPI(get_model_data等)をconstに保ったまま
         // 遅延読み込み(ensure_asset_loaded)からも書き込めるようにmutableにしている
         mutable ecs::Registory asset_registory;
-        mutable std::unordered_map<std::filesystem::path, assets_system::AssetHandle>
-            path_to_handle;
+        mutable std::unordered_map<std::filesystem::path, types::AssetHandle> path_to_handle;
         mutable std::mutex state_mutex;
-        mutable std::unordered_map<assets_system::AssetHandle, types::AssetState> asset_states;
+        mutable std::unordered_map<types::AssetHandle, types::AssetState> asset_states;
         mutable assets_system::AssetLoadScheduler load_scheduler;
 
         LoaderMap extension_to_loader;
@@ -43,31 +42,29 @@ namespace enishi::core {
       public:
         explicit AssetManager(void);
 
-        foundation::Result<assets_system::AssetHandle, assets_system::AssetError> load_asset(
+        foundation::Result<types::AssetHandle, platform::AssetError> load_asset(
             const std::filesystem::path& path) noexcept override;
 
-        void release_asset(const assets_system::AssetHandle& handle) noexcept override;
+        void release_asset(const types::AssetHandle& handle) noexcept override;
 
         [[nodiscard]] foundation::Option<const std::filesystem::path&> get_asset_file_name(
-            const assets_system::AssetHandle& handle) const noexcept override;
+            const types::AssetHandle& handle) const noexcept override;
 
-        [[nodiscard]] assets_system::PathObjects find_assets(
-            const std::filesystem::path& target_path,
+        [[nodiscard]] foundation::PathObjects find_assets(const std::filesystem::path& target_path,
             const std::unordered_set<std::filesystem::path>& target_extensions)
             const noexcept override;
-        [[nodiscard]] assets_system::PathObjects find_assets(
-            const std::filesystem::path& target_path,
+        [[nodiscard]] foundation::PathObjects find_assets(const std::filesystem::path& target_path,
             const types::AssetKind asset_kind) const noexcept override;
 
-        [[nodiscard]] foundation::Option<const assets_system::AssetModelData&> get_model_data(
-            const assets_system::AssetHandle& handle) const noexcept override;
-        [[nodiscard]] foundation::Option<const assets_system::AssetShaderData&> get_shader_data(
-            const assets_system::AssetHandle& handle) const noexcept override;
-        [[nodiscard]] foundation::Option<const assets_system::AssetTextureData&> get_texture_data(
-            const assets_system::AssetHandle& handle) const noexcept override;
+        [[nodiscard]] foundation::Option<const types::AssetModelData&> get_model_data(
+            const types::AssetHandle& handle) const noexcept override;
+        [[nodiscard]] foundation::Option<const types::AssetShaderData&> get_shader_data(
+            const types::AssetHandle& handle) const noexcept override;
+        [[nodiscard]] foundation::Option<const types::AssetTextureData&> get_texture_data(
+            const types::AssetHandle& handle) const noexcept override;
 
         [[nodiscard]] types::AssetState get_asset_state(
-            const assets_system::AssetHandle& handle) const noexcept override;
+            const types::AssetHandle& handle) const noexcept override;
         [[nodiscard]] foundation::UTF8 get_extensions_pattern(
             const types::AssetKind asset_kind) const noexcept override;
 
@@ -113,17 +110,17 @@ namespace enishi::core {
 
         // 指定パスの読み込みジョブをスケジューラへ積む(呼び出し元はブロックしない)
         void request_load(const std::filesystem::path& path,
-            const assets_system::AssetHandle& handle,
+            const types::AssetHandle& handle,
             const std::vector<AssetLoader>& candidates) const;
 
         void set_asset_state(
-            const assets_system::AssetHandle& handle, const types::AssetState state) const noexcept;
+            const types::AssetHandle& handle, const types::AssetState state) const noexcept;
 
         // スケジューラの完了結果をRegistoryへ反映
         void commit_completed_load(CompletedLoad&& completed) const noexcept;
 
         // データ取得要求が来た時点で該当ハンドルが読み込み中(Queued/Loading)なら
         // IO完了とRegistoryへの反映が終わるまで呼び出し元をブロックする
-        void ensure_asset_loaded(const assets_system::AssetHandle& handle) const noexcept;
+        void ensure_asset_loaded(const types::AssetHandle& handle) const noexcept;
     };
 } // namespace enishi::core

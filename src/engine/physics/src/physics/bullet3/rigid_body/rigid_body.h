@@ -21,6 +21,7 @@ namespace enishi::physics::bullet3 {
         types::HandleId active_motion_state;
         types::HandleId kinematic_motion_state;
         types::RigidBodyKind kind;
+        types::BoneIndex bone_index;
 
       public:
         explicit BulletRigidBody(std::shared_ptr<INativePhysicsAccessor> native_view,

@@ -13,11 +13,6 @@ namespace enishi::core {
         };
     }
 
-    skinning_system::IKBoneView BoneViewFactory::make_ik_view(
-        component::IKComponent& ik, const types::BoneIndex index) noexcept {
-        return skinning_system::IKBoneView{};
-    }
-
     skinning_system::PhysicsBoneView BoneViewFactory::make_physics_view(
         component::PhysicsComponent& physics, const types::BoneIndex index) noexcept {
         return skinning_system::PhysicsBoneView{

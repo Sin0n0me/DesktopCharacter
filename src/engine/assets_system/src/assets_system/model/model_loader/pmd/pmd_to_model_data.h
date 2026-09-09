@@ -1,6 +1,5 @@
 #pragma once
 #include "../../../errors/errors.h"
-#include "../../../interface_asset_system.h"
 #include "../../../texture/texture_loader.h"
 #include "../../bone/bone_resolver.h"
 #include "../../morph/morph_resolver.h"
@@ -17,7 +16,7 @@ namespace enishi::assets_system {
         static constexpr glm::vec3 MMD_KNEE_AXIS = glm::vec3(-1.0f, 0.0f, 0.0f); // X軸固定
 
       public:
-        static foundation::Result<AssetModelData, AssetError> to_model_data(
+        static foundation::Result<types::AssetModelData, AssetError> to_model_data(
             const std::filesystem::path& path,
             const PMDData& data,
             TextureLoader* const texture_loader);
@@ -57,7 +56,7 @@ namespace enishi::assets_system {
         [[nodiscard]] static types::RigidBodyKind make_rigid_body_type_from_pmd(
             const PMDRigidBody& rigid_body);
 
-        [[nodiscard]] static std::unordered_map<std::filesystem::path, AssetTextureData>
+        [[nodiscard]] static std::unordered_map<std::filesystem::path, types::AssetTextureData>
         make_textures(
             const std::vector<types::Material>& materials, TextureLoader* const texture_loader);
     };

@@ -10,6 +10,8 @@
 namespace enishi::renderer {
     class RenderPass : public platform::IRenderPass {
       private:
+        foundation::DependencyNode node;
+        foundation::DependencyBounds dependencies;
         types::RenderHandle render_target;
         std::vector<types::DrawCommand> commands;
         std::unordered_map<foundation::UTF8, std::size_t> mesh_name_to_index;
@@ -17,17 +19,21 @@ namespace enishi::renderer {
 
       public:
         foundation::VoidResult<platform::RenderError> make_render_pass(
-            const types::PipelineDescription& description) noexcept;
+            const types::PipelineDescription& description,
+            foundation::DependencyNode&& node,
+            foundation::DependencyBounds&& dependencies) noexcept;
 
         void add_mesh(const foundation::UTF8& mesh_name, const types::RenderHandle handle);
-
-        // 舞フレーム更新する場合
-        void add_updater(std::shared_ptr<platform::IResourceUpdater> updater);
 
       public:
         std::span<const types::DrawCommand> get_commands(void) const noexcept override;
         types::RenderHandle get_render_target(void) const noexcept override;
         void update(void) override;
+
+        void add_updater(std::shared_ptr<platform::IResourceUpdater> updater) noexcept override;
+        void add_mesh(const types::RenderHandle& mesh) noexcept override;
+        foundation::DependencyNode get_node(void) const noexcept override;
+        foundation::DependencyBounds get_dependencies(void) const noexcept override;
 
       private:
         void add_command(const types::RenderHandle handle);

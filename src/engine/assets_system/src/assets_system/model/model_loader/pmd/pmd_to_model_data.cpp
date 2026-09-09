@@ -9,7 +9,7 @@
 #include <ranges>
 
 namespace enishi::assets_system {
-    foundation::Result<AssetModelData, AssetError> PMDToModelData::to_model_data(
+    foundation::Result<types::AssetModelData, AssetError> PMDToModelData::to_model_data(
         const std::filesystem::path& path,
         const PMDData& data,
         TextureLoader* const texture_loader) {
@@ -499,9 +499,10 @@ namespace enishi::assets_system {
         return types::RigidBodyKind::Dynamic;
     }
 
-    std::unordered_map<std::filesystem::path, AssetTextureData> PMDToModelData::make_textures(
+    std::unordered_map<std::filesystem::path, types::AssetTextureData>
+    PMDToModelData::make_textures(
         const std::vector<types::Material>& materials, TextureLoader* const texture_loader) {
-        std::unordered_map<std::filesystem::path, AssetTextureData> textures;
+        std::unordered_map<std::filesystem::path, types::AssetTextureData> textures;
 
         for (const auto& material : materials) {
             for (const auto& texture : material.textures) {
@@ -510,7 +511,7 @@ namespace enishi::assets_system {
                     return {};
                 }
 
-                auto texture_data = std::get_if<AssetTextureData>(&result.unwrap_mut());
+                auto texture_data = std::get_if<types::AssetTextureData>(&result.unwrap_mut());
                 if (!bool(texture_data)) {
                     return {}; // 本来は到達しない
                 }

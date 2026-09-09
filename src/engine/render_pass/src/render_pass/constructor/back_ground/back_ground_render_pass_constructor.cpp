@@ -1,5 +1,6 @@
 #include "back_ground_render_pass_constructor.h"
 #include "../helper.h"
+#include "back_ground_render_pass_constructor.h"
 #include <foundation/log/logger.h>
 #include <foundation/path/path_utility.h>
 #include <foundation/str/string_builder.h>
@@ -9,11 +10,6 @@
 namespace enishi::render_pass {
     constexpr char VS_FILE_NAME[] = "vs_clear_wall";
     constexpr char PS_FILE_NAME[] = "ps_clear_wall";
-    constexpr float WALL_SIZE = 30.0f;
-    constexpr float HALF_WALL_SIZE = WALL_SIZE / 2.0f;
-    constexpr float FRONT_DEPTH = 0.0f;
-    constexpr float FLOOR_DEPTH = 1.5f; // 奥行(床面)
-    constexpr float OFFSET_Y = 0.0f;
 
     foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError>
     enishi::render_pass::BackGroundRenderPassConstructor::make(
@@ -24,9 +20,15 @@ namespace enishi::render_pass {
             .topology = types::PrimitiveTopology::TriangleList,
         };
 
+        const auto opt_window_size = window->get_size();
+        if (opt_window_size.is_none()) {
+            return;
+        }
+        auto window_size = opt_window_size.unwrap().to_glm_ivec2();
+
         // レンダーターゲットの作成
         auto rtv =
-            make_render_target(types::ImageDescription::make_default_render_target(WINDOW_SIZE),
+            make_render_target(types::ImageDescription::make_default_render_target(window_size),
                 types::ImageFormat::BGRA8_UNORM,
                 renderer);
         if (rtv.is_err()) {
@@ -36,7 +38,7 @@ namespace enishi::render_pass {
 
         // 深度ステンシルの作成
         auto dsv = make_depth_stencil(types::ImageDescription::make_depth_stencil(
-                                          WINDOW_SIZE, types::ImageFormat::D24_UNORM_S8_UINT),
+                                          window_size, types::ImageFormat::D24_UNORM_S8_UINT),
             types::ImageFormat::BGRA8_UNORM,
             renderer);
         if (dsv.is_err()) {
@@ -69,71 +71,6 @@ namespace enishi::render_pass {
         }
         description.rasterizer_state = rasterizer.unwrap();
 
-        // シェーダーの作成
-        ShaderPaths paths = {
-            {types::ShaderKind::Vertex, {VS_FILE_NAME}},
-            {types::ShaderKind::Pixel, {PS_FILE_NAME}},
-        };
-        auto shader_result =
-            make_shaders(renderer, std::move(paths)).add_message("シェーダーの作成に失敗しました");
-        if (shader_result.is_err()) {
-            return shader_result.propagation(ConstructError::Construct);
-        }
-        std::vector<types::RenderHandle> shader_refrections;
-        for (auto& s : shader_result.unwrap()) {
-            if (s.input_layout.is_valid()) {
-                description.vertex_layout = s.input_layout;
-            }
-            description.shaders.emplace_back(s.shader);
-            shader_refrections.emplace_back(s.shader_reflection);
-        }
-
-        // レンダーパスの生成
-        const auto render_pass_result = render_pass->make_render_pass(description);
-        if (render_pass_result.is_err()) {
-            return render_pass_result.propagation(ConstructError::Construct);
-        }
-
-        assets_system::AssetModelData model_data = std::make_shared<types::ModelData>();
-        model_data->vertices = {
-            types::VertexVariants{
-                types::VertexPosition{
-                    .position = {-HALF_WALL_SIZE, -HALF_WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH},
-                },
-            },
-            types::VertexVariants{
-                types::VertexPosition{
-                    .position = {-HALF_WALL_SIZE, WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH},
-                },
-            },
-            types::VertexVariants{
-                types::VertexPosition{
-                    .position = {HALF_WALL_SIZE, WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH},
-                },
-            },
-            types::VertexVariants{
-                types::VertexPosition{
-                    .position = {HALF_WALL_SIZE, -HALF_WALL_SIZE, FRONT_DEPTH + FLOOR_DEPTH},
-                },
-            },
-        };
-
-        model_data->indices = {std::vector<std::uint16_t>{
-            0,
-            1,
-            2,
-            0,
-            2,
-            3,
-        }};
-
-        // メッシュ作成
-        auto mesh_handle = renderer->create_mesh(*model_data, shader_refrections);
-        if (mesh_handle.is_err()) {
-            return mesh_handle.propagation(core::SystemError::ConstructRenderPassError);
-        }
-        render_pass->add_mesh("Wall", mesh_handle.unwrap());
-
         return render_pass;
     }
 
@@ -150,10 +87,15 @@ namespace enishi::render_pass {
     void enishi::render_pass::BackGroundRenderPassConstructor::import_shader(
         const types::ShaderKind& shader_kind, const types::ShaderData& shader) const noexcept {
     }
-    std::vector<std::filesystem::path>
+
+    std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>
     enishi::render_pass::BackGroundRenderPassConstructor::get_paths(void) const noexcept {
-        return std::vector<std::filesystem::path>();
+        return {
+            {types::ShaderKind::Vertex, VS_FILE_NAME},
+            {types::ShaderKind::Pixel, PS_FILE_NAME},
+        };
     }
+
     foundation::UTF8 enishi::render_pass::BackGroundRenderPassConstructor::get_render_pass_name(
         void) const noexcept {
         return foundation::UTF8();

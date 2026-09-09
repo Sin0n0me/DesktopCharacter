@@ -9,23 +9,9 @@
 #include <engine_types/renderer/vertex/vertex_layout.h>
 
 namespace enishi::types {
-    /*
-    enum class BlendMode : std::uint8_t {
-        Opaque,        // 不透明
-        AlphaBlend,    // 通常アルファブレンド
-        Additive,      // 加算合成
-        Premultiplied, // 乗算済みアルファ
-    };
-
-    enum class DepthTestMode : std::uint8_t {
-        ReadWrite, // 深度テストあり, 書き込みあり(通常)
-        ReadOnly,  // 深度テストあり, 書き込みなし(半透明)
-        Disabled,  // 深度テストなし(UI, デバッグ)
-    };
-    */
-
     struct PipelineDescription {
         std::vector<RenderHandle> shaders;
+        std::vector<RenderHandle> shader_reflections;
         PrimitiveTopology topology;
         RenderHandle vertex_layout;
         RenderHandle render_target_view;

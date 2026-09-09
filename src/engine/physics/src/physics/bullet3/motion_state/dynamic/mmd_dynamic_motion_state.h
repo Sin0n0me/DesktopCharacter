@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <physics/bullet3/motion_state/interface_mmd_motion_state.h>
-#include <platform/animation/interface_bone_updater.h>
 
 namespace enishi::physics::bullet3 {
     class MMDDynamicMotionState : public IMMDMotionState {
@@ -13,6 +12,7 @@ namespace enishi::physics::bullet3 {
         glm::mat4 inverse_offset;
         btTransform transform;
         bool override_with_physics;
+        types::BoneIndex index;
 
       public:
         explicit MMDDynamicMotionState(const glm::mat4& offset, const bool override_with_physics);

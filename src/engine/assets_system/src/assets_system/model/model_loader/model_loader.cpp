@@ -18,7 +18,7 @@ namespace enishi::assets_system {
         }
     }
 
-    foundation::Result<AssetData, AssetError> ModelLoader::load(
+    foundation::Result<types::AssetData, AssetError> ModelLoader::load(
         const std::filesystem::path& path) noexcept {
         if (!path.has_extension()) {
             return foundation::Error(AssetError::NotFound, "不明なファイルです");
@@ -44,7 +44,7 @@ namespace enishi::assets_system {
                 return convert_data;
             }
 
-            return AssetData{convert_data.unwrap()};
+            return types::AssetData{convert_data.unwrap()};
         }
 
         // 仮

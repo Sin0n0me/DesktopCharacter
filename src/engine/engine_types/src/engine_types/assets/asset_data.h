@@ -6,11 +6,11 @@
 #include <memory>
 #include <variant>
 
-namespace enishi::assets_system {
-    using AssetModelData = std::shared_ptr<types::ModelData>;
-    using AssetShaderData = std::shared_ptr<types::ShaderData>;
-    using AssetTextureData = std::shared_ptr<types::TextureData>;
-    using AssetAudioData = std::shared_ptr<types::AudioData>;
+namespace enishi::types {
+    using AssetModelData = std::shared_ptr<ModelData>;
+    using AssetShaderData = std::shared_ptr<ShaderData>;
+    using AssetTextureData = std::shared_ptr<TextureData>;
+    using AssetAudioData = std::shared_ptr<AudioData>;
     using AssetAnimationData = std::shared_ptr<int>;
 
     using AssetData = std::variant<AssetModelData,
@@ -18,4 +18,4 @@ namespace enishi::assets_system {
         AssetTextureData,
         AssetAudioData,
         AssetAnimationData>;
-} // namespace enishi::assets_system
+} // namespace enishi::types

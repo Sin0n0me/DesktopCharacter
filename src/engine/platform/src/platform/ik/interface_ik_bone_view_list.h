@@ -14,13 +14,13 @@ namespace enishi::platform {
 
         [[nodiscard]] virtual std::size_t size(void) const noexcept = 0;
 
-        [[nodiscard]] virtual foundation::Option<IIKBoneView&> get(
+        [[nodiscard]] virtual foundation::Option<IIKBoneView*> get(
             const types::BoneIndex index) noexcept = 0;
-        [[nodiscard]] virtual foundation::Option<const IIKBoneView&> get(
+        [[nodiscard]] virtual foundation::Option<const IIKBoneView*> get(
             const types::BoneIndex index) const noexcept = 0;
 
-        [[nodiscard]] virtual IIKBoneView& at(const types::BoneIndex index) noexcept = 0;
-        [[nodiscard]] virtual const IIKBoneView& at(
+        [[nodiscard]] virtual IIKBoneView* at(const types::BoneIndex index) noexcept = 0;
+        [[nodiscard]] virtual const IIKBoneView* at(
             const types::BoneIndex index) const noexcept = 0;
     };
 } // namespace enishi::platform

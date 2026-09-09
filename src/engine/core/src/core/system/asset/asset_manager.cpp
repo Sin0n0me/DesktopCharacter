@@ -33,8 +33,8 @@ namespace enishi::core {
         this->add_loader<assets_system::AudioLoader>(types::AssetKind::Audio);
     }
 
-    foundation::Result<assets_system::AssetHandle, assets_system::AssetError>
-    AssetManager::load_asset(const std::filesystem::path& path) noexcept {
+    foundation::Result<types::AssetHandle, platform::AssetError> AssetManager::load_asset(
+        const std::filesystem::path& path) noexcept {
         // すでに読み込み済み、または読み込み中の場合はそのまま保管しているハンドルを返す
         // (path_to_handleへの登録は読み込み完了を待たず即座に行うため、これだけで多重読み込みを防げる)
         const auto normalized_path = path.lexically_normal();
@@ -44,7 +44,7 @@ namespace enishi::core {
         }
 
         if (!path.has_extension()) {
-            return foundation::Error(assets_system::AssetError::NotFound);
+            return foundation::Error(platform::AssetError::NotFound);
         }
 
         // 拡張子に応じたアセットローダー候補を探す
@@ -52,19 +52,19 @@ namespace enishi::core {
         const auto extention = path.extension();
         const auto asset_iter = this->extension_to_loader.find(extention.string<char>());
         if (asset_iter == this->extension_to_loader.end()) {
-            return foundation::Error(assets_system::AssetError::NotFound,
+            return foundation::Error(platform::AssetError::NotFound,
                 std::format("not found loader. target: {}", path.string<char>()));
         }
 
         const auto& candidates = asset_iter->second;
         if (candidates.empty()) {
-            return foundation::Error(assets_system::AssetError::NotFound);
+            return foundation::Error(platform::AssetError::NotFound);
         }
 
         // ハンドルはIOの完了を待たずにこの場で発行する
         // (typeは最有力候補である先頭ローダーの対応アセット種別を暫定的に採用する。
         //  1拡張子に複数ローダーが対応するケースは稀であり、通常はここで確定する)
-        const auto handle = assets_system::AssetHandle{
+        const auto handle = types::AssetHandle{
             .id = this->asset_registory.create(),
             .type = candidates.front()->get_target_asset_type(),
         };
@@ -76,17 +76,17 @@ namespace enishi::core {
         return handle;
     }
 
-    void AssetManager::release_asset(const assets_system::AssetHandle& handle) noexcept {
+    void AssetManager::release_asset(const types::AssetHandle& handle) noexcept {
     }
 
     foundation::Option<const std::filesystem::path&> AssetManager::get_asset_file_name(
-        const assets_system::AssetHandle& handle) const noexcept {
+        const types::AssetHandle& handle) const noexcept {
         return foundation::Option<const std::filesystem::path&>();
     }
 
-    assets_system::PathObjects AssetManager::find_assets(const std::filesystem::path& target_path,
+    foundation::PathObjects AssetManager::find_assets(const std::filesystem::path& target_path,
         const std::unordered_set<std::filesystem::path>& target_extensions) const noexcept {
-        assets_system::PathObjects matched_files;
+        foundation::PathObjects matched_files;
         std::vector<std::filesystem::path> directory_stack;
         std::error_code ec;
 
@@ -131,14 +131,14 @@ namespace enishi::core {
         return matched_files;
     }
 
-    assets_system::PathObjects AssetManager::find_assets(const std::filesystem::path& target_path,
+    foundation::PathObjects AssetManager::find_assets(const std::filesystem::path& target_path,
         const types::AssetKind asset_kind) const noexcept {
         const auto& extensions = this->get_extensions(asset_kind);
         return this->find_assets(target_path, AssetManager::convert_hash_set(extensions));
     }
 
     void AssetManager::request_load(const std::filesystem::path& path,
-        const assets_system::AssetHandle& handle,
+        const types::AssetHandle& handle,
         const std::vector<AssetLoader>& candidates) const {
         // キャプチャは安全のためにコピーで行う
         auto job = [this, path, handle, candidates] {
@@ -154,7 +154,7 @@ namespace enishi::core {
                 }
             }
 
-            return foundation::Result<assets_system::AssetData, assets_system::AssetError>(
+            return foundation::Result<types::AssetData, assets_system::AssetError>(
                 foundation::Error(assets_system::AssetError::NotFound,
                     std::format("読み込みに失敗しました. target: {}", path.string<char>())));
         };
@@ -164,7 +164,7 @@ namespace enishi::core {
     }
 
     void AssetManager::set_asset_state(
-        const assets_system::AssetHandle& handle, const types::AssetState state) const noexcept {
+        const types::AssetHandle& handle, const types::AssetState state) const noexcept {
         const std::lock_guard<std::mutex> lock(this->state_mutex);
         this->asset_states[handle] = state;
     }
@@ -212,8 +212,7 @@ namespace enishi::core {
         }
     }
 
-    void AssetManager::ensure_asset_loaded(
-        const assets_system::AssetHandle& handle) const noexcept {
+    void AssetManager::ensure_asset_loaded(const types::AssetHandle& handle) const noexcept {
         // Queued/Loading以外(NotLoaded/Loaded/Failed)であれば何もしない
         // 待っても新しい結果は来ない(そもそも投入されていない, 既に確定済み)ため
         if (types::is_inactive_state(this->get_asset_state(handle))) {
@@ -234,7 +233,7 @@ namespace enishi::core {
     }
 
     types::AssetState AssetManager::get_asset_state(
-        const assets_system::AssetHandle& handle) const noexcept {
+        const types::AssetHandle& handle) const noexcept {
         const std::lock_guard<std::mutex> lock(this->state_mutex);
 
         const auto iter = this->asset_states.find(handle);
@@ -250,38 +249,38 @@ namespace enishi::core {
         return make_extension_regex(extensions);
     }
 
-    foundation::Option<const assets_system::AssetModelData&> AssetManager::get_model_data(
-        const assets_system::AssetHandle& handle) const noexcept {
-        auto&& cached = this->asset_registory.get_const<assets_system::AssetModelData>(handle.id);
+    foundation::Option<const types::AssetModelData&> AssetManager::get_model_data(
+        const types::AssetHandle& handle) const noexcept {
+        auto&& cached = this->asset_registory.get_const<types::AssetModelData>(handle.id);
         if (cached.is_some()) {
             return cached;
         }
 
         // 読み込み中であれば、ここで完了を待ってからもう一度取得する
         this->ensure_asset_loaded(handle);
-        return this->asset_registory.get_const<assets_system::AssetModelData>(handle.id);
+        return this->asset_registory.get_const<types::AssetModelData>(handle.id);
     }
 
-    foundation::Option<const assets_system::AssetShaderData&> AssetManager::get_shader_data(
-        const assets_system::AssetHandle& handle) const noexcept {
-        auto&& cached = this->asset_registory.get_const<assets_system::AssetShaderData>(handle.id);
+    foundation::Option<const types::AssetShaderData&> AssetManager::get_shader_data(
+        const types::AssetHandle& handle) const noexcept {
+        auto&& cached = this->asset_registory.get_const<types::AssetShaderData>(handle.id);
         if (cached.is_some()) {
             return cached;
         }
 
         this->ensure_asset_loaded(handle);
-        return this->asset_registory.get_const<assets_system::AssetShaderData>(handle.id);
+        return this->asset_registory.get_const<types::AssetShaderData>(handle.id);
     }
 
-    foundation::Option<const assets_system::AssetTextureData&> AssetManager::get_texture_data(
-        const assets_system::AssetHandle& handle) const noexcept {
-        auto&& cached = this->asset_registory.get_const<assets_system::AssetTextureData>(handle.id);
+    foundation::Option<const types::AssetTextureData&> AssetManager::get_texture_data(
+        const types::AssetHandle& handle) const noexcept {
+        auto&& cached = this->asset_registory.get_const<types::AssetTextureData>(handle.id);
         if (cached.is_some()) {
             return cached;
         }
 
         this->ensure_asset_loaded(handle);
-        return this->asset_registory.get_const<assets_system::AssetTextureData>(handle.id);
+        return this->asset_registory.get_const<types::AssetTextureData>(handle.id);
     }
 
     std::vector<foundation::UTF8> AssetManager::get_extensions(

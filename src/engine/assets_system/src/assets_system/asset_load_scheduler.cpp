@@ -2,7 +2,7 @@
 
 namespace enishi::assets_system {
     void AssetLoadScheduler::submit(
-        const AssetHandle& handle, const std::filesystem::path& path, LoadJob job) {
+        const types::AssetHandle& handle, const std::filesystem::path& path, LoadJob job) {
         // candidatesやpathなど読み込みに必要な情報はjob側にすでに閉じ込められている想定のため、
         // ここではjobの実行と、その結果の受け渡しのみを行う
         this->io_executor.submit([this, handle, path, job = std::move(job)] {
@@ -34,7 +34,7 @@ namespace enishi::assets_system {
     }
 
     foundation::Option<AssetLoadScheduler::CompletedLoad>
-    AssetLoadScheduler::wait_and_take_completed(const AssetHandle& handle) noexcept {
+    AssetLoadScheduler::wait_and_take_completed(const types::AssetHandle& handle) noexcept {
         std::unique_lock<std::mutex> lock(this->completed_mutex);
         this->completed_condition.wait(
             lock, [this, &handle] { return this->completed_loads.contains(handle); });

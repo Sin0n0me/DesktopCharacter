@@ -1,8 +1,8 @@
 #pragma once
-#include "asset_data.h"
-#include "asset_handle.h"
 #include "errors/errors.h"
 #include <condition_variable>
+#include <engine_types/assets/asset_data.h>
+#include <engine_types/handle/asset/asset_handle.h>
 #include <filesystem>
 #include <foundation/option/option.h>
 #include <foundation/result/result.h>
@@ -30,13 +30,13 @@ namespace enishi::assets_system {
     class AssetLoadScheduler {
       public:
         // IOスレッドで実行するジョブ本体(ファイルの読み込み処理そのもの)
-        using LoadJob = std::function<foundation::Result<AssetData, AssetError>(void)>;
+        using LoadJob = std::function<foundation::Result<types::AssetData, AssetError>(void)>;
 
         // IOスレッドでの読み込みが完了した1件分の結果
         struct CompletedLoad {
-            AssetHandle handle;
+            types::AssetHandle handle;
             std::filesystem::path path;
-            foundation::Result<AssetData, AssetError> result;
+            foundation::Result<types::AssetData, AssetError> result;
         };
 
       private:
@@ -44,7 +44,7 @@ namespace enishi::assets_system {
 
         std::mutex completed_mutex;
         std::condition_variable completed_condition;
-        std::unordered_map<AssetHandle, CompletedLoad> completed_loads;
+        std::unordered_map<types::AssetHandle, CompletedLoad> completed_loads;
 
       public:
         AssetLoadScheduler(void) = default;
@@ -56,7 +56,8 @@ namespace enishi::assets_system {
         AssetLoadScheduler& operator=(AssetLoadScheduler&&) = delete;
 
         // ジョブをIO専用スレッドへ積む。呼び出し元のスレッドをブロックしない
-        void submit(const AssetHandle& handle, const std::filesystem::path& path, LoadJob job);
+        void submit(
+            const types::AssetHandle& handle, const std::filesystem::path& path, LoadJob job);
 
         // 完了済みの結果を1件取り出す(非ブロッキング)。結果が無ければNoneを返す
         // フレーム毎のポーリング等、複数件をまとめて処理したい場合に繰り返し呼ぶことを想定している
@@ -64,10 +65,11 @@ namespace enishi::assets_system {
 
         // 指定ハンドルの完了を待って結果を取り出す(ブロッキング)
         //
-        // 前提条件: 呼び出し時点でhandleに対応するジョブが投入済みで、まだ結果を取り出していないこと
+        // 前提条件:
+        // 呼び出し時点でhandleに対応するジョブが投入済みで、まだ結果を取り出していないこと
         // 呼び出し元(AssetManager)は状態(AssetState)が読み込み中であることを確認したうえでのみ
         // このメソッドを呼ぶ責務を負う。そうでない場合は完了が来ず無限に待機し続けてしまう
         [[nodiscard]] foundation::Option<CompletedLoad> wait_and_take_completed(
-            const AssetHandle& handle) noexcept;
+            const types::AssetHandle& handle) noexcept;
     };
 } // namespace enishi::assets_system

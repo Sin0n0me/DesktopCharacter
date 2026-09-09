@@ -17,17 +17,17 @@ namespace enishi::assets_system {
       public:
         ShaderLoader(void);
 
-        foundation::Result<AssetData, AssetError> load(
+        foundation::Result<types::AssetData, AssetError> load(
             const std::filesystem::path& path) noexcept override;
         std::vector<foundation::UTF8> get_supported_extension(void) const noexcept override;
 
       private:
         [[nodiscard]]
-        static foundation::Result<AssetShaderData, AssetError> load_spir_v(
+        static foundation::Result<types::AssetShaderData, AssetError> load_spir_v(
             BinaryReader& reader) noexcept;
 
         [[nodiscard]]
-        static foundation::Result<AssetShaderData, AssetError> load_dxbc(
+        static foundation::Result<types::AssetShaderData, AssetError> load_dxbc(
             BinaryReader& reader) noexcept;
 
         types::AssetKind get_target_asset_type(void) const noexcept override;

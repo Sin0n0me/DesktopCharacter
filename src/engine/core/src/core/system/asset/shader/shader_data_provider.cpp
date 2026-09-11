@@ -4,8 +4,7 @@
 namespace enishi::core {
     const std::filesystem::path SHADER_PATH = "./assets/shader";
 
-    inline ShaderDataProvider::ShaderDataProvider(
-        std::shared_ptr<platform::IAssetSystem> asset_system)
+    ShaderDataProvider::ShaderDataProvider(std::shared_ptr<platform::IAssetSystem> asset_system)
         : asset_system(std::move(asset_system)) {
     }
 

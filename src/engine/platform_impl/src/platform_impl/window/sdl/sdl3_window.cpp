@@ -149,13 +149,11 @@ namespace enishi::platform_impl {
             return {};
         }
 
-        const platform::WindowHandle handle{
+        return platform::WindowHandle{
             .id = types::HandleId{},
             .tag = this->window_system,
             .native_handle = opt_window_handle.unwrap(),
         };
-
-        return handle;
     }
 
     foundation::Option<types::WindowPosition> SDL3Window::get_position(void) const noexcept {

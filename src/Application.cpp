@@ -11,6 +11,8 @@
 #include <render_pass/constructor/shadow/shadow_map_render_pass_constructor.h>
 #include <render_pass/render_pass_orchestra.h>
 
+#include <model_controller/model_controller.h>
+
 #include <physics/bullet3/physics_engine.h>
 
 #include <core/system/asset/shader/shader_data_provider.h>

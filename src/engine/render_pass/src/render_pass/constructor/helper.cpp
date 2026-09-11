@@ -6,6 +6,27 @@
 namespace enishi::render_pass {
     constexpr glm::vec4 CLEAR_COLOR = glm::vec4{0.25f, 0.25f, 0.25f, 0.25f};
 
+    ShaderKindToData make_shader_map_presorted(
+        const std::vector<platform::ShaderDataEntry>& entries) {
+        ShaderKindToData map;
+
+        auto projection = entries | std::views::transform([](const auto& entry) {
+            return std::pair{entry.kind, entry.data};
+        });
+
+        for (auto group : projection | std::views::chunk_by([](const auto& a, const auto& b) {
+                 return a.first == b.first;
+             })) {
+            types::ShaderKind kind = group.front().first;
+            auto data_list = group |
+                             std::views::transform([](const auto& pair) { return pair.second; }) |
+                             std::ranges::to<std::vector>();
+            map.emplace(kind, std::move(data_list));
+        }
+
+        return map;
+    }
+
     foundation::Result<types::RenderHandle, ConstructError> make_render_target(
         types::ImageDescription&& description,
         types::ImageFormat&& view_format,
@@ -107,7 +128,7 @@ namespace enishi::render_pass {
     }
 
     foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
-        platform::IRenderer* const renderer, platform::ShaderKindToData&& shaders_map) {
+        platform::IRenderer* const renderer, ShaderKindToData&& shaders_map) {
         auto shader_result = std::vector<ShaderResult>();
 
         for (const auto& [kind, shaders] : shaders_map) {

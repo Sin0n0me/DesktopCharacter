@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace enishi::model_controller {
-    class ModelContoller {
+    class ModelController {
       private:
         std::shared_ptr<platform::IAssetSystem> asset_system;
         std::shared_ptr<ModelRenderDataBuilder> builder;
@@ -43,6 +43,5 @@ namespace enishi::model_controller {
             const std::vector<types::RenderHandle>& shader_reflections) noexcept;
 
       private:
-        void make_wall(void);
     };
 } // namespace enishi::model_controller

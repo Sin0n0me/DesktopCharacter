@@ -25,7 +25,7 @@ namespace enishi::skinning_system {
         const auto& bind = this->bind_view->at(index);
 
         // pivotはバインドポーズのローカル位置(不変)を使う
-        const auto bind_local_translation = glm::vec3(bind.get_bind_local()[3]);
+        const auto bind_local_translation = glm::vec3(bind->get_bind_local()[3]);
         const auto local = glm::translate(glm::mat4(1.0f), bind_local_translation) *
                            glm::mat4_cast(view->get_ik_rotation());
 
@@ -42,7 +42,7 @@ namespace enishi::skinning_system {
     }
 
     void IKBonesUpdater::update_children_global(const types::BoneIndex index) noexcept {
-        if (this->bone_nodes().size() <= index) {
+        if (this->bone_nodes().size() + 1 < index) {
             return;
         }
         for (const auto& child : this->bone_nodes()[index].children) {
@@ -51,7 +51,8 @@ namespace enishi::skinning_system {
     }
 
     void IKBonesUpdater::update_global_form_roots(void) noexcept {
-        for (types::BoneIndex i = 0; i < this->bone_nodes().size(); ++i) {
+        const auto size = this->bone_nodes().size();
+        for (types::BoneIndex i = 0; i < size; ++i) {
             if (!this->bone_nodes()[i].has_parent()) {
                 this->update_global(i);
             }

@@ -22,21 +22,22 @@ namespace enishi::foundation {
 
           public:
             OptionBase(void) noexcept = default;
+            OptionBase(const OptionBase<Derived, T>&) noexcept = default;
             OptionBase(OptionBase<Derived, T>&&) noexcept = default;
-            OptionBase(Option&& option)
+            OptionBase(Option&& option) noexcept
                 : option(std::move(option)) {
             }
-            OptionBase(OptionValue<T>&& option)
-                : option(std::move(option)) {
-            }
-            OptionBase(const T& option)
+            OptionBase(const Option& option) noexcept
                 : option(option) {
             }
-            OptionBase(std::nullopt_t&& nullopt)
+            OptionBase(OptionValue<T>&& option) noexcept
+                : option(std::move(option)) {
+            }
+            OptionBase(std::nullopt_t&& nullopt) noexcept
                 : option(std::move(nullopt)) {
             }
-            OptionBase(const std::nullopt_t& nullopt)
-                : option(nullopt) {
+            OptionBase(const T& value) noexcept
+                : option(value) {
             }
 
           public:
@@ -110,13 +111,20 @@ namespace enishi::foundation {
         using details::OptionBase<Option<T>, T>::OptionBase;
 
         Option(void) noexcept = default;
-        Option(std::nullopt_t&& nullopt)
+        Option(Option<T>&&) noexcept = default;
+        Option(const Option<T>&) noexcept = default;
+
+        Option(details::OptionValue<T>&& value) noexcept
+            : details::OptionBase<Option<T>, T>(std::move(value)) {
+        }
+        Option(std::nullopt_t&& nullopt) noexcept
             : details::OptionBase<Option<T>, T>(std::move(nullopt)) {
         }
-        Option(const std::nullopt_t& nullopt)
-            : details::OptionBase<Option<T>, T>(nullopt) {
-        }
 
+        Option& operator=(Option<T>&& value) {
+            this->option = value.option;
+            return *this;
+        }
         Option& operator=(T&& value) {
             this->option = value;
             return *this;
@@ -170,16 +178,4 @@ namespace enishi::foundation {
             }
         }
     };
-
-#define OPTION_RETURN(value_name, option)                                                          \
-    if (option.is_none()) {                                                                        \
-        return {};                                                                                 \
-    }                                                                                              \
-    const auto& value_name = option.unwrap()
-
-#define MUT_OPTION_RETURN(value_name, option)                                                      \
-    if (option.is_none()) {                                                                        \
-        return {};                                                                                 \
-    }                                                                                              \
-    auto& value_name = option.unwrap_mut()
 } // namespace enishi::foundation

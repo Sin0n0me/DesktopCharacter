@@ -64,7 +64,7 @@ namespace enishi::model_controller {
         if (load_result.is_err()) {
             return load_result.propagation(ControlError::LoadFailed);
         }
-        const auto model_handle = load_result.unwrap();
+        const auto& model_handle = load_result.unwrap();
 
         // 描画データへの変換はModelRenderDataBuilderの責務
         auto build_result = this->builder->build(model_handle, shader_reflections);
@@ -77,25 +77,7 @@ namespace enishi::model_controller {
         return this->current_model_render_handle.unwrap();
     }
 
-    void ModelContoller::find_model(void) {
-        const auto pattern_model_extensions =
-            this->asset_system->get_extensions_pattern(types::AssetKind::Model);
-        const auto path = MODEL_PATH / "";
-        const std::regex pattern(
-            std::format("{}.*{}", foundation::path_to_regex_str(path), pattern_model_extensions));
-        const auto model_paths =
-            this->asset_system->find_assets(MODEL_PATH, types::AssetKind::Model);
-        const auto asset_paths = model_paths.find(pattern);
-
-        if (asset_paths.empty()) {
-            return foundation::Error(ConstructError::Construct, "モデルデータが見つかりません");
-        }
-
-        for (const auto& asset_path : asset_paths) {
-        }
-    }
-
-    void ModelContoller::make_wall(void) {
+    void make_wall(void) {
         constexpr float WALL_SIZE = 30.0f;
         constexpr float HALF_WALL_SIZE = WALL_SIZE / 2.0f;
         constexpr float FRONT_DEPTH = 0.0f;
@@ -135,10 +117,12 @@ namespace enishi::model_controller {
             3,
         }};
 
+        /*
         // メッシュ作成
-        auto mesh_handle = renderer->create_mesh(*model_data, this->model_shader_reflections);
+        auto mesh_handle = renderer->create_mesh(*model_data, model_shader_reflections);
         if (mesh_handle.is_err()) {
             // return mesh_handle.propagation(core::SystemError::ConstructRenderPassError);
         }
+        */
     }
 } // namespace enishi::model_controller

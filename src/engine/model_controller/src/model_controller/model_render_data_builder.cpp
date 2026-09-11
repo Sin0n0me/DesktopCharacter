@@ -20,7 +20,7 @@ namespace enishi::model_controller {
 
         // モデルが参照するテクスチャを先に読み込み要求しておく
         // (テクスチャ自体の完了待ちはマテリアル参照時、実際に必要になったタイミングで行われる想定)
-        this->request_textures(*model_data);
+        this->request_textures(model_data);
 
         auto mesh_handle = this->renderer->create_mesh(*model_data, shader_reflections);
         if (mesh_handle.is_err()) {
@@ -31,7 +31,8 @@ namespace enishi::model_controller {
         return mesh_handle.unwrap();
     }
 
-    void ModelRenderDataBuilder::request_textures(const types::AssetModelData& model_data) noexcept {
+    void ModelRenderDataBuilder::request_textures(
+        const types::AssetModelData& model_data) noexcept {
         for (const auto& material : model_data->materials) {
             for (const auto& material_texture : material.textures) {
                 const auto texture_handle = this->asset_system->load_asset(material_texture.path);

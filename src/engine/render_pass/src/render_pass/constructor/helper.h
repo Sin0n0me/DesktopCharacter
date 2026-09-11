@@ -20,6 +20,12 @@ namespace enishi::render_pass {
         types::RenderHandle input_layout;
     };
 
+    using ShaderKindToData =
+        std::unordered_map<types::ShaderKind, std::vector<types::AssetShaderData>>;
+
+    [[nodiscard]] ShaderKindToData make_shader_map_presorted(
+        const std::vector<platform::ShaderDataEntry>& entries);
+
     [[nodiscard]] foundation::Result<types::RenderHandle, ConstructError> make_render_target(
         types::ImageDescription&& description,
         types::ImageFormat&& view_format,
@@ -56,7 +62,7 @@ namespace enishi::render_pass {
         platform::IRenderer* const renderer, const std::vector<std::filesystem::path>& asset_paths);
 
     [[nodiscard]] foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
-        platform::IRenderer* const renderer, platform::ShaderKindToData&& shaders_map);
+        platform::IRenderer* const renderer, ShaderKindToData&& shaders_map);
 
     [[nodiscard]] foundation::Result<ShaderResult, ConstructError> make_shader(
         const types::ShaderKind kind,

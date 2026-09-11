@@ -1,6 +1,4 @@
 #include "render_pass_orchestra.h"
-#pragma once
-#include "render_pass_orchestra.h"
 #include <filesystem>
 #include <foundation/algorithm/resolve_dependencies.h>
 #include <foundation/result/result.h>
@@ -12,8 +10,10 @@
 #include <vector>
 
 namespace enishi::render_pass {
-    RenderPassOrchestra::RenderPassOrchestra(std::shared_ptr<platform::IRenderer> renderer)
-        : renderer(renderer) {
+    RenderPassOrchestra::RenderPassOrchestra(std::shared_ptr<platform::IRenderer> renderer,
+        std::shared_ptr<platform::IShaderDataProvider> shader_data_provider)
+        : renderer(renderer)
+        , shader_data_provider(shader_data_provider) {
     }
 
     void RenderPassOrchestra::add_constructor(
@@ -37,7 +37,9 @@ namespace enishi::render_pass {
                 continue;
             }
 
-            auto result = constructor->make(this->renderer.get(), window).add_message("");
+            auto&& result =
+                constructor->make(this->renderer.get(), window, this->shader_data_provider.get())
+                    .add_message("");
             if (result.is_err()) {
                 return;
             }

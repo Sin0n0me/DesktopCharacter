@@ -1,6 +1,4 @@
 #pragma once
-#include <engine_types/assets/model/addons/bone.h>
-#include <foundation/option/option.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 

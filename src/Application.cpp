@@ -13,6 +13,7 @@
 
 #include <physics/bullet3/physics_engine.h>
 
+#include <core/system/asset/shader/shader_data_provider.h>
 #include <platform_impl/window/sdl/sdl3_window.h>
 #include <renderer/directx/directx11/d3d11_render_initializer.h>
 #include <renderer/directx/directx11/d3d11_renderer.h>
@@ -137,10 +138,12 @@ namespace enishi {
             return {};
         }
 
+        auto shader_data_provider = std::make_shared<core::ShaderDataProvider>(asset_system);
         const auto render_system = this->system_scheduler.register_system<core::RenderSystem>(
             100, this->rsegistory, renderer, renderer);
 
-        render_pass::RenderPassOrchestra orchestra(render_system->get_renderer());
+        render_pass::RenderPassOrchestra orchestra(
+            render_system->get_renderer(), shader_data_provider);
 
         // レンダーパスの作成
         orchestra.add_constructor(std::make_shared<render_pass::ModelRenderPassConstructor>());
@@ -174,33 +177,4 @@ namespace enishi {
         std::shared_ptr<platform::IPhysicsEngine> physics_engine) {
         physics_engine->init_world();
     }
-
-    /*
-    std::shared_ptr<types::ShaderData> get_shaders(
-        assets_system::IAssetSystem* asset_system, const std::filesystem::path& path) {
-        const auto shader_paths = asset_system->find_assets(SHADER_PATH, types::AssetKind::Shader);
-        const auto pattern_shader_extensions =
-            asset_system->get_extensions_pattern(types::AssetKind::Shader);
-        const auto make_paths = [&](const std::filesystem::path& file_path) {
-            const auto str_pattern = std::format(
-                "{}{}", foundation::path_to_regex_str(file_path), pattern_shader_extensions);
-            const std::regex pattern(str_pattern);
-            return shader_paths.find(pattern);
-        };
-    }
-
-    std::shared_ptr<types::ShaderData> get_shader(
-        assets_system::IAssetSystem* asset_system, const std::filesystem::path& path) {
-        const auto asset_handle =
-            asset_system->load_asset(path).add_message("シェーダーの読み込みに失敗しました");
-        if (asset_handle.is_err()) {
-            return asset_handle.propagation(ConstructError::Construct);
-        }
-        const auto shader_data = asset_system->get_shader_data(asset_handle.unwrap());
-        if (shader_data.is_none()) {
-            return foundation::Error(ConstructError::Construct, "シェーダーデータが存在しません");
-        }
-        shader_data.unwrap();
-    }
-    */
 } // namespace enishi

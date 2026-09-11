@@ -5,10 +5,11 @@ namespace enishi::skinning_system {
         if (this->physics_view->size() < index + 1) {
             return;
         }
-        if (this->bone_nodes.size() < index + 1) {
+        const auto nodes = this->physics_view->get_bone_nodes();
+        if (nodes.size() < index + 1) {
             return;
         }
-        const auto& bone_node = this->bone_nodes[index];
+        const auto& bone_node = nodes[index];
         const auto& view = this->physics_view->at(index);
 
         // 物理状態の反映(ローカル空間)
@@ -28,10 +29,11 @@ namespace enishi::skinning_system {
         if (this->physics_view->size() < index + 1) {
             return;
         }
-        if (this->bone_nodes.size() < index + 1) {
+        const auto nodes = this->physics_view->get_bone_nodes();
+        if (nodes.size() < index + 1) {
             return;
         }
-        const auto& bone_node = this->bone_nodes[index];
+        const auto& bone_node = nodes[index];
         const auto& view = this->physics_view->at(index);
 
         const auto& local = view->get_physics_local();
@@ -49,14 +51,21 @@ namespace enishi::skinning_system {
     }
 
     void PhysicsBonesUpdater::update_children_global(const types::BoneIndex index) noexcept {
-        if (this->bone_nodes.size() < index + 1) {
+        const auto nodes = this->physics_view->get_bone_nodes();
+        if (nodes.size() < index + 1) {
             return;
         }
-        const auto& bone_node = this->bone_nodes[index];
+        const auto& bone_node = nodes[index];
         for (const auto& child : bone_node.children) {
             this->update_global(child);
         }
     }
     void skinning_system::PhysicsBonesUpdater::update_global_form_roots(void) noexcept {
+        const auto nodes = this->physics_view->get_bone_nodes();
+        for (types::BoneIndex i = 0; i < nodes.size(); ++i) {
+            if (!nodes[i].has_parent()) {
+                this->update_global(i);
+            }
+        }
     }
 } // namespace enishi::skinning_system

@@ -16,7 +16,7 @@ namespace enishi::platform {
 
         [[nodiscard]] virtual std::size_t size(void) const noexcept = 0;
 
-        [[nodiscard]] virtual const IBindBoneView& at(
+        [[nodiscard]] virtual const IBindBoneView* at(
             const types::BoneIndex index) const noexcept = 0;
     };
 } // namespace enishi::platform

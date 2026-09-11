@@ -3,14 +3,7 @@
 
 namespace enishi::skinning_system {
     /**
-     * この型の目的
-     *
-     * platform::IPhysicsBoneViewの非所有(non-owning)な実装
-     * AnimationBoneViewと同じく、外部が所有するlocal/global行列へのポインタを保持するだけ
-     *
-     * 物理演算専用のバッファは別に持たず、アニメーション側と同じlocal/globalを指す想定
-     * (AnimationComponent::AnimationCommand::WriteBackPhysicsSimulateが
-     *  「現在のglobalを物理エンジンに書き戻す」という意味を持っていることに合わせている)
+     * 物理演算専用のView
      */
     class PhysicsBoneView final : public platform::IPhysicsBoneView {
       private:
@@ -25,6 +18,7 @@ namespace enishi::skinning_system {
 
         ~PhysicsBoneView(void) noexcept override = default;
 
+        PhysicsBoneView(void) = delete;
         PhysicsBoneView(const PhysicsBoneView&) = delete;
         PhysicsBoneView& operator=(const PhysicsBoneView&) = delete;
         PhysicsBoneView(PhysicsBoneView&&) = delete;

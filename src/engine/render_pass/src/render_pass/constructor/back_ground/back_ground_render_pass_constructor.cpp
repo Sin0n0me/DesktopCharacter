@@ -1,6 +1,5 @@
 #include "back_ground_render_pass_constructor.h"
 #include "../helper.h"
-#include "back_ground_render_pass_constructor.h"
 #include <foundation/log/logger.h>
 #include <foundation/path/path_utility.h>
 #include <foundation/str/string_builder.h>
@@ -12,11 +11,32 @@ namespace enishi::render_pass {
     constexpr char PS_FILE_NAME[] = "ps_clear_wall";
 
     foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError>
-    enishi::render_pass::BackGroundRenderPassConstructor::make(
-        platform::IRenderer* const renderer, const platform::IWindow* window) {
+    enishi::render_pass::BackGroundRenderPassConstructor::make(platform::IRenderer* const renderer,
+        const platform::IWindow* window,
+        const platform::IShaderDataProvider* shader_data_provider) {
         types::PipelineDescription description{
             .topology = types::PrimitiveTopology::TriangleList,
         };
+
+        const auto shader_paths = this->get_paths();
+        const auto result_shader_entries = shader_data_provider->get(shader_paths);
+        if (result_shader_entries.is_err()) {
+            return result_shader_entries.propagation(ConstructError::Construct);
+        }
+        auto&& shader_entries = make_shader_map_presorted(result_shader_entries.unwrap());
+        const auto result_shader = make_shaders(renderer, std::move(shader_entries));
+        if (result_shader.is_err()) {
+            return foundation::Error(ConstructError::Construct);
+        }
+        auto&& shaders = result_shader.unwrap();
+        for (auto& shader : shaders) {
+            if (shader.shader.is_valid()) {
+                description.shaders.emplace_back(shader.shader);
+            }
+            if (shader.shader_reflection.is_valid()) {
+                description.shader_reflections.emplace_back(shader.shader_reflection);
+            }
+        }
 
         const auto opt_window_size = window->get_size();
         if (opt_window_size.is_none()) {

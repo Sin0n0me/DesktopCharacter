@@ -5,7 +5,6 @@
 
 namespace enishi::render_pass {
     constexpr glm::vec4 CLEAR_COLOR = glm::vec4{0.25f, 0.25f, 0.25f, 0.25f};
-    const std::filesystem::path SHADER_PATH = "./assets/shader";
 
     foundation::Result<types::RenderHandle, ConstructError> make_render_target(
         types::ImageDescription&& description,
@@ -108,13 +107,12 @@ namespace enishi::render_pass {
     }
 
     foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
-        platform::IRenderer* const renderer,
-        std::unordered_map<types::ShaderKind, std::span<const types::ShaderData>>&& shaders_map) {
+        platform::IRenderer* const renderer, platform::ShaderKindToData&& shaders_map) {
         auto shader_result = std::vector<ShaderResult>();
 
         for (const auto& [kind, shaders] : shaders_map) {
             for (const auto& shader : shaders) {
-                auto result = make_shader(kind, shader, renderer)
+                auto result = make_shader(kind, *shader, renderer)
                                   .add_message("シェーダーの作成に失敗しました");
                 if (result.is_err()) {
                     return std::move(result).unwrap_err();

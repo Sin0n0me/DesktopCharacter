@@ -12,7 +12,9 @@ namespace enishi::render_pass {
 
       public:
         foundation::Result<std::shared_ptr<platform::IRenderPass>, ConstructError> make(
-            platform::IRenderer* const renderer, const platform::IWindow* window) override;
+            platform::IRenderer* const renderer,
+            const platform::IWindow* window,
+            const platform::IShaderDataProvider* shader_data_provider) override;
         std::vector<std::tuple<types::ShaderKind, std::filesystem::path>> get_paths(
             void) const noexcept override;
         foundation::UTF8 get_render_pass_name(void) const noexcept override;

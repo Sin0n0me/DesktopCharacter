@@ -8,10 +8,11 @@ namespace enishi::skinning_system {
         if (this->animation_view->size() < index + 1) {
             return;
         }
-        if (this->bone_nodes.size() < index + 1) {
+        const auto nodes = this->animation_view->get_bone_nodes();
+        if (nodes.size() < index + 1) {
             return;
         }
-        const auto& bone_node = this->bone_nodes[index];
+        const auto& bone_node = nodes[index];
         const auto& view = this->animation_view->at(index);
 
         const auto& local = view->get_animation_local_transform();
@@ -29,14 +30,21 @@ namespace enishi::skinning_system {
     }
 
     void AnimationBonesUpdater::update_children_global(const types::BoneIndex index) noexcept {
-        if (this->bone_nodes.size() < index + 1) {
+        const auto nodes = this->animation_view->get_bone_nodes();
+        if (nodes.size() < index + 1) {
             return;
         }
-        const auto& bone_node = this->bone_nodes[index];
+        const auto& bone_node = nodes[index];
         for (const auto& child : bone_node.children) {
             this->update_global(child);
         }
     }
     void skinning_system::AnimationBonesUpdater::update_global_form_roots(void) noexcept {
+        const auto nodes = this->animation_view->get_bone_nodes();
+        for (types::BoneIndex i = 0; i < nodes.size(); ++i) {
+            if (!nodes[i].has_parent()) {
+                this->update_global(i);
+            }
+        }
     }
 } // namespace enishi::skinning_system

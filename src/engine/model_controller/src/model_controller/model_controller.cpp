@@ -2,8 +2,81 @@
 #include "model_controller.h"
 #include <foundation/log/logger.h>
 #include <foundation/path/path_utility.h>
+#include <regex>
 
 namespace enishi::model_controller {
+    ModelController::ModelController(std::shared_ptr<platform::IAssetSystem> asset_system,
+        std::shared_ptr<ModelRenderDataBuilder> builder) noexcept
+        : asset_system(asset_system)
+        , builder(builder) {
+    }
+
+    void ModelController::find_model(const std::filesystem::path& search_path) noexcept {
+        const auto model_paths =
+            this->asset_system->find_assets(search_path, types::AssetKind::Model);
+        const auto pattern_str = std::format("{}{}",
+            foundation::path_to_regex_str(search_path),
+            this->asset_system->get_extensions_pattern(types::AssetKind::Model));
+        const std::regex pattern(pattern_str);
+
+        const auto asset_paths = model_paths.find(pattern);
+        if (asset_paths.empty()) {
+            foundation::Logger::warning(
+                std::format("モデルデータが見つかりません. path: {}", search_path.string<char>()));
+            return;
+        }
+
+        for (const auto& asset_path : asset_paths) {
+            this->model_list[asset_path.stem().string<char>()] = asset_path;
+        }
+    }
+
+    std::vector<foundation::UTF8> ModelController::get_model_list(void) const noexcept {
+        std::vector<foundation::UTF8> names;
+        names.reserve(this->model_list.size());
+        for (const auto& [name, path] : this->model_list) {
+            names.emplace_back(name);
+        }
+        return names;
+    }
+
+    foundation::Option<foundation::UTF8> ModelController::get_current_model_name(
+        void) const noexcept {
+        return this->current_model_name;
+    }
+
+    foundation::Option<types::RenderHandle> ModelController::get_current_model_render_handle(
+        void) const noexcept {
+        return this->current_model_render_handle;
+    }
+
+    foundation::Result<types::RenderHandle, ControlError> ModelController::change_model(
+        const foundation::UTF8& name,
+        const std::vector<types::RenderHandle>& shader_reflections) noexcept {
+        const auto iter = this->model_list.find(name);
+        if (iter == this->model_list.end()) {
+            return foundation::Error(
+                ControlError::NotFound, std::format("モデルが見つかりません: {}", name));
+        }
+        const auto& path = iter->second;
+
+        auto load_result = this->asset_system->load_asset(path);
+        if (load_result.is_err()) {
+            return load_result.propagation(ControlError::LoadFailed);
+        }
+        const auto model_handle = load_result.unwrap();
+
+        // 描画データへの変換はModelRenderDataBuilderの責務
+        auto build_result = this->builder->build(model_handle, shader_reflections);
+        if (build_result.is_err()) {
+            return foundation::Error(ControlError::BuildFailed, "描画データの作成に失敗しました");
+        }
+
+        this->current_model_name = name;
+        this->current_model_render_handle = build_result.unwrap();
+        return this->current_model_render_handle.unwrap();
+    }
+
     void ModelContoller::find_model(void) {
         const auto pattern_model_extensions =
             this->asset_system->get_extensions_pattern(types::AssetKind::Model);
@@ -19,42 +92,6 @@ namespace enishi::model_controller {
         }
 
         for (const auto& asset_path : asset_paths) {
-        }
-    }
-
-    void ModelContoller::change_model(const foundation::UTF8& name) {
-        const auto iter = this->model_list.find(name);
-        if (iter == this->model_list.end()) {
-            return;
-        }
-        const auto& path = iter->second;
-
-        auto&& result = this->asset_system->load_asset(path);
-        if (result.is_err()) {
-            continue;
-        }
-        const auto& handle = result.unwrap();
-
-        const auto opt_model_data = this->asset_system->get_model_data(handle);
-        if (opt_model_data.is_none()) {
-            return;
-        }
-        const auto& model_data = opt_model_data.unwrap();
-
-        // 先にテクスチャ読み込み
-        for (const auto& material : model_data->materials) {
-            for (const auto& material_texture : material.textures) {
-                const auto asset_handle = this->asset_system->load_asset(material_texture.path);
-                if (asset_handle.is_err()) {
-                    foundation::Logger::warning(asset_handle.unwrap_err().get_message());
-                }
-            }
-        }
-
-        // メッシュ作成
-        const auto mesh_handle = renderer->create_mesh(*model_data, this->model_shader_reflections);
-        if (mesh_handle.is_err()) {
-            return mesh_handle.unwrap_err();
         }
     }
 

@@ -4,6 +4,7 @@
 #include <foundation/result/result.h>
 #include <foundation/str/str.h>
 #include <memory>
+#include <platform/asset/interface_shader_data_provider.h>
 #include <platform/renderer/interface_render_pass.h>
 #include <platform/renderer/interface_renderer.h>
 #include <platform/window/interface_window.h>
@@ -18,7 +19,9 @@ namespace enishi::render_pass {
 
         [[nodiscard]] virtual foundation::Result<std::shared_ptr<platform::IRenderPass>,
             ConstructError>
-        make(platform::IRenderer* const renderer, const platform::IWindow* window) = 0;
+        make(platform::IRenderer* const renderer,
+            const platform::IWindow* window,
+            const platform::IShaderDataProvider* shader_data_provider) = 0;
 
         // 拡張子は含めないこと
         [[nodiscard]] virtual std::vector<std::tuple<types::ShaderKind, std::filesystem::path>>

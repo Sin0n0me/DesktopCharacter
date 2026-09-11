@@ -3,24 +3,15 @@
 
 namespace enishi::skinning_system {
     /**
-     * この型の目的
-     *
-     * platform::IAnimationBoneViewの非所有(non-owning)な実装
-     * 値そのものは持たず、外部(ECS等)が所有する各データへのポインタを保持するだけの薄いラッパー
-     *
-     * componentやecsを一切知らないため、このクラス自体はどんなデータソースにも紐付けられる
-     * 実データへの結び付けは、component/ecsを知っている呼び出し側(例: model_control_system)が
-     * コンストラクタに参照を渡すことで行う
-     *
-     * 前提条件: このビューが指す先の変数(vectorの要素など)は、
-     * ビューの生存期間中にアドレスが変わらない(resize等でreallocされない)こと
+     * ビューの生存期間中にアドレスが変わることがない
+     * 変わる場合は新しく作り直される
      */
     class AnimationBoneView final : public platform::IAnimationBoneView {
       private:
         glm::vec3* const translation;
         glm::quat* const rotation;
         glm::vec3* const scale;
-        glm::mat4* const global; // UpdateGlobal等で書き込まれた計算済みのグローバル行列
+        glm::mat4* const global; //  計算済みのグローバル行列
 
       public:
         AnimationBoneView(glm::vec3& translation,
@@ -35,6 +26,7 @@ namespace enishi::skinning_system {
 
         ~AnimationBoneView(void) noexcept override = default;
 
+        AnimationBoneView(void) = delete;
         AnimationBoneView(const AnimationBoneView&) = delete;
         AnimationBoneView& operator=(const AnimationBoneView&) = delete;
         AnimationBoneView(AnimationBoneView&&) = delete;

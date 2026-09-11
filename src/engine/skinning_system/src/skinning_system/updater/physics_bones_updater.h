@@ -8,10 +8,17 @@
 namespace enishi::skinning_system {
     class PhysicsBonesUpdater : public platform::IBoneUpdater {
       private:
-        std::span<const types::BoneNode> bone_nodes;
         PhysicsBonesCache* const physics_view;
 
       public:
+        explicit PhysicsBonesUpdater(PhysicsBonesCache& physics_view) noexcept
+            : physics_view(&physics_view) {
+        }
+
+        [[nodiscard]] std::span<const types::BoneNode> bone_nodes(void) const noexcept {
+            return this->physics_view->get_bone_nodes();
+        }
+
         void update_local(const types::BoneIndex index) noexcept override;
         void update_global(const types::BoneIndex index) noexcept override;
         void update_children_global(const types::BoneIndex index) noexcept override;

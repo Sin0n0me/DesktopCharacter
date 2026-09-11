@@ -5,6 +5,7 @@
 #include <engine_types/renderer/description/sampler/sampler_description.h>
 #include <foundation/result/result.h>
 #include <memory>
+#include <platform/asset/interface_shader_data_provider.h>
 #include <platform/renderer/interface_render_pass.h>
 #include <platform/renderer/interface_renderer.h>
 #include <render_pass/errors/errors.h>
@@ -55,8 +56,7 @@ namespace enishi::render_pass {
         platform::IRenderer* const renderer, const std::vector<std::filesystem::path>& asset_paths);
 
     [[nodiscard]] foundation::Result<std::vector<ShaderResult>, ConstructError> make_shaders(
-        platform::IRenderer* const renderer,
-        std::unordered_map<types::ShaderKind, std::span<const types::ShaderData>>&& shaders_map);
+        platform::IRenderer* const renderer, platform::ShaderKindToData&& shaders_map);
 
     [[nodiscard]] foundation::Result<ShaderResult, ConstructError> make_shader(
         const types::ShaderKind kind,
